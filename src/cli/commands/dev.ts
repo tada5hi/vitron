@@ -33,108 +33,116 @@ export class DevCommand implements CommandModule {
     }
 
     async handler(raw: Arguments) {
-        const args : DevArguments = raw as DevArguments;
+        try {
+            const args: DevArguments = raw as DevArguments;
 
-        // Project directory
-        const baseDirectoryPath = args.root || process.cwd();
+            // Project directory
+            const baseDirectoryPath = args.root || process.cwd();
 
-        // Config
-        const config = getElectronAdapterConfig(baseDirectoryPath);
+            // Config
+            const config = getElectronAdapterConfig(baseDirectoryPath);
 
-        // Port
-        const port = args.port ? parseInt(args.port, 10) : config.port || 8888;
-        config.port = port;
+            // Port
+            const port = args.port ? parseInt(args.port, 10) : config.port || 8888;
+            config.port = port;
 
-        // ----------------------------------------
+            // ----------------------------------------
 
-        const spawnOptions: SpawnSyncOptions = {
-            cwd: baseDirectoryPath,
-            stdio: 'inherit',
-        };
+            const spawnOptions: SpawnSyncOptions = {
+                cwd: baseDirectoryPath,
+                stdio: 'inherit',
+            };
 
-        let firstCompile = true;
-        let watching: any;
-        let mainProcess: ChildProcess;
-        let rendererProcess: ChildProcess;
+            let firstCompile = true;
+            let watching: any;
+            let mainProcess: ChildProcess;
+            let rendererProcess: ChildProcess;
 
-        const startMainProcess = () => {
-            mainProcess = spawn('electron', [path.join(config.rootPath, config.buildDirectory, 'index.js')], {
-                detached: false,
-                env: {
-                    ELECTRON_MAIN_PORT: `${port}`,
-                },
-                ...spawnOptions,
+            const startMainProcess = () => {
+                mainProcess = spawn('electron', [path.join(config.rootPath, config.buildDirectory, 'index.js')], {
+                    detached: false,
+                    env: {
+                        ELECTRON_MAIN_PORT: `${port}`,
+                    },
+                    ...spawnOptions,
+                });
+
+                mainProcess.unref();
+            };
+
+            const startRendererProcess = () => {
+                const child = runRendererCommand('dev', config);
+
+                if (typeof child === 'undefined') {
+                    throw new BaseError('No renderer process command provided...');
+                }
+
+                return child;
+            };
+
+            const killWholeProcess = () => {
+                if (watching) {
+                    watching.close(() => {
+                    });
+                }
+                if (mainProcess) {
+                    mainProcess.kill();
+                }
+                if (rendererProcess) {
+                    rendererProcess.kill();
+                }
+            };
+
+            process.on('SIGINT', killWholeProcess);
+            process.on('SIGTERM', killWholeProcess);
+            process.on('exit', killWholeProcess);
+
+            rendererProcess = startRendererProcess();
+
+            const webpackConfig = buildWebpackConfig('development', baseDirectoryPath);
+            const compiler = webpack(webpackConfig, (err, stats) => {
+                if (err) {
+                    process.exit(1);
+                } else {
+                    // todo: maybe hash stats.hash to not recompile ;)
+                }
             });
 
-            mainProcess.unref();
-        };
-
-        const startRendererProcess = () => {
-            const child = runRendererCommand('dev', config);
-
-            if (typeof child === 'undefined') {
-                throw new BaseError('No renderer process command provided...');
-            }
-
-            return child;
-        };
-
-        const killWholeProcess = () => {
-            if (watching) {
-                watching.close(() => {});
-            }
-            if (mainProcess) {
-                mainProcess.kill();
-            }
-            if (rendererProcess) {
-                rendererProcess.kill();
-            }
-        };
-
-        process.on('SIGINT', killWholeProcess);
-        process.on('SIGTERM', killWholeProcess);
-        process.on('exit', killWholeProcess);
-
-        rendererProcess = startRendererProcess();
-
-        const webpackConfig = buildWebpackConfig('development', baseDirectoryPath);
-        const compiler = webpack(webpackConfig, (err, stats) => {
-            if (err) {
-                process.exit(1);
-            } else {
-                // todo: maybe hash stats.hash to not recompile ;)
-            }
-        });
-
-        Promise
-            .resolve()
-            // eslint-disable-next-line no-promise-executor-return
-            .then(() => new Promise(((resolve) => setTimeout(resolve, 5000))))
-            .then(() => {
-                watching = compiler.watch({}, async (err: any) => {
-                    if (err) {
-                        // eslint-disable-next-line no-console
-                        console.error(err.stack || err);
-                        if (err.details) {
+            Promise
+                .resolve()
+                // eslint-disable-next-line no-promise-executor-return
+                .then(() => new Promise(((resolve) => setTimeout(resolve, 5000))))
+                .then(() => {
+                    watching = compiler.watch({}, async (err: any) => {
+                        if (err) {
                             // eslint-disable-next-line no-console
-                            console.error(err.details);
-                        }
-                    }
-
-                    if (firstCompile) {
-                        firstCompile = false;
-                    }
-
-                    if (!err) {
-                        if (!firstCompile) {
-                            if (mainProcess) {
-                                mainProcess.kill();
+                            console.error(err.stack || err);
+                            if (err.details) {
+                                // eslint-disable-next-line no-console
+                                console.error(err.details);
                             }
                         }
 
-                        startMainProcess();
-                    }
+                        if (firstCompile) {
+                            firstCompile = false;
+                        }
+
+                        if (!err) {
+                            if (!firstCompile) {
+                                if (mainProcess) {
+                                    mainProcess.kill();
+                                }
+                            }
+
+                            startMainProcess();
+                        }
+                    });
                 });
-            });
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.log(e);
+
+            throw e;
+        }
     }
 }

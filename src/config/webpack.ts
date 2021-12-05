@@ -44,7 +44,7 @@ export function buildWebpackBaseConfig(
                     },
                     exclude: [
                         /node_modules/,
-                        path.join(config.buildDirectory, config.rendererDirectory),
+                        path.join(config.rootPath, config.rendererDirectory),
                     ],
                 },
             ],

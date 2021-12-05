@@ -27,7 +27,7 @@ function extendElectronAdapterConfig(config: Config, directoryPath: string) : Co
     }
 
     if (!config.buildDirectory) {
-        config.buildDirectory = '.electron-adapter';
+        config.buildDirectory = 'app';
     }
 
     if (!config.rendererDirectory) {
