@@ -6,8 +6,9 @@ export type Config = {
 
     framework?: Framework,
 
-    buildDirectory?: string,
     rootPath?: string,
+
+    buildDirectory?: string,
     mainDirectory?: string,
 
     webpack?: (config: Configuration, env: Environment) => Configuration,
