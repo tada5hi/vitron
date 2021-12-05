@@ -7,7 +7,6 @@ export function getElectronAdapterConfig(directoryPath: string) : Config {
     const filePath : string = path.join(directoryPath, 'electron-adapter.config.js');
 
     if (!fs.existsSync(filePath)) {
-        process.exit(1); // todo: remove after debug
         return extendElectronAdapterConfig({}, directoryPath);
     }
 
