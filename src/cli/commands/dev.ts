@@ -2,7 +2,10 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import { ChildProcess, SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import { webpack } from 'webpack';
+import { BaseError } from '@typescript-error/core';
 import { buildWebpackConfig } from '../../config/webpack';
+import { getElectronAdapterConfig } from '../../utils/config';
+import { runRendererCommand } from '../../utils/run-renderer-command';
 
 export interface DevArguments extends Arguments {
     root: string;
@@ -23,19 +26,23 @@ export class DevCommand implements CommandModule {
             })
             .option('port', {
                 alias: 'p',
-                default: '8888',
+                default: '',
                 describe: 'Port to run the application in dev mode.',
             });
     }
 
-    async handler(raw: Arguments, exitProcess = true) {
+    async handler(raw: Arguments) {
         const args : DevArguments = raw as DevArguments;
 
         // Project directory
         const baseDirectoryPath = args.root || process.cwd();
 
+        // Config
+        const config = getElectronAdapterConfig(baseDirectoryPath);
+
         // Port
-        const port = parseInt(args.port || '8888', 10);
+        const port = parseInt(args.port || `${config.port}` || '8888', 10);
+        config.port = port;
 
         // ----------------------------------------
 
@@ -62,10 +69,16 @@ export class DevCommand implements CommandModule {
         };
 
         const startRendererProcess = () => {
-            const child = spawn('nuxt', ['-p', `${port}`, 'renderer'], spawnOptions);
+            const child = runRendererCommand('dev', config);
+
+            if (typeof child === 'undefined') {
+                throw new BaseError('No renderer process command provided...');
+            }
+
             child.on('close', () => {
                 process.exit(0);
             });
+
             return child;
         };
 
@@ -87,11 +100,11 @@ export class DevCommand implements CommandModule {
 
         rendererProcess = startRendererProcess();
 
-        const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
-        await delay(8000);
+        console.log('delay finished');
 
         const compiler = webpack(buildWebpackConfig('development', baseDirectoryPath));
+
+        console.log('compiler');
 
         watching = compiler.watch({}, async (err: any) => {
             if (err) {

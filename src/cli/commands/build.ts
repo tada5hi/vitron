@@ -3,6 +3,9 @@ import path from 'path';
 import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import fs from 'fs-extra';
+import { getElectronAdapterConfig } from '../../utils/config';
+import { deleteRendererBuilds } from '../../utils/delete-renderer-builds';
+import { runRendererCommand } from '../../utils/run-renderer-command';
 
 export interface BuildArguments extends Arguments {
     root: string;
@@ -36,7 +39,7 @@ export class BuildCommand implements CommandModule {
             });
     }
 
-    async handler(raw: Arguments, exitProcess = true) {
+    async handler(raw: Arguments) {
         const args : BuildArguments = raw as BuildArguments;
         const builderArgs : string[] = [];
 
@@ -45,6 +48,8 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...['--project', baseDirectoryPath]);
 
         // Config
+        const config = getElectronAdapterConfig(baseDirectoryPath);
+
         const configFileName = args.config || 'electron-builder.yml';
         builderArgs.push(...['--config', configFileName]);
 
@@ -52,25 +57,20 @@ export class BuildCommand implements CommandModule {
         const flagsMapped = args.flags.map((flag) => `--${flag}`);
         builderArgs.push(...flagsMapped);
 
-        const renderDirectoryPath = path.join(baseDirectoryPath, 'renderer');
-
         // Clear old electron and adapter build data
         fs.removeSync(path.join(baseDirectoryPath, 'app'));
         fs.removeSync(path.join(baseDirectoryPath, 'dist'));
 
-        // Clear old application data
-        fs.removeSync(path.join(baseDirectoryPath, 'renderer', '.nuxt'));
-        fs.removeSync(path.join(baseDirectoryPath, 'renderer', 'dist'));
+        // Clear old renderer data
+        deleteRendererBuilds(config);
+
+        // build renderer output
+        runRendererCommand('build', config);
 
         const spawnOptions: SpawnSyncOptions = {
             cwd: baseDirectoryPath,
             stdio: 'inherit',
         };
-
-        spawn.sync('nuxt', ['build', renderDirectoryPath], spawnOptions);
-        spawn.sync('nuxt', ['generate', renderDirectoryPath], spawnOptions);
-
-        fs.copySync(path.join(renderDirectoryPath, 'dist'), path.join(baseDirectoryPath, 'app'));
 
         spawn.sync('node', [path.join(__dirname, '..', '..', 'compiler'), baseDirectoryPath], spawnOptions);
 

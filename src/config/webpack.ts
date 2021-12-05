@@ -1,6 +1,7 @@
 import path from 'path';
 import webpack from 'webpack';
 import merge from 'webpack-merge';
+import { getElectronAdapterConfig } from '../utils/config';
 
 export function buildWebpackBaseConfig(
     env: 'development' | 'production',
@@ -60,11 +61,13 @@ export function buildWebpackConfig(
 ) : webpack.Configuration {
     directoryPath ??= process.cwd();
 
-    return merge(
+    const { webpack: webpackFunc, mainDirectory } = getElectronAdapterConfig(directoryPath);
+
+    const config = merge(
         buildWebpackBaseConfig(env, directoryPath),
         {
             entry: {
-                index: path.join(directoryPath, 'main', 'index.ts'),
+                index: path.join(directoryPath, mainDirectory, 'index.ts'),
             },
             output: {
                 filename: 'index.js',
@@ -72,4 +75,10 @@ export function buildWebpackConfig(
             },
         },
     );
+
+    if (typeof webpackFunc === 'function') {
+        return webpackFunc(config, env);
+    }
+
+    return config;
 }
