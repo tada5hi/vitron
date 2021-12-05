@@ -57,9 +57,8 @@ export class BuildCommand implements CommandModule {
         const flagsMapped = args.flags.map((flag) => `--${flag}`);
         builderArgs.push(...flagsMapped);
 
-        // Clear old electron and adapter build data
-        fs.removeSync(path.join(baseDirectoryPath, 'app'));
-        fs.removeSync(path.join(baseDirectoryPath, 'dist'));
+        // Clear old build data
+        fs.removeSync(path.join(baseDirectoryPath, config.buildDirectory));
 
         // Clear old renderer data
         deleteRendererBuilds(config);

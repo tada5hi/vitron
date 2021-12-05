@@ -6,6 +6,7 @@ export type Config = {
 
     framework?: Framework,
 
+    buildDirectory?: string,
     rootPath?: string,
     mainDirectory?: string,
 

@@ -2,15 +2,14 @@ import path from 'path';
 import webpack from 'webpack';
 import merge from 'webpack-merge';
 import { getElectronAdapterConfig } from '../utils/config';
+import { Config } from '../type';
 
 export function buildWebpackBaseConfig(
     env: 'development' | 'production',
-    directoryPath?: string,
+    config: Config,
 ) : webpack.Configuration {
-    directoryPath ??= process.cwd();
-
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const externals = require(path.join(directoryPath, 'package.json'))
+    const externals = require(path.join(config.rootPath, 'package.json'))
         .dependencies;
 
     return {
@@ -24,7 +23,10 @@ export function buildWebpackBaseConfig(
         devtool: 'source-map',
         resolve: {
             extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
-            modules: [path.join(directoryPath, 'app'), 'node_modules'],
+            modules: [
+                path.join(config.rootPath, config.buildDirectory),
+                'node_modules',
+            ],
         },
         output: {
             libraryTarget: 'commonjs2',
@@ -42,7 +44,7 @@ export function buildWebpackBaseConfig(
                     },
                     exclude: [
                         /node_modules/,
-                        path.join(directoryPath, 'renderer'),
+                        path.join(config.buildDirectory, config.rendererDirectory),
                     ],
                 },
             ],
@@ -61,24 +63,24 @@ export function buildWebpackConfig(
 ) : webpack.Configuration {
     directoryPath ??= process.cwd();
 
-    const { webpack: webpackFunc, mainDirectory } = getElectronAdapterConfig(directoryPath);
+    const config = getElectronAdapterConfig(directoryPath);
 
-    const config = merge(
-        buildWebpackBaseConfig(env, directoryPath),
+    const webpackConfig = merge(
+        buildWebpackBaseConfig(env, config),
         {
             entry: {
-                index: path.join(directoryPath, mainDirectory, 'index.ts'),
+                index: path.join(directoryPath, config.mainDirectory, 'index.ts'),
             },
             output: {
                 filename: 'index.js',
-                path: path.join(directoryPath, 'app'),
+                path: path.join(directoryPath, config.buildDirectory),
             },
         },
     );
 
-    if (typeof webpackFunc === 'function') {
-        return webpackFunc(config, env);
+    if (typeof config.webpack === 'function') {
+        return config.webpack(webpackConfig, env);
     }
 
-    return config;
+    return webpackConfig;
 }

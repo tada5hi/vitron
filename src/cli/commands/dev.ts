@@ -58,7 +58,7 @@ export class DevCommand implements CommandModule {
         let rendererProcess: ChildProcess;
 
         const startMainProcess = () => {
-            mainProcess = spawn('electron', [path.join(config.rootPath, 'app', 'index.js'), '--debug'], {
+            mainProcess = spawn('electron', [path.join(config.rootPath, config.buildDirectory, 'index.js')], {
                 detached: false,
                 env: {
                     ELECTRON_MAIN_PORT: `${port}`,
@@ -75,10 +75,6 @@ export class DevCommand implements CommandModule {
             if (typeof child === 'undefined') {
                 throw new BaseError('No renderer process command provided...');
             }
-
-            child.on('close', () => {
-                process.exit(0);
-            });
 
             return child;
         };

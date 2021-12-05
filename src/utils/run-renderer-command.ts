@@ -29,7 +29,7 @@ export function runRendererCommand(type: CommandType, config: Config) : ChildPro
                         break;
                     case 'build':
                         commands.push({ key: 'next', args: ['build', renderDirectoryPath] });
-                        commands.push({ key: 'next', args: ['export', '-o', path.join(config.rootPath, 'app'), renderDirectoryPath] });
+                        commands.push({ key: 'next', args: ['export', '-o', path.join(config.rootPath, config.buildDirectory), renderDirectoryPath] });
                         break;
                 }
                 break;
@@ -79,7 +79,10 @@ export function runRendererCommand(type: CommandType, config: Config) : ChildPro
         config.framework &&
         config.framework === 'nuxt'
     ) {
-        fs.copySync(path.join(renderDirectoryPath, 'dist'), path.join(config.rootPath, 'app'));
+        fs.copySync(
+            path.join(renderDirectoryPath, 'dist'),
+            path.join(config.rootPath, config.buildDirectory),
+        );
     }
 
     return command ? spawn(command.key, command.args, spawnOptions) : undefined;

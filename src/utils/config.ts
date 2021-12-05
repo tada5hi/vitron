@@ -26,6 +26,10 @@ function extendElectronAdapterConfig(config: Config, directoryPath: string) : Co
         config.rootPath = directoryPath;
     }
 
+    if (!config.buildDirectory) {
+        config.buildDirectory = 'dist';
+    }
+
     if (!config.rendererDirectory) {
         config.rendererDirectory = 'renderer';
     }
