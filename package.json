@@ -11,7 +11,7 @@
         "type": "git",
         "url": "https://github.com/tada5hi/electron-adapter.git"
     },
-    "main": "dist/index.js",
+    "main": "dist/cli/index.js",
     "scripts": {
         "build": "rm -rf ./dist && tsc",
         "lint": "eslint --ext .js,.vue,.ts ./src",
