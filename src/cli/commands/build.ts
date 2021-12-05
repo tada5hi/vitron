@@ -58,7 +58,7 @@ export class BuildCommand implements CommandModule {
         fs.removeSync(path.join(baseDirectoryPath, 'app'));
         fs.removeSync(path.join(baseDirectoryPath, 'dist'));
 
-        // Clear old nuxt data
+        // Clear old application data
         fs.removeSync(path.join(baseDirectoryPath, 'renderer', '.nuxt'));
         fs.removeSync(path.join(baseDirectoryPath, 'renderer', 'dist'));
 
