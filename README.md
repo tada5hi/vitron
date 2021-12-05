@@ -1,7 +1,7 @@
 # Electron Adapter 🛠
 
 [![npm version](https://badge.fury.io/js/electron-adapter.svg)](https://badge.fury.io/js/electron-adapter)
-[![Master Workflow](https://github.com/Tada5hi/electron-adapter/workflows/main/badge.svg)](https://github.com/Tada5hi/electron-adapter)
+[![CI](https://github.com/tada5hi/electron-adapter/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/electron-adapter/actions/workflows/main.yml)
 
 This is a library to build platform executables for a bundled (webpack) application as well 
 boot an application in `dev` mode. 
