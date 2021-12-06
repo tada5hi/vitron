@@ -1,7 +1,7 @@
 import path from 'path';
 import webpack from 'webpack';
 import merge from 'webpack-merge';
-import { getElectronAdapterConfig } from '../utils/config';
+import { useElectronAdapterConfig } from './module';
 import { Config } from '../type';
 
 export function buildWebpackBaseConfig(
@@ -63,7 +63,7 @@ export function buildWebpackConfig(
 ) : webpack.Configuration {
     directoryPath ??= process.cwd();
 
-    const config = getElectronAdapterConfig(directoryPath);
+    const config = useElectronAdapterConfig(directoryPath);
 
     const webpackConfig = merge(
         buildWebpackBaseConfig(env, config),

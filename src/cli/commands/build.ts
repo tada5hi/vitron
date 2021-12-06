@@ -3,9 +3,8 @@ import path from 'path';
 import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import fs from 'fs-extra';
-import { getElectronAdapterConfig } from '../../utils/config';
-import { deleteRendererBuilds } from '../../utils/delete-renderer-builds';
-import { runRendererCommand } from '../../utils/run-renderer-command';
+import { useElectronAdapterConfig } from '../../config/module';
+import { clearRendererBuilds, runRendererCommand } from '../../renderer';
 
 export interface BuildArguments extends Arguments {
     root: string;
@@ -48,7 +47,7 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...['--project', baseDirectoryPath]);
 
         // Config
-        const config = getElectronAdapterConfig(baseDirectoryPath);
+        const config = useElectronAdapterConfig(baseDirectoryPath);
 
         const configFileName = args.config || 'electron-builder.yml';
         builderArgs.push(...['--config', configFileName]);
@@ -62,7 +61,7 @@ export class BuildCommand implements CommandModule {
         fs.removeSync(path.join(baseDirectoryPath, 'dist'));
 
         // Clear old renderer data
-        deleteRendererBuilds(config);
+        clearRendererBuilds(config);
 
         // build renderer output
         runRendererCommand('build', config);

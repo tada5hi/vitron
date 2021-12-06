@@ -15,8 +15,10 @@ export type Config = {
 
     rendererDirectory?: string,
     rendererBuildPaths?: string[],
-    rendererBuildCommands?: Command[] | ((env: Environment, rootPath: string) => Command[]),
-    rendererDevCommands?: Command[] | ((env: Environment, rootPath: string) => Command[])
+    rendererBuildCommands?: Command[] |
+    ((env: Environment, rootPath: string) => Command[]),
+    rendererDevCommands?: Command[] |
+    ((env: Environment, rootPath: string) => Command[])
 };
 
 export type Framework = 'nuxt' | 'next';

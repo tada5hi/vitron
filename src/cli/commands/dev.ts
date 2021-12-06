@@ -5,8 +5,8 @@ import { webpack } from 'webpack';
 import { BaseError } from '@typescript-error/core';
 import path from 'path';
 import { buildWebpackConfig } from '../../config/webpack';
-import { getElectronAdapterConfig } from '../../utils/config';
-import { runRendererCommand } from '../../utils/run-renderer-command';
+import { useElectronAdapterConfig } from '../../config/module';
+import { runRendererCommand } from '../../renderer/run-command';
 
 export interface DevArguments extends Arguments {
     root: string;
@@ -40,7 +40,7 @@ export class DevCommand implements CommandModule {
             const baseDirectoryPath = args.root || process.cwd();
 
             // Config
-            const config = getElectronAdapterConfig(baseDirectoryPath);
+            const config = useElectronAdapterConfig(baseDirectoryPath);
 
             // Port
             const port = args.port ? parseInt(args.port, 10) : config.port || 8888;

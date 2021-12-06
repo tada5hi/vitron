@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Config } from '../type';
 
-export function deleteRendererBuilds(config: Config) {
+export function clearRendererBuilds(config: Config) {
     const rendererFiles : string[] = [];
 
     if (config.framework) {
