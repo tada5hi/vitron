@@ -30,7 +30,9 @@ export async function getRendererPath(path_: string) : Promise<string> {
     return undefined;
 }
 
-export function registerRenderedFiles(options: RegisteredRenderedFilesContext) {
+export function registerRenderedFiles(
+    options: RegisteredRenderedFilesContext,
+) {
     options = {
         ...options,
         isCorsEnabled: true,
