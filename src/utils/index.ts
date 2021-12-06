@@ -6,3 +6,4 @@
  */
 
 export * from './framework-detect';
+export * from './webpack';

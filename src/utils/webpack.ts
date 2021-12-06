@@ -1,7 +1,14 @@
+/*
+ * Copyright (c) 2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import path from 'path';
 import webpack from 'webpack';
 import merge from 'webpack-merge';
-import { useElectronAdapterConfig } from './module';
+import { useElectronAdapterConfig } from '../config';
 import { Config } from '../type';
 
 export function buildWebpackBaseConfig(

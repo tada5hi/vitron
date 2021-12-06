@@ -32,3 +32,9 @@ export type Command = {
 export type CommandType = 'build' | 'dev';
 
 export type Environment = 'production' | 'development' | 'test';
+export type RegisterRenderedFilesContext = {
+    isCorsEnabled?: boolean,
+    scheme?: string
+    directory: string,
+    partition?: string
+};

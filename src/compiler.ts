@@ -1,5 +1,5 @@
 import webpack from 'webpack';
-import { buildWebpackConfig } from './config';
+import { buildWebpackConfig } from './utils';
 
 const args : string[] = process.argv.slice(2);
 const directory = args.shift();

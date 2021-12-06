@@ -4,7 +4,7 @@ import spawn from 'cross-spawn';
 import { webpack } from 'webpack';
 import { BaseError } from '@typescript-error/core';
 import path from 'path';
-import { buildWebpackConfig } from '../../config/webpack';
+import { buildWebpackConfig } from '../../utils/webpack';
 import { useElectronAdapterConfig } from '../../config/module';
 import { runRendererCommand } from '../../renderer/run-command';
 

@@ -7,5 +7,4 @@
 
 export * from './build-clear';
 export * from './run-command';
-export * from './electron-register';
-export * from './type';
+export * from '../electron';

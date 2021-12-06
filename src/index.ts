@@ -6,6 +6,5 @@
  */
 
 export * from './config';
-export * from './renderer';
-export * from './utils';
+export * from './electron';
 export * from './type';
