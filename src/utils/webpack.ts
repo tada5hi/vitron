@@ -31,7 +31,7 @@ export function buildWebpackBaseConfig(
         resolve: {
             extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
             modules: [
-                path.join(config.rootPath, config.buildDirectory),
+                path.join(config.rootPath, config.buildTempDirectory),
                 'node_modules',
             ],
         },
@@ -80,7 +80,7 @@ export function buildWebpackConfig(
             },
             output: {
                 filename: 'index.js',
-                path: path.join(directoryPath, config.buildDirectory),
+                path: path.join(directoryPath, config.buildTempDirectory),
             },
         },
     );

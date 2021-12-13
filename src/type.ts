@@ -9,6 +9,7 @@ export type Config = {
     rootPath?: string,
 
     buildDirectory?: string,
+    buildTempDirectory?: string,
     mainDirectory?: string,
 
     webpack?: (config: Configuration, env: Environment) => Configuration,

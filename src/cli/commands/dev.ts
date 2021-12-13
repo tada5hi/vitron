@@ -59,7 +59,7 @@ export class DevCommand implements CommandModule {
             let rendererProcess: ChildProcess;
 
             const startMainProcess = () => {
-                mainProcess = spawn('electron', [path.join(config.rootPath, config.buildDirectory, 'index.js')], {
+                mainProcess = spawn('electron', [path.join(config.rootPath, config.buildTempDirectory, 'index.js')], {
                     detached: false,
                     env: {
                         ELECTRON_MAIN_PORT: `${port}`,
@@ -100,7 +100,7 @@ export class DevCommand implements CommandModule {
             rendererProcess = startRendererProcess();
 
             const webpackConfig = buildWebpackConfig('development', baseDirectoryPath);
-            const compiler = webpack(webpackConfig, (err, stats) => {
+            const compiler = webpack(webpackConfig, (err: Error | undefined, stats: any) => {
                 if (err) {
                     process.exit(1);
                 } else {

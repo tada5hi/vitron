@@ -57,8 +57,8 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...flagsMapped);
 
         // Clear old build data
+        fs.removeSync(path.join(baseDirectoryPath, config.buildTempDirectory));
         fs.removeSync(path.join(baseDirectoryPath, config.buildDirectory));
-        fs.removeSync(path.join(baseDirectoryPath, 'dist'));
 
         // Clear old renderer data
         clearRendererBuilds(config);

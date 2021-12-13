@@ -29,7 +29,7 @@ export function runRendererCommand(type: CommandType, config: Config) : ChildPro
                         break;
                     case 'build':
                         commands.push({ key: 'next', args: ['build', renderDirectoryPath] });
-                        commands.push({ key: 'next', args: ['export', '-o', path.join(config.rootPath, config.buildDirectory), renderDirectoryPath] });
+                        commands.push({ key: 'next', args: ['export', '-o', path.join(config.rootPath, config.buildTempDirectory), renderDirectoryPath] });
                         break;
                 }
                 break;
@@ -74,15 +74,55 @@ export function runRendererCommand(type: CommandType, config: Config) : ChildPro
         }
     }
 
-    if (
-        type === 'build' &&
-        config.framework &&
-        config.framework === 'nuxt'
-    ) {
-        fs.copySync(
-            path.join(renderDirectoryPath, 'dist'),
-            path.join(config.rootPath, config.buildDirectory),
-        );
+    if (type === 'build') {
+        const rendererBuildDirectories : string[] = [];
+
+        if (config.rendererBuildPaths) {
+            rendererBuildDirectories.push(...config.rendererBuildPaths);
+        }
+
+        if (rendererBuildDirectories.length === 0) {
+            if (config.framework) {
+                switch (config.framework) {
+                    case 'nuxt':
+                    case 'next':
+                        rendererBuildDirectories.push('dist');
+                        break;
+                }
+            }
+        }
+
+        if (rendererBuildDirectories.length > 0) {
+            const isSingle = rendererBuildDirectories.length === 1;
+
+            for (let i = 0; i < rendererBuildDirectories.length; i++) {
+                let destinationPath = path.join(config.rootPath, config.buildTempDirectory);
+                if (!isSingle) {
+                    const sourceFolderName = rendererBuildDirectories[i].split(path.sep).pop();
+                    destinationPath = path.join(destinationPath, sourceFolderName);
+                }
+
+                fs.copySync(
+                    path.join(renderDirectoryPath, rendererBuildDirectories[i]),
+                    destinationPath,
+                );
+            }
+        } else {
+            const destinationPath = path.join(config.rootPath, config.buildTempDirectory);
+
+            const rendererDistPath = path.join(renderDirectoryPath, 'dist');
+            if (fs.existsSync(rendererDistPath)) {
+                fs.copySync(
+                    path.join(rendererDistPath),
+                    destinationPath,
+                );
+            } else {
+                fs.copySync(
+                    renderDirectoryPath,
+                    destinationPath,
+                );
+            }
+        }
     }
 
     return command ? spawn(command.key, command.args, spawnOptions) : undefined;

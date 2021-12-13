@@ -23,7 +23,7 @@ let mainWindow : BrowserWindow;
 (async () => {
     if(isProd) {
         const directory = __dirname.split(path.sep).pop();
-        registerRenderedFiles({directory: directory || {{buildDirectory}}});
+        registerRenderedFiles({directory: directory || {{buildTempDirectory}});
     }
 
     await app.whenReady();

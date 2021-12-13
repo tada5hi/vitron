@@ -79,7 +79,7 @@ export class InitCommand implements CommandModule {
                     templateMap[i].srcPath,
                     templateMap[i].destPath,
                     {
-                        buildDirectory: config.buildDirectory,
+                        buildTempDirectory: config.buildTempDirectory,
                     },
                 );
                 promises.push(promise);

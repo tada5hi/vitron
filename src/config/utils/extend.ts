@@ -19,7 +19,11 @@ export function extendElectronAdapterConfig(config: Config, directoryPath: strin
     }
 
     if (!config.buildDirectory) {
-        config.buildDirectory = '.electron-adapter';
+        config.buildDirectory = 'dist';
+    }
+
+    if (!config.buildTempDirectory) {
+        config.buildTempDirectory = '.electron-adapter';
     }
 
     if (!config.rendererDirectory) {

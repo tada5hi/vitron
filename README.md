@@ -53,10 +53,11 @@ module.exports = {
     
     // rootPath: '',
     
-    // buildDirectory: '.electron-adapter',
-    mainDirectory: 'src/main',
+    // buildDirectory: 'dist',
+    // buildTempDirectory: '.electron-adapter',
+    mainDirectory: 'main',
 
-    rendererDirectory: 'src/renderer'
+    rendererDirectory: 'renderer'
 }
 ```
 
