@@ -1,10 +1,9 @@
 import { Configuration } from 'webpack';
 import {
-    ChildProcessWithoutNullStreams,
     SpawnOptions,
     SpawnSyncOptions,
-    spawn, spawnSync,
 } from 'child_process';
+import spawn from 'cross-spawn';
 
 export type Config = {
     port?: number,
@@ -21,8 +20,8 @@ export type Config = {
 
     rendererDirectory?: string,
     rendererBuildPaths?: string[],
-    rendererBuildCommands?: (context: ConfigCommandContext) => ChildProcessWithoutNullStreams | undefined,
-    rendererDevCommands?: (context: ConfigCommandContext) => ChildProcessWithoutNullStreams | undefined
+    rendererBuildCommands?: (context: ConfigCommandContext) => any | undefined,
+    rendererDevCommands?: (context: ConfigCommandContext) => any | undefined
 };
 
 export type ConfigBaseContext = {
@@ -32,7 +31,7 @@ export type ConfigBaseContext = {
 export type ConfigCommandContext = ConfigBaseContext & {
     rootPath: string,
     exec: typeof spawn,
-    execSync: typeof spawnSync,
+    execSync: typeof spawn.sync,
     execOptions: SpawnSyncOptions
 };
 
@@ -46,8 +45,6 @@ export type Command = {
     args: string[],
     execOptions?: SpawnOptions
 };
-
-export type CommandType = 'build' | 'dev';
 
 export type Environment = 'production' | 'development' | 'test';
 export type RegisterRenderedFilesContext = {

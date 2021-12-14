@@ -6,7 +6,8 @@
  */
 
 import path from 'path';
-import { SpawnSyncOptions, spawn, spawnSync } from 'child_process';
+import spawn from 'cross-spawn';
+import { SpawnSyncOptions } from 'child_process';
 import { Config } from '../../type';
 import { moveRendererBuildDirectory } from './utils';
 
@@ -23,19 +24,19 @@ export function runRendererBuildCommand(config: Config): void {
             env: 'production',
             rootPath: config.rootPath,
             exec: spawn,
-            execSync: spawnSync,
+            execSync: spawn.sync,
             execOptions,
         });
     }
     if (config.framework) {
         switch (config.framework) {
             case 'nuxt':
-                spawnSync('nuxt', ['build', renderDirectoryPath], execOptions);
-                spawnSync('nuxt', ['generate', renderDirectoryPath], execOptions);
+                spawn.sync('nuxt', ['build', renderDirectoryPath], execOptions);
+                spawn.sync('nuxt', ['generate', renderDirectoryPath], execOptions);
                 break;
             case 'next':
-                spawnSync('next', ['build', renderDirectoryPath], execOptions);
-                spawnSync('next', ['export', '-o', path.join(config.rootPath, config.buildTempDirectory), renderDirectoryPath], execOptions);
+                spawn.sync('next', ['build', renderDirectoryPath], execOptions);
+                spawn.sync('next', ['export', '-o', path.join(config.rootPath, config.buildTempDirectory), renderDirectoryPath], execOptions);
                 break;
         }
     } else {

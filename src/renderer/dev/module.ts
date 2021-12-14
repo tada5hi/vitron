@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    ChildProcessWithoutNullStreams, SpawnSyncOptions, spawn, spawnSync,
-} from 'child_process';
+import spawn from 'cross-spawn';
+import { SpawnSyncOptions } from 'child_process';
 import { Config } from '../../type';
 
-export function runRendererDevCommand(config: Config): ChildProcessWithoutNullStreams | undefined {
+export function runRendererDevCommand(config: Config): any | undefined {
     const execOptions: SpawnSyncOptions = {
         cwd: config.rootPath,
         stdio: 'inherit',
@@ -21,7 +20,7 @@ export function runRendererDevCommand(config: Config): ChildProcessWithoutNullSt
             env: 'production',
             rootPath: config.rootPath,
             exec: spawn,
-            execSync: spawnSync,
+            execSync: spawn.sync,
             execOptions,
         });
     }
