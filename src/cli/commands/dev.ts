@@ -4,9 +4,9 @@ import spawn from 'cross-spawn';
 import { webpack } from 'webpack';
 import { BaseError } from '@typescript-error/core';
 import path from 'path';
-import { buildWebpackConfig } from '../../utils/webpack';
-import { useElectronAdapterConfig } from '../../config/module';
-import { runRendererCommand } from '../../renderer/run-command';
+import { buildWebpackConfig } from '../../utils';
+import { useElectronAdapterConfig } from '../../config';
+import { runRendererDevCommand } from '../../renderer';
 
 export interface DevArguments extends Arguments {
     root: string;
@@ -71,7 +71,7 @@ export class DevCommand implements CommandModule {
             };
 
             const startRendererProcess = () => {
-                const child = runRendererCommand('dev', config);
+                const child = runRendererDevCommand(config);
 
                 if (typeof child === 'undefined') {
                     throw new BaseError('No renderer process command provided...');

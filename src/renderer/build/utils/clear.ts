@@ -1,9 +1,16 @@
-import fs from 'fs-extra';
+/*
+ * Copyright (c) 2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import path from 'path';
-import { Config } from '../type';
+import fs from 'fs-extra';
+import { Config } from '../../../type';
 
 export function clearRendererBuilds(config: Config) {
-    const rendererFiles : string[] = [];
+    const rendererFiles: string[] = [];
 
     if (config.framework) {
         switch (config.framework) {
@@ -24,7 +31,7 @@ export function clearRendererBuilds(config: Config) {
 
     const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
 
-    const directoryPaths : string[] = [
+    const directoryPaths: string[] = [
         ...(
             config.rendererBuildPaths ?
                 config.rendererBuildPaths.map((directoryPath) => (

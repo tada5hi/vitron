@@ -1,5 +1,10 @@
 import { Configuration } from 'webpack';
-import { SpawnOptions } from 'child_process';
+import {
+    ChildProcessWithoutNullStreams,
+    SpawnOptions,
+    SpawnSyncOptions,
+    spawn, spawnSync,
+} from 'child_process';
 
 export type Config = {
     port?: number,
@@ -12,22 +17,34 @@ export type Config = {
     buildTempDirectory?: string,
     mainDirectory?: string,
 
-    webpack?: (config: Configuration, env: Environment) => Configuration,
+    webpack?: (context: ConfigWebpackContext) => Configuration,
 
     rendererDirectory?: string,
     rendererBuildPaths?: string[],
-    rendererBuildCommands?: Command[] |
-    ((env: Environment, rootPath: string) => Command[]),
-    rendererDevCommands?: Command[] |
-    ((env: Environment, rootPath: string) => Command[])
+    rendererBuildCommands?: (context: ConfigCommandContext) => ChildProcessWithoutNullStreams | undefined,
+    rendererDevCommands?: (context: ConfigCommandContext) => ChildProcessWithoutNullStreams | undefined
+};
+
+export type ConfigBaseContext = {
+    env: Environment
+};
+
+export type ConfigCommandContext = ConfigBaseContext & {
+    rootPath: string,
+    exec: typeof spawn,
+    execSync: typeof spawnSync,
+    execOptions: SpawnSyncOptions
+};
+
+export type ConfigWebpackContext = ConfigBaseContext & {
+    config: Configuration
 };
 
 export type Framework = 'nuxt' | 'next';
-
 export type Command = {
     key: string,
-    args?: string[],
-    options?: SpawnOptions
+    args: string[],
+    execOptions?: SpawnOptions
 };
 
 export type CommandType = 'build' | 'dev';

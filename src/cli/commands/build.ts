@@ -3,8 +3,8 @@ import path from 'path';
 import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import fs from 'fs-extra';
-import { useElectronAdapterConfig } from '../../config/module';
-import { clearRendererBuilds, runRendererCommand } from '../../renderer';
+import { useElectronAdapterConfig } from '../../config';
+import { clearRendererBuilds, runRendererBuildCommand } from '../../renderer';
 
 export interface BuildArguments extends Arguments {
     root: string;
@@ -64,7 +64,7 @@ export class BuildCommand implements CommandModule {
         clearRendererBuilds(config);
 
         // build renderer output
-        runRendererCommand('build', config);
+        runRendererBuildCommand(config);
 
         const spawnOptions: SpawnSyncOptions = {
             cwd: baseDirectoryPath,

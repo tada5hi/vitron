@@ -86,7 +86,10 @@ export function buildWebpackConfig(
     );
 
     if (typeof config.webpack === 'function') {
-        return config.webpack(webpackConfig, env);
+        return config.webpack({
+            config: webpackConfig,
+            env,
+        });
     }
 
     return webpackConfig;
