@@ -39,7 +39,7 @@ export function runRendererBuildCommand(config: Config): void {
                 break;
         }
     } else {
-        // todo: serve static files in renderer/dist or renderer folder.
+        // todo: build static files in renderer/dist or renderer folder.
     }
 
     moveRendererBuildDirectory(config);

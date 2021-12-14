@@ -32,15 +32,15 @@ electron-adapter init
 This will create the following files/directories, if they do not already exist:
 
 **Directories**
-- src/main
-- src/renderer
+- main
+- renderer
 
 **Files**
-- src/main/index.ts
+- main/index.ts
 - .electron-builder.yml
 - tsconfig.json
 
-The `src/main` & `src/renderer` path and other specifications, 
+The `main` & `renderer` path and other specifications, 
 can be changed with a configuration file in the root directory  of the project.
 
 Therefore, create a `.electron-adapter.yml` file in the root folder with the following content:
