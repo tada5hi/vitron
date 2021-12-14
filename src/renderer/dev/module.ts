@@ -8,12 +8,9 @@
 import {
     ChildProcessWithoutNullStreams, SpawnSyncOptions, spawn, spawnSync,
 } from 'child_process';
-import path from 'path';
 import { Config } from '../../type';
 
 export function runRendererDevCommand(config: Config): ChildProcessWithoutNullStreams | undefined {
-    const renderDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
-
     const execOptions: SpawnSyncOptions = {
         cwd: config.rootPath,
         stdio: 'inherit',
@@ -30,10 +27,15 @@ export function runRendererDevCommand(config: Config): ChildProcessWithoutNullSt
     }
     if (config.framework) {
         switch (config.framework) {
-            case 'nuxt':
-                return spawn('nuxt', ['-p', config.port.toString(), renderDirectoryPath], execOptions);
+            case 'nuxt': {
+                const proc = spawn('nuxt', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
+                proc.on('error', (e) => {
+                    console.log(e);
+                });
+                return proc;
+            }
             case 'next':
-                return spawn('next', ['-p', config.port.toString(), renderDirectoryPath], execOptions);
+                return spawn('next', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
         }
     } else {
         // todo: serve static files in renderer/dist or renderer folder.
