@@ -7,9 +7,12 @@
 
 import spawn from 'cross-spawn';
 import { SpawnSyncOptions } from 'child_process';
+import WebpackDevServer from 'webpack-dev-server';
+import path from 'path';
 import { Config } from '../../type';
+import { RendererInstance } from '../type';
 
-export function runRendererDevCommand(config: Config): any | undefined {
+export function runRendererDevCommand(config: Config): RendererInstance | undefined {
     const execOptions: SpawnSyncOptions = {
         cwd: config.rootPath,
         stdio: 'inherit',
@@ -27,17 +30,32 @@ export function runRendererDevCommand(config: Config): any | undefined {
     if (config.framework) {
         switch (config.framework) {
             case 'nuxt': {
-                const proc = spawn('nuxt', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
-                proc.on('error', (e) => {
-                    console.log(e);
-                });
-                return proc;
+                return {
+                    type: 'childProcess',
+                    value: spawn('nuxt', ['-p', config.port.toString(), config.rendererDirectory], execOptions),
+                };
             }
             case 'next':
-                return spawn('next', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
+                return {
+                    type: 'childProcess',
+                    value: spawn('next', ['-p', config.port.toString(), config.rendererDirectory], execOptions),
+                };
         }
     } else {
-        // todo: serve static files in renderer/dist or renderer folder.
+        const server = new WebpackDevServer({
+            static: {
+                directory: path.join(config.rootPath, config.rendererDirectory),
+            },
+            watchFiles: path.join(config.rootPath, config.rendererDirectory, '**', '*'),
+            compress: true,
+            port: config.port,
+            hot: true,
+        });
+
+        return {
+            type: 'webpackDevServer',
+            value: server,
+        };
     }
 
     return undefined;

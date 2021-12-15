@@ -1,10 +1,10 @@
 import webpack from 'webpack';
-import { buildWebpackConfig } from './utils';
+import { buildMainWebpackConfig } from './utils';
 
 const args : string[] = process.argv.slice(2);
 const directory = args.shift();
 
-const compiler = webpack(buildWebpackConfig('production', directory));
+const compiler = webpack(buildMainWebpackConfig('production', directory));
 
 compiler.run((err: Error, stats: webpack.Stats) => {
     if (err) {

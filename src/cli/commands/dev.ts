@@ -4,9 +4,10 @@ import spawn from 'cross-spawn';
 import { webpack } from 'webpack';
 import { BaseError } from '@typescript-error/core';
 import path from 'path';
-import { buildWebpackConfig } from '../../utils';
+import { buildMainWebpackConfig } from '../../utils';
 import { useElectronAdapterConfig } from '../../config';
 import { runRendererDevCommand } from '../../renderer';
+import { RendererInstance } from '../../renderer/type';
 
 export interface DevArguments extends Arguments {
     root: string;
@@ -56,7 +57,7 @@ export class DevCommand implements CommandModule {
             let firstCompile = true;
             let watching: any;
             let mainProcess: ChildProcess;
-            let rendererProcess: ChildProcess;
+            let rendererInstance: RendererInstance;
 
             const startMainProcess = () => {
                 mainProcess = spawn('electron', [path.join(config.rootPath, config.buildTempDirectory, 'index.js')], {
@@ -70,7 +71,7 @@ export class DevCommand implements CommandModule {
                 mainProcess.unref();
             };
 
-            const startRendererProcess = () => {
+            const startRendererInstance = async () : Promise<RendererInstance> => {
                 const child = runRendererDevCommand(config);
 
                 if (typeof child === 'undefined') {
@@ -80,16 +81,25 @@ export class DevCommand implements CommandModule {
                 return child;
             };
 
-            const killWholeProcess = () => {
+            const killWholeProcess = async () => {
                 if (watching) {
                     watching.close(() => {
                     });
                 }
+
                 if (mainProcess) {
                     mainProcess.kill();
                 }
-                if (rendererProcess) {
-                    rendererProcess.kill();
+
+                if (rendererInstance) {
+                    switch (rendererInstance.type) {
+                        case 'childProcess':
+                            rendererInstance.value.kill();
+                            break;
+                        case 'webpackDevServer':
+                            await rendererInstance.value.stop();
+                            break;
+                    }
                 }
             };
 
@@ -97,9 +107,12 @@ export class DevCommand implements CommandModule {
             process.on('SIGTERM', killWholeProcess);
             process.on('exit', killWholeProcess);
 
-            rendererProcess = startRendererProcess();
+            rendererInstance = await startRendererInstance();
+            if (rendererInstance.type === 'webpackDevServer') {
+                await rendererInstance.value.start();
+            }
 
-            const webpackConfig = buildWebpackConfig('development', baseDirectoryPath);
+            const webpackConfig = buildMainWebpackConfig('development', baseDirectoryPath);
             const compiler = webpack(webpackConfig, (err: Error | undefined, stats: any) => {
                 if (err) {
                     process.exit(1);

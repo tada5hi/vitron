@@ -43,11 +43,11 @@ export class BuildCommand implements CommandModule {
         const builderArgs : string[] = [];
 
         // Project directory
-        const baseDirectoryPath = args.root || process.cwd();
-        builderArgs.push(...['--project', baseDirectoryPath]);
+        const rootPath = args.root || process.cwd();
+        builderArgs.push(...['--project', rootPath]);
 
         // Config
-        const config = useElectronAdapterConfig(baseDirectoryPath);
+        const config = useElectronAdapterConfig(rootPath);
 
         const configFileName = args.config || 'electron-builder.yml';
         builderArgs.push(...['--config', configFileName]);
@@ -57,8 +57,8 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...flagsMapped);
 
         // Clear old build data
-        fs.removeSync(path.join(baseDirectoryPath, config.buildTempDirectory));
-        fs.removeSync(path.join(baseDirectoryPath, config.buildDirectory));
+        fs.removeSync(path.join(rootPath, config.buildTempDirectory));
+        fs.removeSync(path.join(rootPath, config.buildDirectory));
 
         // Clear old renderer data
         clearRendererBuilds(config);
@@ -67,11 +67,29 @@ export class BuildCommand implements CommandModule {
         runRendererBuildCommand(config);
 
         const spawnOptions: SpawnSyncOptions = {
-            cwd: baseDirectoryPath,
+            cwd: rootPath,
             stdio: 'inherit',
         };
+        /*
+        const compiler = webpack(buildMainWebpackConfig('production', rootPath));
 
-        spawn.sync('node', [path.join(__dirname, '..', '..', 'compiler'), baseDirectoryPath], spawnOptions);
+        await new Promise(((resolve, reject) => {
+            compiler.run((err: Error, stats: webpack.Stats) => {
+                if (err) {
+                    // eslint-disable-next-line no-console
+                    console.error(err.stack || err);
+                    reject(err);
+                }
+                if (stats.hasErrors()) {
+                    // eslint-disable-next-line no-console
+                    console.error(stats.toString());
+                }
+
+                resolve(stats);
+            });
+        }));
+        */
+        spawn.sync('node', [path.join(__dirname, '..', '..', 'compiler'), rootPath], spawnOptions);
 
         spawn.sync('electron-builder', builderArgs, spawnOptions);
     }

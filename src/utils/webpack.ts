@@ -9,62 +9,8 @@ import path from 'path';
 import webpack from 'webpack';
 import merge from 'webpack-merge';
 import { useElectronAdapterConfig } from '../config';
-import { Config } from '../type';
 
-export function buildWebpackBaseConfig(
-    env: 'development' | 'production',
-    config: Config,
-) : webpack.Configuration {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const externals = require(path.join(config.rootPath, 'package.json'))
-        .dependencies;
-
-    return {
-        mode: env,
-        target: 'electron-main',
-        node: {
-            __dirname: false,
-            __filename: false,
-        },
-        externals: [...Object.keys(externals || {})],
-        devtool: 'source-map',
-        resolve: {
-            extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
-            modules: [
-                path.join(config.rootPath, config.buildTempDirectory),
-                'node_modules',
-            ],
-        },
-        output: {
-            libraryTarget: 'commonjs2',
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.(js|ts)x?$/,
-                    use: {
-                        loader: 'babel-loader',
-                        options: {
-                            cacheDirectory: true,
-                            presets: ['@babel/preset-typescript'],
-                        },
-                    },
-                    exclude: [
-                        /node_modules/,
-                        path.join(config.rootPath, config.rendererDirectory),
-                    ],
-                },
-            ],
-        },
-        plugins: [
-            new webpack.EnvironmentPlugin({
-                NODE_ENV: env,
-            }),
-        ],
-    };
-}
-
-export function buildWebpackConfig(
+export function buildMainWebpackConfig(
     env: 'development' | 'production',
     directoryPath?: string,
 ) : webpack.Configuration {
@@ -72,8 +18,55 @@ export function buildWebpackConfig(
 
     const config = useElectronAdapterConfig(directoryPath);
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
+    const externals = require(path.join(config.rootPath, 'package.json'))
+        .dependencies;
+
     const webpackConfig = merge(
-        buildWebpackBaseConfig(env, config),
+        {
+            mode: env,
+            target: 'electron-main',
+            node: {
+                __dirname: false,
+                __filename: false,
+            },
+            externals: [...Object.keys(externals || {})],
+            devtool: 'source-map',
+            resolve: {
+                extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
+                modules: [
+                    path.join(__dirname, '..', '..', 'node_modules'),
+                    path.join(config.rootPath, config.buildTempDirectory),
+                    path.join(config.rootPath, 'node_modules'),
+                ],
+            },
+            output: {
+                libraryTarget: 'commonjs2',
+            },
+            module: {
+                rules: [
+                    {
+                        test: /\.(js|ts)x?$/,
+                        use: {
+                            loader: 'babel-loader',
+                            options: {
+                                cacheDirectory: true,
+                                presets: ['@babel/preset-typescript'],
+                            },
+                        },
+                        exclude: [
+                            /node_modules/,
+                            path.join(config.rootPath, config.rendererDirectory),
+                        ],
+                    },
+                ],
+            },
+            plugins: [
+                new webpack.EnvironmentPlugin({
+                    NODE_ENV: env,
+                }),
+            ],
+        },
         {
             entry: {
                 index: path.join(directoryPath, config.mainDirectory, 'index.ts'),
