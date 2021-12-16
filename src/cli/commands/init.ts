@@ -88,14 +88,13 @@ export class InitCommand implements CommandModule {
 
             const promises : Promise<any>[] = [];
 
-            const prettyPath = config.entrypointDirectory.replace(/\\/g, '/');
-
             for (let i = 0; i < templateMap.length; i++) {
                 const promise : Promise<any> = copyTemplateFile(
                     templateMap[i].srcPath,
                     templateMap[i].destPath,
                     {
-                        entrypointDistDirectory: `${prettyPath}/dist`,
+                        entrypointDistDirectory: `${config.entrypointDirectory.replace(/\\/g, '/')}/dist`,
+                        buildDirectory: config.buildDirectory.replace(/\\/g, '/'),
                     },
                 );
                 promises.push(promise);
