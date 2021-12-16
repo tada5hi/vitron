@@ -118,12 +118,7 @@ export class WebpackCommand implements CommandModule {
                 );
             }
 
-            const compiler = webpack(configuration, ((err) => {
-                if (err) {
-                    console.error(err.stack || err);
-                    process.exit(1);
-                }
-            }));
+            const compiler = webpack(configuration);
 
             switch (args.cmd) {
                 case 'build': {

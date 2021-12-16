@@ -6,6 +6,7 @@ import spawn from 'cross-spawn';
 
 export type Config = {
     port?: number,
+    npmClient?: NpmClient,
 
     framework?: Framework,
 
@@ -38,6 +39,7 @@ export type ConfigWebpackContext = {
     env: Environment
 };
 
+export type NpmClient = 'npm' | 'yarn';
 export type Framework = 'nuxt' | 'next';
 
 export type Environment = 'production' | 'development' | 'test';

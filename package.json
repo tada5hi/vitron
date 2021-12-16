@@ -67,6 +67,7 @@
         "typescript": "^4.5.4"
     },
     "peerDependencies": {
-        "electron": "16.x"
+        "electron": "16.x",
+        "electron-builder": "^22.x"
     }
 }

@@ -1,0 +1,16 @@
+{
+    "name": "electron-adpater-app",
+    "version": "1.0.0",
+    "main": "index.js",
+    "description": "This is my first app build with electron-adapter",
+    "scripts": {
+        "dev": "electron-adapter dev",
+        "build": "electron-adapter build"
+    },
+    "license": "ISC",
+    "devDependencies": {
+        "electron": "^16.0.4",
+        "electron-adapter": "latest",
+        "electron-builder": "^22.14.5"
+    }
+}
