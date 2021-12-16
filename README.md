@@ -32,15 +32,17 @@ electron-adapter init
 This will create the following files/directories, if they do not already exist:
 
 **Directories**
-- main
-- renderer
+- entrypoint
+- src
 
 **Files**
-- main/index.ts
 - .electron-builder.yml
 - tsconfig.json
+- entrypoint/src/index.ts
+- src/index.js
+- src/index.html
 
-The `main` & `renderer` path and other specifications, 
+The `src` & `renderer` path and other specifications, 
 can be changed with a configuration file in the root directory  of the project.
 
 Therefore, create a `.electron-adapter.yml` file in the root folder with the following content:
@@ -54,10 +56,12 @@ module.exports = {
     // rootPath: '',
     
     // buildDirectory: 'dist',
-    // buildTempDirectory: '.electron-adapter',
-    mainDirectory: 'main',
-
-    rendererDirectory: 'renderer'
+    
+    entrypointDirectory: 'src',
+    // entrypointWebpack: undefined, 
+    
+    rendererDirectory: 'renderer',
+    // rendererWebpack: undefined, 
 }
 ```
 

@@ -1,6 +1,5 @@
 import { Configuration } from 'webpack';
 import {
-    SpawnOptions,
     SpawnSyncOptions,
 } from 'child_process';
 import spawn from 'cross-spawn';
@@ -13,38 +12,33 @@ export type Config = {
     rootPath?: string,
 
     buildDirectory?: string,
-    buildTempDirectory?: string,
-    entrypointDirectory?: string,
 
-    webpack?: (context: ConfigWebpackContext) => Configuration,
+    entrypointDirectory?: string,
+    entrypointWebpack?: (context: ConfigWebpackContext) => Configuration,
 
     rendererDirectory?: string,
     rendererBuildPaths?: string[],
     rendererBuildCommands?: (context: ConfigCommandContext) => any | undefined,
-    rendererDevCommands?: (context: ConfigCommandContext) => any | undefined
+    rendererDevCommands?: (context: ConfigCommandContext) => any | undefined,
+    rendererWebpack?: (context: ConfigWebpackContext) => Configuration
 };
 
-export type ConfigBaseContext = {
+export type ConfigCommandContext = {
     env: Environment
-};
-
-export type ConfigCommandContext = ConfigBaseContext & {
     rootPath: string,
+
     exec: typeof spawn,
     execSync: typeof spawn.sync,
     execOptions: SpawnSyncOptions
 };
 
-export type ConfigWebpackContext = ConfigBaseContext & {
-    config: Configuration
+export type ConfigWebpackContext = {
+    webpackConfig: Configuration,
+    rootConfig: Config,
+    env: Environment
 };
 
 export type Framework = 'nuxt' | 'next';
-export type Command = {
-    key: string,
-    args: string[],
-    execOptions?: SpawnOptions
-};
 
 export type Environment = 'production' | 'development' | 'test';
 export type RegisterRenderedFilesContext = {

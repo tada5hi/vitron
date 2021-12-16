@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import webpack from 'webpack';
+import webpack, { Configuration } from 'webpack';
 import merge from 'webpack-merge';
 import { useElectronAdapterConfig } from '../../config';
 
@@ -22,69 +22,64 @@ export function buildEntrypointWebpackConfig(
     const externals = require(path.join(config.rootPath, 'package.json'))
         .dependencies;
 
-    const webpackConfig = merge(
-        {
-            mode: env,
-            target: 'electron-main',
-            node: {
-                __dirname: false,
-                __filename: false,
-            },
-            externals: [...Object.keys(externals || {})],
-            devtool: 'source-map',
-            resolve: {
-                extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
-                modules: [
-                    path.join(config.rootPath, config.entrypointDirectory, 'dist'),
-                    path.join(config.rootPath, 'node_modules'),
-                    path.join(__dirname, '..', '..', '..', 'node_modules'),
-                    'node_modules',
-                ],
-            },
-            output: {
-                libraryTarget: 'commonjs2',
-            },
-            module: {
-                rules: [
-                    {
-                        test: /\.(js|ts)x?$/,
-                        use: {
-                            loader: path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader'),
-                            options: {
-                                cacheDirectory: true,
-                                presets: [path.join(__dirname, '..', '..', '..', 'node_modules', '@babel', 'preset-typescript')],
-                            },
-                        },
-                        exclude: [
-                            /node_modules/,
-                            path.join(config.rootPath, config.rendererDirectory),
-                            path.join(config.rootPath, config.entrypointDirectory, 'dist'),
-                        ],
-                    },
-                ],
-            },
-            plugins: [
-                new webpack.EnvironmentPlugin({
-                    NODE_ENV: env,
-                }),
+    const webpackConfig : Configuration = {
+        mode: env,
+        target: 'electron-main',
+        node: {
+            __dirname: false,
+            __filename: false,
+        },
+        externals: [...Object.keys(externals || {})],
+        entry: {
+            index: path.join(directoryPath, config.entrypointDirectory, 'src', 'index.ts'),
+        },
+        output: {
+            libraryTarget: 'commonjs2',
+            filename: 'index.js',
+            path: path.join(directoryPath, config.entrypointDirectory, 'dist'),
+        },
+        devtool: 'source-map',
+        resolve: {
+            extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
+            modules: [
+                path.join(config.rootPath, config.entrypointDirectory, 'dist'),
+                path.join(config.rootPath, 'node_modules'),
+                path.join(__dirname, '..', '..', '..', 'node_modules'),
+                'node_modules',
             ],
         },
-        {
-            entry: {
-                index: path.join(directoryPath, config.entrypointDirectory, 'src', 'index.ts'),
-            },
-            output: {
-                filename: 'index.js',
-                path: path.join(directoryPath, config.entrypointDirectory, 'dist'),
-            },
+        module: {
+            rules: [
+                {
+                    test: /\.(js|ts)x?$/,
+                    use: {
+                        loader: path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader'),
+                        options: {
+                            cacheDirectory: true,
+                            presets: [path.join(__dirname, '..', '..', '..', 'node_modules', '@babel', 'preset-typescript')],
+                        },
+                    },
+                    exclude: [
+                        /node_modules/,
+                        path.join(config.rootPath, config.rendererDirectory),
+                        path.join(config.rootPath, config.entrypointDirectory, 'dist'),
+                    ],
+                },
+            ],
         },
-    );
+        plugins: [
+            new webpack.EnvironmentPlugin({
+                NODE_ENV: env,
+            }),
+        ],
+    };
 
-    if (typeof config.webpack === 'function') {
-        return config.webpack({
-            config: webpackConfig,
+    if (typeof config.entrypointWebpack === 'function') {
+        return merge(config.entrypointWebpack({
+            webpackConfig,
+            rootConfig: config,
             env,
-        });
+        }));
     }
 
     return webpackConfig;

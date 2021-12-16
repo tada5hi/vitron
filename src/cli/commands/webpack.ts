@@ -7,20 +7,22 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import webpack, { Configuration } from 'webpack';
+import merge from 'webpack-merge';
 import WebpackDevServer from 'webpack-dev-server';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import path from 'path';
 import { useElectronAdapterConfig } from '../../config';
+import { Environment } from '../../type';
 
 export interface WebpackArguments extends Arguments {
     root: string;
-    cmd: 'build' | 'dev';
+    cmd: string;
 }
 
 export class WebpackCommand implements CommandModule {
     command = 'webpack';
 
-    describe = 'Run a static html directory in hmr mode.';
+    describe = 'Bundle a static web application for development or production.';
 
     builder(args: Argv) {
         return args
@@ -46,8 +48,12 @@ export class WebpackCommand implements CommandModule {
             // Config
             const config = useElectronAdapterConfig(baseDirectoryPath);
 
-            const configuration : Configuration = {
-                mode: 'development',
+            const env : Environment = args.cmd === 'build' ?
+                'development' :
+                'production';
+
+            let configuration : Configuration = {
+                mode: env,
                 entry: {
                     index: path.join(config.rootPath, config.rendererDirectory),
                 },
@@ -63,6 +69,17 @@ export class WebpackCommand implements CommandModule {
                     filename: 'bundle.js',
                     path: path.join(config.rootPath, config.entrypointDirectory, 'dist'),
                 };
+            }
+
+            if (typeof config.entrypointWebpack === 'function') {
+                configuration = merge(
+                    configuration,
+                    config.entrypointWebpack({
+                        webpackConfig: configuration,
+                        rootConfig: config,
+                        env,
+                    }),
+                );
             }
 
             const compiler = webpack(configuration);
