@@ -31,7 +31,7 @@ export function buildEntrypointWebpackConfig(
         },
         externals: [...Object.keys(externals || {})],
         entry: {
-            index: path.join(directoryPath, config.entrypointDirectory, 'src', 'index.ts'),
+            index: path.join(directoryPath, config.entrypointDirectory, 'index.ts'),
         },
         output: {
             libraryTarget: 'commonjs2',
