@@ -85,8 +85,8 @@ export class WebpackCommand implements CommandModule {
                         {
                             test: /\.css$/i,
                             use: [
-                                path.join(__dirname, '..', '..', '..', 'node_modules', 'style-loader'), // todo: check rootPath node_modules before
-                                path.join(__dirname, '..', '..', '..', 'node_modules', 'css-loader'), // todo: check rootPath node_modules before
+                                'style-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'style-loader')
+                                'css-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'css-loader')
                             ],
                         },
                         {
