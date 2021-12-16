@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import yargs from 'yargs';
 import { BuildCommand, DevCommand } from './commands';
 import { InitCommand } from './commands/init';
-import { WebpackCommand } from './commands/webpack-dev';
+import { WebpackCommand } from './commands/webpack';
 
 // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 yargs
