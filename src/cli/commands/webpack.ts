@@ -77,7 +77,7 @@ export class WebpackCommand implements CommandModule {
                     rules: [
                         {
                             test: /\.html$/,
-                            loader: path.join(__dirname, '..', '..', '..', 'node_modules', 'html-loader'),
+                            loader: 'html-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'html-loader')
                             options: {
                                 minimize: true,
                             },
@@ -85,15 +85,15 @@ export class WebpackCommand implements CommandModule {
                         {
                             test: /\.css$/i,
                             use: [
-                                path.join(__dirname, '..', '..', '..', 'node_modules', 'style-loader'),
-                                path.join(__dirname, '..', '..', '..', 'node_modules', 'css-loader'),
+                                path.join(__dirname, '..', '..', '..', 'node_modules', 'style-loader'), // todo: check rootPath node_modules before
+                                path.join(__dirname, '..', '..', '..', 'node_modules', 'css-loader'), // todo: check rootPath node_modules before
                             ],
                         },
                         {
                             test: /\.m?js$/,
                             exclude: /(node_modules|bower_components)/,
                             use: {
-                                loader: path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader'),
+                                loader: 'babel-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader')
                             },
                         },
                     ],

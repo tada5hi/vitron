@@ -53,10 +53,10 @@ export function buildEntrypointWebpackConfig(
                 {
                     test: /\.(js|ts)x?$/,
                     use: {
-                        loader: path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader'),
+                        loader: 'babel-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader')
                         options: {
                             cacheDirectory: true,
-                            presets: [path.join(__dirname, '..', '..', '..', 'node_modules', '@babel', 'preset-typescript')],
+                            presets: ['@babel/preset-typescript'], // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', '@babel', 'preset-typescript')
                         },
                     },
                     exclude: [
