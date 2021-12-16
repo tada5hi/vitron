@@ -38,7 +38,7 @@ This will create the following files/directories, if they do not already exist:
 **Files**
 - .electron-builder.yml
 - tsconfig.json
-- entrypoint/src/index.ts
+- entrypoint/index.ts
 - src/index.js
 - src/index.html
 
