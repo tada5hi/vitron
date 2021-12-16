@@ -71,7 +71,7 @@ export class InitCommand implements CommandModule {
 
                 // entrypoint files
                 {
-                    srcPath: path.join(tplPath, 'entrypoint', 'src', 'index.ts.tpl'),
+                    srcPath: path.join(tplPath, 'entrypoint', 'index.ts.tpl'),
                     destPath: path.join(entrypointDirectoryPath, 'index.ts'),
                 },
 
