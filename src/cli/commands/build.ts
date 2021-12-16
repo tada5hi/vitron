@@ -3,8 +3,13 @@ import path from 'path';
 import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import fs from 'fs-extra';
+import webpack from 'webpack';
 import { useElectronAdapterConfig } from '../../config';
-import { clearRendererBuilds, runRendererBuildCommand } from '../../renderer';
+import {
+    clearRendererBuilds,
+    runRendererBuildCommand,
+} from '../../renderer';
+import { buildEntrypointWebpackConfig } from '../../entrypoint';
 
 export interface BuildArguments extends Arguments {
     root: string;
@@ -57,7 +62,7 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...flagsMapped);
 
         // Clear old build data
-        fs.removeSync(path.join(rootPath, config.buildTempDirectory));
+        fs.removeSync(path.join(rootPath, config.entrypointDirectory, 'dist'));
         fs.removeSync(path.join(rootPath, config.buildDirectory));
 
         // Clear old renderer data
@@ -70,8 +75,8 @@ export class BuildCommand implements CommandModule {
             cwd: rootPath,
             stdio: 'inherit',
         };
-        /*
-        const compiler = webpack(buildMainWebpackConfig('production', rootPath));
+
+        const compiler = webpack(buildEntrypointWebpackConfig('production', rootPath));
 
         await new Promise(((resolve, reject) => {
             compiler.run((err: Error, stats: webpack.Stats) => {
@@ -83,13 +88,12 @@ export class BuildCommand implements CommandModule {
                 if (stats.hasErrors()) {
                     // eslint-disable-next-line no-console
                     console.error(stats.toString());
+                    reject(stats);
                 }
 
                 resolve(stats);
             });
         }));
-        */
-        spawn.sync('node', [path.join(__dirname, '..', '..', 'compiler'), rootPath], spawnOptions);
 
         spawn.sync('electron-builder', builderArgs, spawnOptions);
     }

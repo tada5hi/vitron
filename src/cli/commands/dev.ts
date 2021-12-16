@@ -4,10 +4,9 @@ import spawn from 'cross-spawn';
 import { webpack } from 'webpack';
 import { BaseError } from '@typescript-error/core';
 import path from 'path';
-import { buildMainWebpackConfig } from '../../utils';
 import { useElectronAdapterConfig } from '../../config';
 import { runRendererDevCommand } from '../../renderer';
-import { RendererInstance } from '../../renderer/type';
+import { buildEntrypointWebpackConfig } from '../../entrypoint';
 
 export interface DevArguments extends Arguments {
     root: string;
@@ -44,7 +43,7 @@ export class DevCommand implements CommandModule {
             const config = useElectronAdapterConfig(baseDirectoryPath);
 
             // Port
-            const port = args.port ? parseInt(args.port, 10) : config.port || 8888;
+            const port = args.port ? parseInt(args.port, 10) : config.port || 9000;
             config.port = port;
 
             // ----------------------------------------
@@ -57,10 +56,12 @@ export class DevCommand implements CommandModule {
             let firstCompile = true;
             let watching: any;
             let mainProcess: ChildProcess;
-            let rendererInstance: RendererInstance;
+            let rendererInstance: ChildProcess;
 
             const startMainProcess = () => {
-                mainProcess = spawn('electron', [path.join(config.rootPath, config.buildTempDirectory, 'index.js')], {
+                mainProcess = spawn('electron', [
+                    path.join(config.rootPath, config.entrypointDirectory, 'dist', 'index.js'),
+                ], {
                     detached: false,
                     env: {
                         ELECTRON_MAIN_PORT: `${port}`,
@@ -68,10 +69,14 @@ export class DevCommand implements CommandModule {
                     ...spawnOptions,
                 });
 
+                mainProcess.on('exit', () => {
+                    killWholeProcess();
+                });
+
                 mainProcess.unref();
             };
 
-            const startRendererInstance = async () : Promise<RendererInstance> => {
+            const startRendererInstance = () : ChildProcess => {
                 const child = runRendererDevCommand(config);
 
                 if (typeof child === 'undefined') {
@@ -92,14 +97,7 @@ export class DevCommand implements CommandModule {
                 }
 
                 if (rendererInstance) {
-                    switch (rendererInstance.type) {
-                        case 'childProcess':
-                            rendererInstance.value.kill();
-                            break;
-                        case 'webpackDevServer':
-                            await rendererInstance.value.stop();
-                            break;
-                    }
+                    rendererInstance.kill();
                 }
             };
 
@@ -107,14 +105,12 @@ export class DevCommand implements CommandModule {
             process.on('SIGTERM', killWholeProcess);
             process.on('exit', killWholeProcess);
 
-            rendererInstance = await startRendererInstance();
-            if (rendererInstance.type === 'webpackDevServer') {
-                await rendererInstance.value.start();
-            }
+            rendererInstance = startRendererInstance();
 
-            const webpackConfig = buildMainWebpackConfig('development', baseDirectoryPath);
-            const compiler = webpack(webpackConfig, (err: Error | undefined, stats: any) => {
+            const entrypointWebpackConfig = buildEntrypointWebpackConfig('development', baseDirectoryPath);
+            const entrypointCompiler = webpack(entrypointWebpackConfig, (err: Error | undefined, stats: any) => {
                 if (err) {
+                    console.log(err);
                     process.exit(1);
                 } else {
                     // todo: maybe hash stats.hash to not recompile ;)
@@ -126,7 +122,7 @@ export class DevCommand implements CommandModule {
                 // eslint-disable-next-line no-promise-executor-return
                 .then(() => new Promise(((resolve) => setTimeout(resolve, 5000))))
                 .then(() => {
-                    watching = compiler.watch({}, async (err: any) => {
+                    watching = entrypointCompiler.watch({}, async (err: any) => {
                         if (err) {
                             // eslint-disable-next-line no-console
                             console.error(err.stack || err);

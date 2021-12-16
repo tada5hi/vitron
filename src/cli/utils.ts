@@ -18,6 +18,14 @@ export async function copyTemplateFile(
         templateFilePath :
         path.join(__dirname, '..', '..', 'assets', 'templates', templateFilePath);
 
+    const destinationDirectoryPath = path.dirname(destinationFilePath);
+
+    try {
+        await fs.promises.access(destinationDirectoryPath);
+    } catch (e) {
+        await fs.promises.mkdir(destinationDirectoryPath, { recursive: true });
+    }
+
     try {
         await fs.promises.access(destinationFilePath, fs.constants.F_OK | fs.constants.R_OK);
     } catch (e) {

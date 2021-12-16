@@ -33,7 +33,7 @@ export function moveRendererBuildDirectory(config: Config) {
         const isSingle = rendererBuildDirectories.length === 1;
 
         for (let i = 0; i < rendererBuildDirectories.length; i++) {
-            let destinationPath = path.join(config.rootPath, config.buildTempDirectory);
+            let destinationPath = path.join(config.rootPath, config.entrypointDirectory, 'dist');
             if (!isSingle) {
                 const sourceFolderName = rendererBuildDirectories[i].split(path.sep).pop();
                 destinationPath = path.join(destinationPath, sourceFolderName);
@@ -45,7 +45,7 @@ export function moveRendererBuildDirectory(config: Config) {
             );
         }
     } else {
-        const destinationPath = path.join(config.rootPath, config.buildTempDirectory);
+        const destinationPath = path.join(config.rootPath, config.entrypointDirectory, 'dist');
 
         const rendererDistPath = path.join(renderDirectoryPath, 'dist');
         if (fs.existsSync(rendererDistPath)) {

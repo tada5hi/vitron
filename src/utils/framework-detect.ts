@@ -25,7 +25,7 @@ export function detectFramework(config: Config) : Framework | undefined {
         return 'nuxt';
     }
 
-    if (dependencies.indexOf('next') !== -1) {
+    if (dependencyNames.indexOf('next') !== -1) {
         return 'next';
     }
 

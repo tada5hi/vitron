@@ -36,11 +36,11 @@ export function runRendererBuildCommand(config: Config): void {
                 break;
             case 'next':
                 spawn.sync('next', ['build', renderDirectoryPath], execOptions);
-                spawn.sync('next', ['export', '-o', path.join(config.rootPath, config.buildTempDirectory), renderDirectoryPath], execOptions);
+                spawn.sync('next', ['export', '-o', path.join(config.rootPath, config.entrypointDirectory, 'dist'), renderDirectoryPath], execOptions);
                 break;
         }
     } else {
-        // todo: build static files in renderer/dist or renderer folder.
+        spawn.sync('electron-adapter', ['webpack', '--cmd', 'build'], execOptions);
     }
 
     moveRendererBuildDirectory(config);

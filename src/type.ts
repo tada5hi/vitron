@@ -14,7 +14,7 @@ export type Config = {
 
     buildDirectory?: string,
     buildTempDirectory?: string,
-    mainDirectory?: string,
+    entrypointDirectory?: string,
 
     webpack?: (context: ConfigWebpackContext) => Configuration,
 

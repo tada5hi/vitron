@@ -40,11 +40,12 @@ export class InitCommand implements CommandModule {
             const config = useElectronAdapterConfig(baseDirectoryPath);
 
             // Create main directory
-            const mainDirectoryPath = path.join(config.rootPath, config.mainDirectory);
+            const entrypointDirectoryPath = path.join(config.rootPath, config.entrypointDirectory);
             try {
-                await fs.promises.access(mainDirectoryPath);
+                await fs.promises.access(entrypointDirectoryPath);
             } catch (e) {
-                await fs.promises.mkdir(mainDirectoryPath, { recursive: true });
+                await fs.promises.mkdir(entrypointDirectoryPath, { recursive: true });
+                await fs.promises.mkdir(path.join(entrypointDirectoryPath, 'src'), { recursive: true });
             }
 
             // Create Renderer Directory
@@ -58,28 +59,43 @@ export class InitCommand implements CommandModule {
             const tplPath: string = path.join(__dirname, '..', '..', '..', 'assets', 'templates');
 
             const templateMap : {srcPath: string, destPath :string}[] = [
+                // root files
                 {
                     srcPath: path.join(tplPath, 'electron-builder.yml.tpl'),
                     destPath: path.join(config.rootPath, 'electron-builder.yml'),
                 },
                 {
                     srcPath: path.join(tplPath, 'tsconfig.json'),
-                    destPath: path.join(mainDirectoryPath, 'tsconfig.json'),
+                    destPath: path.join(config.rootPath, 'tsconfig.json'),
+                },
+
+                // entrypoint files
+                {
+                    srcPath: path.join(tplPath, 'entrypoint', 'src', 'index.ts.tpl'),
+                    destPath: path.join(entrypointDirectoryPath, 'src', 'index.ts'),
+                },
+
+                // src files
+                {
+                    srcPath: path.join(tplPath, 'src', 'index.js'),
+                    destPath: path.join(rendererDirectoryPath, 'index.js'),
                 },
                 {
-                    srcPath: path.join(tplPath, 'main', 'index.ts.tpl'),
-                    destPath: path.join(mainDirectoryPath, 'index.ts'),
+                    srcPath: path.join(tplPath, 'src', 'index.html'),
+                    destPath: path.join(rendererDirectoryPath, 'index.html'),
                 },
             ];
 
             const promises : Promise<any>[] = [];
+
+            const prettyPath = config.entrypointDirectory.replace(/\\/g, '/');
 
             for (let i = 0; i < templateMap.length; i++) {
                 const promise : Promise<any> = copyTemplateFile(
                     templateMap[i].srcPath,
                     templateMap[i].destPath,
                     {
-                        buildTempDirectory: config.buildTempDirectory,
+                        entrypointDistDirectory: `${prettyPath}/dist`,
                     },
                 );
                 promises.push(promise);

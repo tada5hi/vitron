@@ -22,8 +22,7 @@ let mainWindow : BrowserWindow;
 
 (async () => {
     if(isProd) {
-        const directory = __dirname.split(path.sep).pop();
-        registerRenderedFiles({directory: directory || {{buildTempDirectory}});
+        registerRenderedFiles({directory: '{{{entrypointDistDirectory}}}'});
     }
 
     await app.whenReady();
@@ -32,7 +31,7 @@ let mainWindow : BrowserWindow;
         height: 768,
         width: 1024,
         autoHideMenuBar: true,
-        title: 'PHT - LocalTool',
+        title: 'Electron Adapter',
         webPreferences: {
             devTools: !app.isPackaged,
             nodeIntegration: true,
