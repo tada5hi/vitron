@@ -57,10 +57,10 @@ module.exports = {
     
     // buildDirectory: 'dist',
     
-    entrypointDirectory: 'src',
+    entrypointDirectory: 'entrypoint',
     // entrypointWebpack: undefined, 
     
-    rendererDirectory: 'renderer',
+    rendererDirectory: 'src',
     // rendererWebpack: undefined, 
 }
 ```
