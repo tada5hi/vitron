@@ -49,8 +49,8 @@ export class WebpackCommand implements CommandModule {
             const config = useElectronAdapterConfig(baseDirectoryPath);
 
             const env : Environment = args.cmd === 'build' ?
-                'development' :
-                'production';
+                'production' :
+                'development';
 
             let configuration : Configuration = {
                 mode: env,
@@ -59,15 +59,51 @@ export class WebpackCommand implements CommandModule {
                 },
                 plugins: [
                     new HtmlWebpackPlugin({
+                        filename: 'index.html',
+                        inject: true,
                         template: path.join(config.rootPath, config.rendererDirectory, 'index.html'),
                     }),
                 ],
+                resolve: {
+                    extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
+                    modules: [
+                        path.join(config.rootPath, config.entrypointDirectory, 'dist'),
+                        path.join(config.rootPath, 'node_modules'),
+                        path.join(__dirname, '..', '..', '..', 'node_modules'),
+                        'node_modules',
+                    ],
+                },
+                module: {
+                    rules: [
+                        {
+                            test: /\.html$/,
+                            loader: path.join(__dirname, '..', '..', '..', 'node_modules', 'html-loader'),
+                            options: {
+                                minimize: true,
+                            },
+                        },
+                        {
+                            test: /\.css$/i,
+                            use: [
+                                path.join(__dirname, '..', '..', '..', 'node_modules', 'style-loader'),
+                                path.join(__dirname, '..', '..', '..', 'node_modules', 'css-loader'),
+                            ],
+                        },
+                        {
+                            test: /\.m?js$/,
+                            exclude: /(node_modules|bower_components)/,
+                            use: {
+                                loader: path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader'),
+                            },
+                        },
+                    ],
+                },
             };
 
             if (args.cmd === 'build') {
                 configuration.output = {
                     filename: 'bundle.js',
-                    path: path.join(config.rootPath, config.entrypointDirectory, 'dist'),
+                    path: path.join(config.rootPath, config.rendererDirectory, 'dist'),
                 };
             }
 
@@ -123,7 +159,7 @@ export class WebpackCommand implements CommandModule {
             // eslint-disable-next-line no-console
             console.log(e);
 
-            throw e;
+            process.exit(1);
         }
     }
 }

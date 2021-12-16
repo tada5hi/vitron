@@ -40,7 +40,7 @@ export function runRendererBuildCommand(config: Config): void {
                 break;
         }
     } else {
-        spawn.sync('electron-adapter', ['webpack', '--cmd', 'build'], execOptions);
+        spawn.sync('electron-adapter', ['webpack', '--cmd', 'build', '--root', config.rootPath], execOptions);
     }
 
     moveRendererBuildDirectory(config);

@@ -42,7 +42,7 @@ This will create the following files/directories, if they do not already exist:
 - src/index.js
 - src/index.html
 
-The `src` & `renderer` path and other specifications, 
+The `entrypoint` & `src` path and other specifications, 
 can be changed with a configuration file in the root directory  of the project.
 
 Therefore, create a `.electron-adapter.yml` file in the root folder with the following content:

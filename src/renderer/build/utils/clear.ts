@@ -27,6 +27,8 @@ export function clearRendererBuilds(config: Config) {
                 ]);
                 break;
         }
+    } else if (!config.rendererBuildPaths) {
+        rendererFiles.push('dist');
     }
 
     const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
