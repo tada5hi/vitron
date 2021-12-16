@@ -118,7 +118,12 @@ export class WebpackCommand implements CommandModule {
                 );
             }
 
-            const compiler = webpack(configuration);
+            const compiler = webpack(configuration, ((err) => {
+                if (err) {
+                    console.error(err.stack || err);
+                    process.exit(1);
+                }
+            }));
 
             switch (args.cmd) {
                 case 'build': {
@@ -150,7 +155,15 @@ export class WebpackCommand implements CommandModule {
                         watchFiles: path.join(config.rootPath, config.rendererDirectory),
                     }, compiler);
 
-                    await server.start();
+                    try {
+                        await server.start();
+                    } catch (e) {
+                        await server.stop();
+                        // eslint-disable-next-line no-console
+                        console.log(e);
+
+                        process.exit(1);
+                    }
 
                     break;
                 }
