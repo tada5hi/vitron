@@ -30,7 +30,7 @@
     "dependencies": {
         "@babel/core": "^7.16.5",
         "@babel/preset-typescript": "^7.16.7",
-        "@typescript-error/core": "^1.0.3",
+        "@typescript-error/core": "^1.1.1",
         "babel-loader": "^8.2.3",
         "cross-spawn": "^7.0.3",
         "css-loader": "^6.5.1",
