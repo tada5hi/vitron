@@ -1,6 +1,6 @@
 {
     "name": "electron-adapter",
-    "version": "0.0.20",
+    "version": "0.1.0",
     "description": "This is a library to build platform (win, linux, mac) executables for a bundled static web application. It is also possible to debug the application with HMR.",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
