@@ -54,6 +54,7 @@ export class WebpackCommand implements CommandModule {
 
             let configuration : Configuration = {
                 mode: env,
+                target: 'electron-renderer',
                 entry: {
                     index: path.join(config.rootPath, config.rendererDirectory),
                 },

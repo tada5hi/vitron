@@ -20,10 +20,37 @@ It is also possible to debug the application with HMR.
 npm install --save electron-adapter
 ```
 
+---
+**Important NOTE**
+
+The `README.md` file is under construction ☂ at the moment.
+So please stay patient or contribute to it, till it covers all parts ⭐.
+
+---
+
 ## Usage
+
+The best way to use the following commands, is by creating shortcuts in the `package.json` file.
+
+```json
+{
+    "scripts": {
+        "init": "electron-adapter init",
+        "dev": "electron-adapter dev",
+        "build": "electron-adapter build"
+    }
+}
+```
+
 ### Init
 
 To init the project folder with the necessary files, run the command:
+
+```bash
+npm run init
+```
+
+**or**
 
 ```bash
 electron-adapter init
@@ -65,17 +92,30 @@ module.exports = {
 }
 ```
 
----
-**Important NOTE**
-
-The `Readme.md` is under construction ☂ at the moment. So please stay patient, till it is available ⭐.
-
----
-
 ### Dev
 
-coming soon...
+To run the application in development mode, with Hot Module Replacement (HMR).
+
+```bash
+npm run dev
+```
+
+**or**
+
+```bash
+electron-adapter dev
+```
 
 ### Build
 
-coming soon...
+To build the application for an operating system, run the following command.
+
+```bash
+npm run build
+```
+
+**or**
+
+```bash
+electron-adapter build
+```
