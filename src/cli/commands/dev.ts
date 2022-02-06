@@ -69,6 +69,10 @@ export class DevCommand implements CommandModule {
                     ...spawnOptions,
                 });
 
+                mainProcess.on('error', (e) => {
+                    console.log(e);
+                });
+
                 mainProcess.on('exit', () => {
                     killWholeProcess();
                 });

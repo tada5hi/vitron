@@ -8,6 +8,7 @@
 import path from 'path';
 import webpack, { Configuration } from 'webpack';
 import merge from 'webpack-merge';
+import fs from 'fs-extra';
 import { useElectronAdapterConfig } from '../../config';
 
 export function buildEntrypointWebpackConfig(
@@ -21,6 +22,16 @@ export function buildEntrypointWebpackConfig(
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
     const externals = require(path.join(config.rootPath, 'package.json'))
         .dependencies;
+
+    let babelLoader = path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader');
+    if (!fs.existsSync(babelLoader)) {
+        babelLoader = 'babel-loader';
+    }
+
+    let babelTsPreset = path.join(__dirname, '..', '..', '..', 'node_modules', '@babel', 'preset-typescript');
+    if (!fs.existsSync(babelTsPreset)) {
+        babelTsPreset = '@babel/preset-typescript';
+    }
 
     const webpackConfig : Configuration = {
         mode: env,
@@ -53,10 +64,10 @@ export function buildEntrypointWebpackConfig(
                 {
                     test: /\.(js|ts)x?$/,
                     use: {
-                        loader: 'babel-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader')
+                        loader: babelLoader,
                         options: {
                             cacheDirectory: true,
-                            presets: ['@babel/preset-typescript'], // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', '@babel', 'preset-typescript')
+                            presets: [babelTsPreset],
                         },
                     },
                     exclude: [

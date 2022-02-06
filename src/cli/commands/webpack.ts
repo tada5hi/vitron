@@ -11,6 +11,7 @@ import merge from 'webpack-merge';
 import WebpackDevServer from 'webpack-dev-server';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import path from 'path';
+import fs from 'fs-extra';
 import { useElectronAdapterConfig } from '../../config';
 import { Environment } from '../../type';
 
@@ -52,6 +53,14 @@ export class WebpackCommand implements CommandModule {
                 'production' :
                 'development';
 
+            const loaders = ['babel-loader', 'css-loader', 'html-loader', 'style-loader'];
+            for (let i = 0; i < loaders.length; i++) {
+                loaders[i] = path.join(__dirname, '..', '..', '..', 'node_modules', loaders[i]);
+                if (!fs.existsSync(loaders[i])) {
+                    loaders[i] = 'babel-loader';
+                }
+            }
+
             let configuration : Configuration = {
                 mode: env,
                 target: 'electron-renderer',
@@ -78,7 +87,7 @@ export class WebpackCommand implements CommandModule {
                     rules: [
                         {
                             test: /\.html$/,
-                            loader: 'html-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'html-loader')
+                            loader: loaders[2],
                             options: {
                                 minimize: true,
                             },
@@ -86,15 +95,15 @@ export class WebpackCommand implements CommandModule {
                         {
                             test: /\.css$/i,
                             use: [
-                                'style-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'style-loader')
-                                'css-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'css-loader')
+                                loaders[3],
+                                loaders[1],
                             ],
                         },
                         {
                             test: /\.m?js$/,
                             exclude: /(node_modules|bower_components)/,
                             use: {
-                                loader: 'babel-loader', // todo: check rootPath node_modules before path.join(__dirname, '..', '..', '..', 'node_modules', 'babel-loader')
+                                loader: loaders[0],
                             },
                         },
                     ],
