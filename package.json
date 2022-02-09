@@ -39,7 +39,7 @@
     },
     "license": "MIT",
     "dependencies": {
-        "@babel/core": "^7.17.0",
+        "@babel/core": "^7.17.2",
         "@babel/preset-typescript": "^7.16.7",
         "@typescript-error/core": "^1.1.2",
         "babel-loader": "^8.2.3",
