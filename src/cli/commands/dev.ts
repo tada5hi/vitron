@@ -116,8 +116,6 @@ export class DevCommand implements CommandModule {
                 if (err) {
                     console.log(err);
                     process.exit(1);
-                } else {
-                    // todo: maybe hash stats.hash to not recompile ;)
                 }
             });
 
