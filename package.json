@@ -79,6 +79,6 @@
     },
     "peerDependencies": {
         "electron": "17.x",
-        "electron-builder": "^22.x"
+        "electron-builder": "^23.x"
     }
 }
