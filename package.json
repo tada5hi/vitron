@@ -55,7 +55,7 @@
         "webpack": "^5.71.0",
         "webpack-dev-server": "^4.8.1",
         "webpack-merge": "5.8.0",
-        "yargs": "^17.4.0"
+        "yargs": "^17.4.1"
     },
     "devDependencies": {
         "@babel/plugin-proposal-class-properties": "^7.16.7",
