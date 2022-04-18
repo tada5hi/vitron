@@ -45,7 +45,7 @@
         "babel-loader": "^8.2.4",
         "cross-spawn": "^7.0.3",
         "css-loader": "^6.7.1",
-        "fs-extra": "^10.0.1",
+        "fs-extra": "^10.1.0",
         "glob": "^8.0.1",
         "html-loader": "^3.1.0",
         "html-webpack-plugin": "^5.5.0",
