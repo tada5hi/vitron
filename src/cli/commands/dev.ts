@@ -64,6 +64,7 @@ export class DevCommand implements CommandModule {
                 ], {
                     detached: false,
                     env: {
+                        ...process.env,
                         ELECTRON_MAIN_PORT: `${port}`,
                     },
                     ...spawnOptions,

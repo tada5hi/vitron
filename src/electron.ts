@@ -34,9 +34,9 @@ export function registerRenderedFiles(
     options: RegisterRenderedFilesContext,
 ) {
     options = {
-        ...options,
         isCorsEnabled: true,
         scheme: 'app',
+        ...options,
     };
 
     if (!options.directory) {
