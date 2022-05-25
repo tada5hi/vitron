@@ -59,7 +59,7 @@
     },
     "devDependencies": {
         "@babel/plugin-proposal-class-properties": "^7.17.12",
-        "@babel/plugin-proposal-object-rest-spread": "^7.17.12",
+        "@babel/plugin-proposal-object-rest-spread": "^7.18.0",
         "@babel/plugin-syntax-dynamic-import": "^7.8.3",
         "@tada5hi/eslint-config-typescript": "^1.0.3",
         "@types/cross-spawn": "^6.0.2",
