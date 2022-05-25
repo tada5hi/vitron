@@ -70,14 +70,12 @@ export class DevCommand implements CommandModule {
                     ...spawnOptions,
                 });
 
-                mainProcess.stdout.setEncoding('utf8');
-                mainProcess.stdout.on('data', (data) => {
+                mainProcess.on('message', (data) => {
                     console.log(data);
                 });
 
-                mainProcess.stderr.setEncoding('utf8');
-                mainProcess.stderr.on('data', (data) => {
-                    console.error(data);
+                mainProcess.on('error', (e) => {
+                    console.log(e);
                 });
 
                 mainProcess.on('exit', () => {
