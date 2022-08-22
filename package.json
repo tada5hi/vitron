@@ -71,7 +71,7 @@
         "@types/yargs": "^17.0.10",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
-        "electron": "^19.0.7",
+        "electron": "^20.0.3",
         "eslint": "^8.18.0",
         "np": "^7.6.2",
         "ts-node": "^10.8.1",
