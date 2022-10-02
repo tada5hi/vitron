@@ -47,7 +47,7 @@
         "css-loader": "^6.7.1",
         "fs-extra": "^10.1.0",
         "glob": "^8.0.3",
-        "html-loader": "^4.1.0",
+        "html-loader": "^4.2.0",
         "html-webpack-plugin": "^5.5.0",
         "mustache": "^4.2.0",
         "reflect-metadata": "^0.1.13",
@@ -71,11 +71,11 @@
         "@types/yargs": "^17.0.12",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
-        "electron": "^20.2.0",
+        "electron": "^21.0.1",
         "eslint": "^8.23.1",
         "np": "^7.6.2",
         "ts-node": "^10.9.1",
-        "typescript": "^4.8.3"
+        "typescript": "^4.8.4"
     },
     "peerDependencies": {
         "electron": "16.x || 17.x || 18.x || 19.x || 20.x",
