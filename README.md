@@ -2,6 +2,8 @@
 
 [![npm version](https://badge.fury.io/js/electron-adapter.svg)](https://badge.fury.io/js/electron-adapter)
 [![CI](https://github.com/tada5hi/electron-adapter/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/electron-adapter/actions/workflows/main.yml)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/electron-adapter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/electron-adapter?targetFile=package.json)
+[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
 This is a library to build platform (win, linux, mac) executables for a bundled static web application.
 It is also possible to debug the application with HMR.
@@ -13,6 +15,7 @@ It is also possible to debug the application with HMR.
   - [Init](#init)
   - [Build](#build)
   - [Dev](#dev)
+- [License](#license)
 
 ## Installation
 
@@ -119,3 +122,9 @@ npm run build
 ```bash
 electron-adapter build
 ```
+
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).
