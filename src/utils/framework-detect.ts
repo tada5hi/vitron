@@ -1,8 +1,9 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { Config, Framework } from '../type';
+import { Framework } from '../constants';
+import { Config } from '../type';
 
-export function detectFramework(config: Config) : Framework | undefined {
+export function detectFramework(config: Config) : `${Framework}` | undefined {
     if (config.framework) {
         return config.framework;
     }

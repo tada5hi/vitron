@@ -1,14 +1,13 @@
-import { Configuration } from 'webpack';
-import {
-    SpawnSyncOptions,
-} from 'child_process';
+import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
+import { Configuration } from 'webpack';
+import { Environment, Framework, NpmClient } from './constants';
 
 export type Config = {
     port?: number,
-    npmClient?: NpmClient,
+    npmClient?: `${NpmClient}`,
 
-    framework?: Framework,
+    framework?: `${Framework}`,
 
     rootPath?: string,
 
@@ -25,7 +24,7 @@ export type Config = {
 };
 
 export type ConfigCommandContext = {
-    env: Environment
+    env: `${Environment}`
     rootPath: string,
 
     exec: typeof spawn,
@@ -36,13 +35,9 @@ export type ConfigCommandContext = {
 export type ConfigWebpackContext = {
     webpackConfig: Configuration,
     rootConfig: Config,
-    env: Environment
+    env: `${Environment}`
 };
 
-export type NpmClient = 'npm' | 'yarn';
-export type Framework = 'nuxt' | 'next';
-
-export type Environment = 'production' | 'development' | 'test';
 export type RegisterRenderedFilesContext = {
     isCorsEnabled?: boolean,
     scheme?: string

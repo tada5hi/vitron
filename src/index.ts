@@ -6,5 +6,6 @@
  */
 
 export * from './config';
+export * from './constants';
 export * from './electron';
 export * from './type';

@@ -13,7 +13,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import path from 'path';
 import fs from 'fs-extra';
 import { useElectronAdapterConfig } from '../../config';
-import { Environment } from '../../type';
+import { Environment } from '../../constants';
 
 export interface WebpackArguments extends Arguments {
     root: string;
@@ -49,7 +49,7 @@ export class WebpackCommand implements CommandModule {
             // Config
             const config = useElectronAdapterConfig(baseDirectoryPath);
 
-            const env : Environment = args.cmd === 'build' ?
+            const env : `${Environment}` = args.cmd === 'build' ?
                 'production' :
                 'development';
 
