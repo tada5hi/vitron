@@ -7,7 +7,6 @@
 
 import path from 'path';
 import electron from 'electron';
-import { promisify } from 'util';
 import { URL } from 'url';
 import * as fs from 'fs';
 
@@ -18,16 +17,17 @@ export type RegisterRenderedFilesContext = {
     partition?: string
 };
 
-export async function getRendererPath(path_: string) : Promise<string> {
+export async function getRendererPath(input: string) : Promise<string> {
     try {
-        const result = await promisify(fs.stat)(path_);
+
+        const result = await fs.promises.stat(input);
 
         if (result.isFile()) {
-            return path_;
+            return input;
         }
 
         if (result.isDirectory()) {
-            return await getRendererPath(path.join(path_, 'index.html'));
+            return await getRendererPath(path.join(input, 'index.html'));
         }
     } catch (_) {
         // ...

@@ -6,7 +6,7 @@ import { StaticCommand } from './commands/static';
 
 // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 yargs
-    .scriptName('electron-adapter')
+    .scriptName('vitron')
     .usage('Usage: $0 <command> [options]')
     .demandCommand(1)
     .command(new BuildCommand())

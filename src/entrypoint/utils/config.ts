@@ -11,6 +11,7 @@ import { InlineConfig } from 'vite';
 import { useConfig } from '../../config';
 import { Environment } from '../../constants';
 import { Config } from '../../type';
+import { getNodeBuiltInModules } from './node-builtin';
 
 export function buildEntryPointConfig(
     env: `${Environment}`,
@@ -72,9 +73,8 @@ export function buildEntryPointConfig(
                     'tray',
                     'web-contents',
 
-                    // node internals
-                    'path',
-                    'fs',
+                    // node built-in internals
+                    ...getNodeBuiltInModules(),
                 ],
             },
         },
