@@ -1,7 +1,7 @@
 {
     "name": "vitron",
     "version": "1.0.0",
-    "description": "This is a library to build beautiful (win, linux, mac) desktop apps, \nfor any static web application, with vite and electron.",
+    "description": "This is a library to build beautiful (win, linux, mac) desktop apps for modern web projects with vite and electron.",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
     "author": {

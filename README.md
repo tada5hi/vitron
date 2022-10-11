@@ -5,8 +5,8 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/vitron/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/vitron?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-This is a library to build beautiful (win, linux, mac) desktop apps, 
-for any static web application, with vite and electron.
+This is a library to build beautiful (win, linux, mac) desktop apps
+for modern web projects with **vite** and **electron**.
 
 **Table of Contents**
 
