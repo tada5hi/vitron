@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/tada5hi/vitron/compare/v1.0.1...v1.0.2) (2022-10-11)
+
+
+### Bug Fixes
+
+* removed .npmignore & specified files via readme ([f2931c4](https://github.com/tada5hi/vitron/commit/f2931c496287c3a7779c9e2f8d70b3196045b273))
+
 ## [1.0.1](https://github.com/tada5hi/vitron/compare/v1.0.0...v1.0.1) (2022-10-11)
 
 
