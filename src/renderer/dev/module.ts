@@ -35,5 +35,5 @@ export function runRendererDevCommand(config: Config): ChildProcess | undefined 
         }
     }
 
-    return spawn('vitron', ['static', '--cmd', 'dev'], execOptions);
+    return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.port.toString()], execOptions);
 }

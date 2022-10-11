@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Arguments, Argv, CommandModule } from 'yargs';
 import { InlineConfig, build, createServer } from 'vite';
+import { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
 import { Environment } from '../../constants';
 import { buildRendererConfig } from '../../renderer';
@@ -14,12 +14,13 @@ import { buildRendererConfig } from '../../renderer';
 export interface CommandArguments extends Arguments {
     root: string;
     cmd: string;
+    port: string | null
 }
 
 export class StaticCommand implements CommandModule {
-    command = 'static';
+    command = 'vite';
 
-    describe = 'Bundle a static web application for development or production.';
+    describe = 'Bundle or run a modern web project in development mode with Hot Module Replacement (HMR).';
 
     builder(args: Argv) {
         return args
@@ -31,7 +32,12 @@ export class StaticCommand implements CommandModule {
             .option('cmd', {
                 demandOption: true,
                 choices: ['build', 'dev'],
-                describe: 'Specify the command.',
+                describe: 'Specify the vite command.',
+            })
+            .option('port', {
+                alias: 'p',
+                default: null,
+                describe: 'Port of the application server in dev mode.',
             });
     }
 
@@ -43,6 +49,9 @@ export class StaticCommand implements CommandModule {
 
         // Config
         const config = useConfig(baseDirectoryPath);
+
+        // Port
+        config.port = args.port ? parseInt(args.port, 10) : config.port || 9000;
 
         const env : `${Environment}` = args.cmd === 'build' ?
             'production' :

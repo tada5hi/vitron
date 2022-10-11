@@ -2,7 +2,7 @@
 import yargs from 'yargs';
 import { BuildCommand, DevCommand } from './commands';
 import { InitCommand } from './commands/init';
-import { StaticCommand } from './commands/static';
+import { StaticCommand } from './commands/vite';
 
 // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 yargs

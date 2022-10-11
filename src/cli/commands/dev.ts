@@ -1,8 +1,8 @@
+import { ChildProcess } from 'child_process';
+import spawn from 'cross-spawn';
 import path from 'path';
 import { build } from 'vite';
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { ChildProcess } from 'child_process';
-import spawn from 'cross-spawn';
 import { useConfig } from '../../config';
 import { buildEntryPointConfig } from '../../entrypoint';
 import { runRendererDevCommand } from '../../renderer';
@@ -42,8 +42,7 @@ export class DevCommand implements CommandModule {
             const config = useConfig(baseDirectoryPath);
 
             // Port
-            const port = args.port ? parseInt(args.port, 10) : config.port || 9000;
-            config.port = port;
+            config.port = args.port ? parseInt(args.port, 10) : config.port || 9000;
 
             // ----------------------------------------
 
@@ -59,7 +58,7 @@ export class DevCommand implements CommandModule {
                 ], {
                     env: {
                         ...process.env,
-                        ELECTRON_MAIN_PORT: `${port}`,
+                        ELECTRON_MAIN_PORT: `${config.port}`,
                     },
                     cwd: baseDirectoryPath,
                     detached: false,
