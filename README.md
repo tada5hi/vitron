@@ -1,4 +1,4 @@
-# Vitron 🌰
+# Vitron 🍑
 
 [![npm version](https://badge.fury.io/js/vitron.svg)](https://badge.fury.io/js/vitron)
 [![CI](https://github.com/tada5hi/vitron/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/vitron/actions/workflows/main.yml)
@@ -6,7 +6,7 @@
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
 This is a library to build beautiful (win, linux, mac) desktop apps, 
-for any static web application.
+for any static web application, with vite and electron.
 
 **Table of Contents**
 

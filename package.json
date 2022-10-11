@@ -1,7 +1,7 @@
 {
     "name": "vitron",
     "version": "1.0.0",
-    "description": "This is a library to build beautiful (win, linux, mac) desktop apps, for any static web application.",
+    "description": "This is a library to build beautiful (win, linux, mac) desktop apps, \nfor any static web application, with vite and electron.",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
     "author": {
@@ -23,18 +23,18 @@
     },
     "keywords": [
         "electron",
-        "cli",
-        "hmr",
-        "vue",
-        "react",
+        "vite",
+        "app",
+        "desktop",
+        "desktop-app",
+        "web",
         "win",
         "mac",
         "linux",
-        "web",
-        "app",
+        "vue",
+        "react",
         "nuxt",
-        "next",
-        "desktop"
+        "next"
     ],
     "bin": {
         "vitron": "dist/cli/index.js"
