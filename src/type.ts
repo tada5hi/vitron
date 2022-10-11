@@ -31,10 +31,3 @@ export type ConfigCommandContext = {
     execSync: typeof spawn.sync,
     execOptions: SpawnSyncOptions
 };
-
-export type RegisterRenderedFilesContext = {
-    isCorsEnabled?: boolean,
-    scheme?: string
-    directory: string,
-    partition?: string
-};

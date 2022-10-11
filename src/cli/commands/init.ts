@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { removeFileNameExtension } from 'locter';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import path from 'path';
 import fs from 'fs-extra';
 import { render } from 'mustache';
-import spawn from 'cross-spawn';
-import { SpawnSyncOptions } from 'child_process';
 import { useConfig } from '../../config';
-import { ConfigDefault } from '../../config/constants';
+import { createRecursiveDirectory } from '../../utils';
 
 async function getFiles(dir: string, relativePath = '') : Promise<string[]> {
     const direntMany = await fs.promises.readdir(dir, { withFileTypes: true });
@@ -56,64 +55,42 @@ export class InitCommand implements CommandModule {
             const args: InitArguments = raw as InitArguments;
 
             // Project directory
-            const baseDirectoryPath = args.root || process.cwd();
+            let baseDirectoryPath = args.root || process.cwd();
+            if (!path.isAbsolute(baseDirectoryPath)) {
+                baseDirectoryPath = path.join(process.cwd(), args.root);
+            }
 
             // Config
             const config = useConfig(baseDirectoryPath);
 
-            // Create main directory
             const entrypointDirectoryPath = path.join(config.rootPath, config.entrypointDirectory);
-            try {
-                await fs.promises.access(entrypointDirectoryPath);
-            } catch (e) {
-                await fs.promises.mkdir(entrypointDirectoryPath, { recursive: true });
-                await fs.promises.mkdir(path.join(entrypointDirectoryPath, 'src'), { recursive: true });
-            }
-
-            // Create Renderer Directory
             const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
-            try {
-                await fs.promises.access(rendererDirectoryPath);
-            } catch (e) {
-                await fs.promises.mkdir(rendererDirectoryPath, { recursive: true });
+
+            const directoryPaths : string[] = [
+                entrypointDirectoryPath,
+                rendererDirectoryPath,
+            ];
+
+            // Create directories
+            for (let i = 0; i < directoryPaths.length; i++) {
+                await createRecursiveDirectory(directoryPaths[i]);
             }
 
             const tplPath: string = path.join(__dirname, '..', '..', '..', 'assets', 'templates');
 
             const templateFiles = await getFiles(tplPath);
             for (let i = 0; i < templateFiles.length; i++) {
-                const relativeFilePath = templateFiles[i];
+                const sourceFilePath = path.join(tplPath, templateFiles[i]);
 
-                const isTpl = relativeFilePath.split('.').pop() === 'tpl';
-
-                let destinationRelativeFilePath : string = relativeFilePath;
-                destinationRelativeFilePath = destinationRelativeFilePath.replace(
-                    ConfigDefault.ENTRYPOINT_DIRECTORY.replace(/\//g, path.sep),
-                    `${config.entrypointDirectory}`,
+                const isTpl = templateFiles[i].split('.').pop() === 'tpl';
+                const destinationFilePath = path.join(
+                    config.rootPath,
+                    isTpl ?
+                        removeFileNameExtension(templateFiles[i], ['.tpl']) :
+                        templateFiles[i],
                 );
-                destinationRelativeFilePath = destinationRelativeFilePath.replace(
-                    ConfigDefault.RENDERER_DIRECTORY.replace(/\//g, path.sep),
-                    `${config.rendererDirectory}`,
-                );
-
-                if (isTpl) {
-                    destinationRelativeFilePath = path.join(
-                        path.dirname(destinationRelativeFilePath),
-                        path.basename(destinationRelativeFilePath, '.tpl'),
-                    );
-                }
-
-                // --------------------------------------------------------
-
-                const sourceFilePath = path.join(tplPath, relativeFilePath);
-                const destinationFilePath = path.join(config.rootPath, destinationRelativeFilePath);
                 const destinationDirectoryPath = path.dirname(destinationFilePath);
-
-                try {
-                    await fs.promises.access(destinationDirectoryPath);
-                } catch (e) {
-                    await fs.promises.mkdir(destinationDirectoryPath, { recursive: true });
-                }
+                await createRecursiveDirectory(destinationDirectoryPath);
 
                 try {
                     await fs.promises.access(destinationFilePath, fs.constants.F_OK | fs.constants.R_OK);
@@ -137,31 +114,6 @@ export class InitCommand implements CommandModule {
                     );
                 }
             }
-
-            const spawnOptions: SpawnSyncOptions = {
-                cwd: config.rootPath,
-                stdio: 'inherit',
-            };
-
-            spawn.sync(
-                config.npmClient,
-                [
-                    ...(config.npmClient === 'yarn' ? [] : ['install']),
-                ],
-                spawnOptions,
-            );
-
-            const syncArgs = [
-                ...(
-                    config.npmClient === 'yarn' ?
-                        ['add', '-D'] :
-                        ['install', '--save-dev']
-                ),
-                'electron',
-                'electron-builder',
-            ];
-
-            spawn.sync(config.npmClient, syncArgs, spawnOptions);
         } catch (e) {
             // eslint-disable-next-line no-console
             console.log(e);

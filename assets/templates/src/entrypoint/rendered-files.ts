@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2021.
+ * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -10,7 +10,13 @@ import electron from 'electron';
 import { promisify } from 'util';
 import { URL } from 'url';
 import * as fs from 'fs';
-import { RegisterRenderedFilesContext } from './type';
+
+export type RegisterRenderedFilesContext = {
+    isCorsEnabled?: boolean,
+    scheme?: string
+    directory: string,
+    partition?: string
+};
 
 export async function getRendererPath(path_: string) : Promise<string> {
     try {

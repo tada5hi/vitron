@@ -1,8 +1,5 @@
-import { app, BrowserWindow, ipcMain, dialog, clipboard, shell } from 'electron';
-import { registerRenderedFiles } from 'vitron';
-
-import {watchFile} from "fs";
-import * as path from "path";
+import { app, BrowserWindow } from 'electron';
+import { registerRenderedFiles } from './rendered-files';
 
 app.on('window-all-closed', () => {
     // On mac-os it is common for applications and their menu bar
@@ -11,12 +8,6 @@ app.on('window-all-closed', () => {
 });
 
 const isProd: boolean = process.env.NODE_ENV === 'production';
-
-if (!isProd) {
-    watchFile(__filename, () => {
-        app.exit(0);
-    });
-}
 
 let mainWindow : BrowserWindow;
 
