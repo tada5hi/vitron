@@ -1,16 +1,16 @@
 {
-    "name": "electron-adpater-app",
+    "name": "vitron-app",
     "version": "1.0.0",
     "main": "index.js",
-    "description": "This is my first app build with electron-adapter",
+    "description": "This is my first vitron app.",
     "scripts": {
-        "dev": "electron-adapter dev",
-        "build": "electron-adapter build"
+        "dev": "vitron dev",
+        "build": "vitron build"
     },
     "license": "ISC",
     "devDependencies": {
-        "electron": "^16.0.4",
-        "electron-adapter": "latest",
-        "electron-builder": "^22.14.5"
+        "electron": "^21.1.0",
+        "vitron": "latest",
+        "electron-builder": "^23.6.0"
     }
 }

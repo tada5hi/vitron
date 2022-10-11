@@ -61,16 +61,17 @@ vitron init
 
 This will create the following files/directories, if they do not already exist:
 
-- entrypoint
-  - index.ts
 - src
-  - index.js
-  - index.html
+  - entrypoint
+    - index.ts
+  - renderer
+    - index.js
+    - index.html
 - .electron-builder.yml
 - tsconfig.json
 
-The `entrypoint` & `src` path and other specifications, 
-can be changed with a configuration file in the root directory  of the project.
+The default location of the `entrypoint` and `renderer` directory can 
+be changed with a configuration file in the root directory  of the project.
 
 Therefore, create a `.vitron.yml` file in the root folder with the following content:
 
@@ -78,15 +79,9 @@ Therefore, create a `.vitron.yml` file in the root folder with the following con
 module.exports = {
     port: 9000,
     
-    // framework: 'nuxt' | 'next',
+    entrypointDirectory: 'src/entrypoint',
     
-    // rootPath: '',
-    
-    // buildDirectory: 'dist',
-    
-    entrypointDirectory: 'entrypoint',
-    
-    rendererDirectory: 'src',
+    rendererDirectory: 'src/renderer',
 }
 ```
 
