@@ -1,12 +1,12 @@
-# Electron Adapter 🛠
+# Vitron 🌰
 
-[![npm version](https://badge.fury.io/js/electron-adapter.svg)](https://badge.fury.io/js/electron-adapter)
-[![CI](https://github.com/tada5hi/electron-adapter/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/electron-adapter/actions/workflows/main.yml)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/electron-adapter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/electron-adapter?targetFile=package.json)
+[![npm version](https://badge.fury.io/js/vitron.svg)](https://badge.fury.io/js/vitron)
+[![CI](https://github.com/tada5hi/vitron/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/vitron/actions/workflows/main.yml)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/vitron/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/vitron?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-This is a library to build platform (win, linux, mac) executables for a bundled static web application.
-It is also possible to debug the application with HMR.
+This is a library to build beautiful (win, linux, mac) desktop apps, 
+for any static web application.
 
 **Table of Contents**
 
@@ -20,7 +20,7 @@ It is also possible to debug the application with HMR.
 ## Installation
 
 ```bash
-npm install --save electron-adapter
+npm install --save vitron
 ```
 
 ---
@@ -38,9 +38,9 @@ The best way to use the following commands, is by creating shortcuts in the `pac
 ```json
 {
     "scripts": {
-        "init": "electron-adapter init",
-        "dev": "electron-adapter dev",
-        "build": "electron-adapter build"
+        "init": "vitron init",
+        "dev": "vitron dev",
+        "build": "vitron build"
     }
 }
 ```
@@ -56,26 +56,23 @@ npm run init
 **or**
 
 ```bash
-electron-adapter init
+vitron init
 ```
 
 This will create the following files/directories, if they do not already exist:
 
-**Directories**
 - entrypoint
+  - index.ts
 - src
-
-**Files**
+  - index.js
+  - index.html
 - .electron-builder.yml
 - tsconfig.json
-- entrypoint/index.ts
-- src/index.js
-- src/index.html
 
 The `entrypoint` & `src` path and other specifications, 
 can be changed with a configuration file in the root directory  of the project.
 
-Therefore, create a `.electron-adapter.yml` file in the root folder with the following content:
+Therefore, create a `.vitron.yml` file in the root folder with the following content:
 
 ```javascript
 module.exports = {
@@ -104,7 +101,7 @@ npm run dev
 **or**
 
 ```bash
-electron-adapter dev
+vitron dev
 ```
 
 ### Build
@@ -118,7 +115,7 @@ npm run build
 **or**
 
 ```bash
-electron-adapter build
+vitron build
 ```
 
 ## License
