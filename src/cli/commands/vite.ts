@@ -17,7 +17,7 @@ export interface CommandArguments extends Arguments {
     port: string | null
 }
 
-export class StaticCommand implements CommandModule {
+export class ViteCommand implements CommandModule {
     command = 'vite';
 
     describe = 'Bundle or run a modern web project in development mode with Hot Module Replacement (HMR).';

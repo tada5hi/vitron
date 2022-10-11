@@ -2,7 +2,7 @@
 import yargs from 'yargs';
 import { BuildCommand, DevCommand } from './commands';
 import { InitCommand } from './commands/init';
-import { StaticCommand } from './commands/vite';
+import { ViteCommand } from './commands/vite';
 
 // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 yargs
@@ -12,7 +12,7 @@ yargs
     .command(new BuildCommand())
     .command(new DevCommand())
     .command(new InitCommand())
-    .command(new StaticCommand())
+    .command(new ViteCommand())
     .strict()
     .alias('v', 'version')
     .help('h')
