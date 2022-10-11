@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/tada5hi/vitron/compare/v1.0.2...v1.0.3) (2022-10-11)
+
+
+### Bug Fixes
+
+* forward custom port to default app renderer ([79fc3ab](https://github.com/tada5hi/vitron/commit/79fc3abda3fa62377669df3927841f0e41810cf7))
+
 ## [1.0.2](https://github.com/tada5hi/vitron/compare/v1.0.1...v1.0.2) (2022-10-11)
 
 
