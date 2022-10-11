@@ -35,5 +35,5 @@ export function runRendererDevCommand(config: Config): ChildProcess | undefined 
         }
     }
 
-    return spawn('electron-adapter', ['static', '--cmd', 'dev'], execOptions);
+    return spawn('vitron', ['static', '--cmd', 'dev'], execOptions);
 }

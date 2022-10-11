@@ -4,7 +4,7 @@ import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import fs from 'fs-extra';
 import { build } from 'vite';
-import { useElectronAdapterConfig } from '../../config';
+import { useConfig } from '../../config';
 import { buildEntryPointConfig } from '../../entrypoint';
 import {
     clearRendererBuilds,
@@ -52,7 +52,7 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...['--project', rootPath]);
 
         // Config
-        const config = useElectronAdapterConfig(rootPath);
+        const config = useConfig(rootPath);
 
         const configFileName = args.config || 'electron-builder.yml';
         builderArgs.push(...['--config', configFileName]);

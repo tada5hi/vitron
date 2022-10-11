@@ -11,5 +11,5 @@ export enum ConfigDefault {
     BUILD_DIRECTORY = 'dist',
     RENDERER_DIRECTORY = 'src/renderer',
     ENTRYPOINT_DIRECTORY = 'src/entrypoint',
-    NPM_CLIENT = 'yarn',
+    NPM_CLIENT = 'npm',
 }

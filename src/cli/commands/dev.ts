@@ -3,7 +3,7 @@ import { build } from 'vite';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { ChildProcess } from 'child_process';
 import spawn from 'cross-spawn';
-import { useElectronAdapterConfig } from '../../config';
+import { useConfig } from '../../config';
 import { buildEntryPointConfig } from '../../entrypoint';
 import { runRendererDevCommand } from '../../renderer';
 
@@ -39,7 +39,7 @@ export class DevCommand implements CommandModule {
             const baseDirectoryPath = args.root || process.cwd();
 
             // Config
-            const config = useElectronAdapterConfig(baseDirectoryPath);
+            const config = useConfig(baseDirectoryPath);
 
             // Port
             const port = args.port ? parseInt(args.port, 10) : config.port || 9000;

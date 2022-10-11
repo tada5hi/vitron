@@ -1,5 +1,5 @@
-import {app, BrowserWindow, ipcMain, dialog, clipboard, shell} from 'electron';
-import {registerRenderedFiles} from 'electron-adapter';
+import { app, BrowserWindow, ipcMain, dialog, clipboard, shell } from 'electron';
+import { registerRenderedFiles } from 'vitron';
 
 import {watchFile} from "fs";
 import * as path from "path";
@@ -31,7 +31,7 @@ let mainWindow : BrowserWindow;
         height: 768,
         width: 1024,
         autoHideMenuBar: true,
-        title: 'Electron Adapter',
+        title: 'Vitron',
         webPreferences: {
             devTools: !app.isPackaged,
             nodeIntegration: true,

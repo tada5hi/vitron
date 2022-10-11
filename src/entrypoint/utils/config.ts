@@ -8,7 +8,7 @@
 import path from 'path';
 import { merge } from 'smob';
 import { InlineConfig } from 'vite';
-import { useElectronAdapterConfig } from '../../config';
+import { useConfig } from '../../config';
 import { Environment } from '../../constants';
 import { Config } from '../../type';
 
@@ -17,7 +17,7 @@ export function buildEntryPointConfig(
     config?: string | Config,
 ) : InlineConfig {
     if (typeof config === 'string' || typeof config === 'undefined') {
-        config = useElectronAdapterConfig(config || process.cwd());
+        config = useConfig(config || process.cwd());
     }
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require

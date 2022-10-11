@@ -11,7 +11,7 @@ import fs from 'fs-extra';
 import { render } from 'mustache';
 import spawn from 'cross-spawn';
 import { SpawnSyncOptions } from 'child_process';
-import { useElectronAdapterConfig } from '../../config';
+import { useConfig } from '../../config';
 import { ConfigDefault } from '../../config/constants';
 
 async function getFiles(dir: string, relativePath = '') : Promise<string[]> {
@@ -59,7 +59,7 @@ export class InitCommand implements CommandModule {
             const baseDirectoryPath = args.root || process.cwd();
 
             // Config
-            const config = useElectronAdapterConfig(baseDirectoryPath);
+            const config = useConfig(baseDirectoryPath);
 
             // Create main directory
             const entrypointDirectoryPath = path.join(config.rootPath, config.entrypointDirectory);
@@ -97,7 +97,10 @@ export class InitCommand implements CommandModule {
                 );
 
                 if (isTpl) {
-                    destinationRelativeFilePath = path.join(path.dirname(destinationRelativeFilePath), path.basename(destinationRelativeFilePath, '.tpl'));
+                    destinationRelativeFilePath = path.join(
+                        path.dirname(destinationRelativeFilePath),
+                        path.basename(destinationRelativeFilePath, '.tpl'),
+                    );
                 }
 
                 // --------------------------------------------------------

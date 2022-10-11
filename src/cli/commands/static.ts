@@ -7,7 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { InlineConfig, build, createServer } from 'vite';
-import { useElectronAdapterConfig } from '../../config';
+import { useConfig } from '../../config';
 import { Environment } from '../../constants';
 import { buildRendererConfig } from '../../renderer';
 
@@ -42,7 +42,7 @@ export class StaticCommand implements CommandModule {
         const baseDirectoryPath = args.root || process.cwd();
 
         // Config
-        const config = useElectronAdapterConfig(baseDirectoryPath);
+        const config = useConfig(baseDirectoryPath);
 
         const env : `${Environment}` = args.cmd === 'build' ?
             'production' :

@@ -8,18 +8,18 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { Config } from '../type';
-import { extendElectronAdapterConfig } from './utils';
+import { extendConfig } from './utils';
 
-export function useElectronAdapterConfig(directoryPath: string) : Config {
-    const filePath : string = path.join(directoryPath, 'electron-adapter.config.js');
+export function useConfig(directoryPath: string) : Config {
+    const filePath : string = path.join(directoryPath, 'vitron.config.js');
 
     if (!fs.existsSync(filePath)) {
-        return extendElectronAdapterConfig({}, directoryPath);
+        return extendConfig({}, directoryPath);
     }
 
     // todo: validation required
     // eslint-disable-next-line global-require,import/no-dynamic-require,@typescript-eslint/no-var-requires
     const config : Config = require(filePath);
 
-    return extendElectronAdapterConfig(config, directoryPath);
+    return extendConfig(config, directoryPath);
 }

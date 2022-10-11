@@ -10,7 +10,7 @@ import { Config } from '../../type';
 import { detectFramework } from '../../utils';
 import { ConfigDefault } from '../constants';
 
-export function extendElectronAdapterConfig(config: Config, directoryPath: string): Config {
+export function extendConfig(config: Config, directoryPath: string): Config {
     if (config.rootPath) {
         if (!path.isAbsolute(config.rootPath)) {
             config.rootPath = path.join(directoryPath, config.rootPath);

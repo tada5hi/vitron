@@ -42,7 +42,7 @@ export function runRendererBuildCommand(config: Config): void {
                 break;
         }
     } else {
-        spawn.sync('electron-adapter', ['static', '--cmd', 'build', '--root', config.rootPath], execOptions);
+        spawn.sync('vitron', ['static', '--cmd', 'build', '--root', config.rootPath], execOptions);
     }
 
     moveRendererBuildDirectory(config);

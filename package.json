@@ -41,7 +41,6 @@
     },
     "license": "MIT",
     "dependencies": {
-        "chokidar": "^3.5.3",
         "cross-spawn": "^7.0.3",
         "fs-extra": "^10.1.0",
         "glob": "^8.0.3",
