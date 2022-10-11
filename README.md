@@ -46,7 +46,6 @@ This will create the following files/directories, if they do not already exist:
         - index.js
         - index.html
 - .electron-builder.yml
-- tsconfig.json
 
 The default location of the `entrypoint` and `renderer` directory can
 be changed with a configuration file in the root directory  of the project.
