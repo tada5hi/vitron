@@ -6,13 +6,14 @@
  */
 
 import spawn from 'cross-spawn';
-import { ChildProcess, SpawnSyncOptions } from 'child_process';
+import { ChildProcess, SpawnOptions } from 'child_process';
 import { Config } from '../../type';
 
 export function runRendererDevCommand(config: Config): ChildProcess | undefined {
-    const execOptions: SpawnSyncOptions = {
+    const execOptions: SpawnOptions = {
         cwd: config.rootPath,
         stdio: 'inherit',
+        detached: false,
     };
 
     if (config.rendererDevCommands) {
@@ -32,9 +33,7 @@ export function runRendererDevCommand(config: Config): ChildProcess | undefined 
             case 'next':
                 return spawn('next', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
         }
-    } else {
-        return spawn('electron-adapter', ['webpack', '--cmd', 'dev'], execOptions);
     }
 
-    return undefined;
+    return spawn('electron-adapter', ['static', '--cmd', 'dev'], execOptions);
 }

@@ -1,6 +1,6 @@
 import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
-import { Configuration } from 'webpack';
+import { UserConfig } from 'vite';
 import { Environment, Framework, NpmClient } from './constants';
 
 export type Config = {
@@ -14,13 +14,13 @@ export type Config = {
     buildDirectory?: string,
 
     entrypointDirectory?: string,
-    entrypointWebpack?: (context: ConfigWebpackContext) => Configuration,
+    entrypointConfig?: (config: UserConfig) => UserConfig,
 
     rendererDirectory?: string,
     rendererBuildPaths?: string[],
     rendererBuildCommands?: (context: ConfigCommandContext) => any | undefined,
     rendererDevCommands?: (context: ConfigCommandContext) => any | undefined,
-    rendererWebpack?: (context: ConfigWebpackContext) => Configuration
+    rendererConfig?: (config: UserConfig) => UserConfig
 };
 
 export type ConfigCommandContext = {
@@ -30,12 +30,6 @@ export type ConfigCommandContext = {
     exec: typeof spawn,
     execSync: typeof spawn.sync,
     execOptions: SpawnSyncOptions
-};
-
-export type ConfigWebpackContext = {
-    webpackConfig: Configuration,
-    rootConfig: Config,
-    env: `${Environment}`
 };
 
 export type RegisterRenderedFilesContext = {

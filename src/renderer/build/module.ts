@@ -7,16 +7,17 @@
 
 import path from 'path';
 import spawn from 'cross-spawn';
-import { SpawnSyncOptions } from 'child_process';
+import { SpawnOptions } from 'child_process';
 import { Config } from '../../type';
 import { moveRendererBuildDirectory } from './utils';
 
 export function runRendererBuildCommand(config: Config): void {
     const renderDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
 
-    const execOptions: SpawnSyncOptions = {
+    const execOptions: SpawnOptions = {
         cwd: config.rootPath,
         stdio: 'inherit',
+        detached: false,
     };
 
     if (config.rendererBuildCommands) {
@@ -28,6 +29,7 @@ export function runRendererBuildCommand(config: Config): void {
             execOptions,
         });
     }
+
     if (config.framework) {
         switch (config.framework) {
             case 'nuxt':
@@ -40,7 +42,7 @@ export function runRendererBuildCommand(config: Config): void {
                 break;
         }
     } else {
-        spawn.sync('electron-adapter', ['webpack', '--cmd', 'build', '--root', config.rootPath], execOptions);
+        spawn.sync('electron-adapter', ['static', '--cmd', 'build', '--root', config.rootPath], execOptions);
     }
 
     moveRendererBuildDirectory(config);

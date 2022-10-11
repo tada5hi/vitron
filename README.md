@@ -88,10 +88,8 @@ module.exports = {
     // buildDirectory: 'dist',
     
     entrypointDirectory: 'entrypoint',
-    // entrypointWebpack: undefined, 
     
     rendererDirectory: 'src',
-    // rendererWebpack: undefined, 
 }
 ```
 

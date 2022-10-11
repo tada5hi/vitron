@@ -3,13 +3,13 @@ import path from 'path';
 import { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import fs from 'fs-extra';
-import webpack from 'webpack';
+import { build } from 'vite';
 import { useElectronAdapterConfig } from '../../config';
+import { buildEntryPointConfig } from '../../entrypoint';
 import {
     clearRendererBuilds,
     runRendererBuildCommand,
 } from '../../renderer';
-import { buildEntrypointWebpackConfig } from '../../entrypoint';
 
 export interface BuildArguments extends Arguments {
     root: string;
@@ -71,29 +71,12 @@ export class BuildCommand implements CommandModule {
         // build renderer output
         runRendererBuildCommand(config);
 
+        await build(buildEntryPointConfig('production', config));
+
         const spawnOptions: SpawnSyncOptions = {
             cwd: rootPath,
             stdio: 'inherit',
         };
-
-        const compiler = webpack(buildEntrypointWebpackConfig('production', rootPath));
-
-        await new Promise(((resolve, reject) => {
-            compiler.run((err: Error, stats: webpack.Stats) => {
-                if (err) {
-                    // eslint-disable-next-line no-console
-                    console.error(err.stack || err);
-                    reject(err);
-                }
-                if (stats.hasErrors()) {
-                    // eslint-disable-next-line no-console
-                    console.error(stats.toString());
-                    reject(stats);
-                }
-
-                resolve(stats);
-            });
-        }));
 
         spawn.sync('electron-builder', builderArgs, spawnOptions);
     }
