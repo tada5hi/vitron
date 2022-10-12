@@ -58,10 +58,6 @@ export class DevCommand implements CommandModule {
                 mainProcess = spawn('electron', [
                     path.join(config.rootPath, config.entrypointDirectory, 'dist', 'index.js'),
                 ], {
-                    env: {
-                        ...process.env,
-                        ELECTRON_MAIN_PORT: `${config.port}`,
-                    },
                     cwd: baseDirectoryPath,
                     detached: false,
                     stdio: 'inherit',

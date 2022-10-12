@@ -10,6 +10,14 @@ import { Config } from '../../type';
 import { guessFramework, isValidFramework } from '../../utils';
 
 export function extendConfigWithDefaults(config: Partial<Config>): Config {
+    if (!config.port) {
+        config.port = 9000;
+    }
+
+    if (!isValidFramework(config.framework)) {
+        config.framework = guessFramework(config.rootPath);
+    }
+
     if (config.rootPath) {
         if (!path.isAbsolute(config.rootPath)) {
             config.rootPath = path.join(process.cwd(), config.rootPath);
@@ -18,28 +26,30 @@ export function extendConfigWithDefaults(config: Partial<Config>): Config {
         config.rootPath = process.cwd();
     }
 
+    // ----------------------------------------
+
     if (!config.buildDirectory) {
         config.buildDirectory = 'dist';
     }
     config.buildDirectory = config.buildDirectory.replace(/\//g, path.sep);
+
+    // ----------------------------------------
 
     if (!config.rendererDirectory) {
         config.rendererDirectory = 'src/renderer';
     }
     config.rendererDirectory = config.rendererDirectory.replace(/\//g, path.sep);
 
+    if (!config.rendererBuildDirectory) {
+        config.rendererBuildDirectory = ['dist'];
+    }
+
+    // ----------------------------------------
+
     if (!config.entrypointDirectory) {
         config.entrypointDirectory = 'src/entrypoint';
     }
     config.entrypointDirectory = config.entrypointDirectory.replace(/\//g, path.sep);
-
-    if (!isValidFramework(config.framework)) {
-        config.framework = guessFramework(config.rootPath);
-    }
-
-    if (!config.port) {
-        config.port = 9000;
-    }
 
     return config as Config;
 }

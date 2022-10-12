@@ -13,7 +13,7 @@ export async function clearRendererBuilds(config: Config) : Promise<void[]> {
     const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
 
     const buildDirectories: string[] = [
-        ...(Array.isArray(config.rendererBuildPath) ? config.rendererBuildPath : [config.rendererBuildPath]),
+        ...(Array.isArray(config.rendererBuildDirectory) ? config.rendererBuildDirectory : [config.rendererBuildDirectory]),
     ];
 
     const promises : Promise<void>[] = [];

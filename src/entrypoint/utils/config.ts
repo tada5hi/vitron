@@ -23,6 +23,10 @@ export async function buildEntryPointConfig(
     const inlineConfig : InlineConfig = {
         mode: config.env,
         root: path.join(config.rootPath, config.entrypointDirectory),
+        define: {
+            'process.env.NODE_ENV': `"${config.env}"`,
+            'process.env.PORT': `"${config.port}"`,
+        },
         build: {
             emptyOutDir: false,
             manifest: true,

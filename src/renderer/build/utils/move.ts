@@ -12,9 +12,9 @@ import { Config } from '../../../type';
 export async function moveRendererBuildDirectory(config: Config) : Promise<void> {
     const directoryPath = path.join(config.rootPath, config.rendererDirectory);
 
-    const buildDirectories: string[] = Array.isArray(config.rendererBuildPath) ?
-        config.rendererBuildPath :
-        [config.rendererBuildPath];
+    const buildDirectories: string[] = Array.isArray(config.rendererBuildDirectory) ?
+        config.rendererBuildDirectory :
+        [config.rendererBuildDirectory];
 
     const isSingle = buildDirectories.length === 1;
 

@@ -16,7 +16,7 @@ export type Config = {
     entrypointConfig?: (config: UserConfig) => UserConfig,
 
     rendererDirectory: string,
-    rendererBuildPath: string | string[],
+    rendererBuildDirectory: string | string[],
     rendererBuildCommand?: (context: RendererBuildCommandContext) => unknown,
     rendererDevCommand?: (context: RendererDevCommandContext) => ChildProcess,
     rendererConfig: (config: UserConfig) => UserConfig

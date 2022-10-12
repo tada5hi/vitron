@@ -33,7 +33,7 @@ let mainWindow : BrowserWindow;
     if (isProd) {
         await mainWindow.loadURL(`app://-`);
     } else {
-        const port = process.env.ELECTRON_MAIN_PORT || 9000;
+        const port = process.env.PORT || 9000;
         await mainWindow.loadURL(`http://localhost:${port}`);
     }
 })();
