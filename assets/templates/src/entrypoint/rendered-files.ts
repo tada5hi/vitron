@@ -33,7 +33,7 @@ export async function getRendererPath(input: string) : Promise<string> {
         // ...
     }
 
-    return undefined;
+    return input;
 }
 
 export function registerRenderedFiles(
