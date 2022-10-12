@@ -7,44 +7,39 @@
 
 import path from 'path';
 import { Config } from '../../type';
-import { detectFramework } from '../../utils';
-import { ConfigDefault } from '../constants';
+import { guessFramework, isValidFramework } from '../../utils';
 
-export function extendConfig(config: Config, directoryPath: string): Config {
+export function extendConfigWithDefaults(config: Partial<Config>): Config {
     if (config.rootPath) {
         if (!path.isAbsolute(config.rootPath)) {
-            config.rootPath = path.join(directoryPath, config.rootPath);
+            config.rootPath = path.join(process.cwd(), config.rootPath);
         }
     } else {
-        config.rootPath = directoryPath;
+        config.rootPath = process.cwd();
     }
 
     if (!config.buildDirectory) {
-        config.buildDirectory = ConfigDefault.BUILD_DIRECTORY;
+        config.buildDirectory = 'dist';
     }
     config.buildDirectory = config.buildDirectory.replace(/\//g, path.sep);
 
     if (!config.rendererDirectory) {
-        config.rendererDirectory = ConfigDefault.RENDERER_DIRECTORY;
+        config.rendererDirectory = 'src/renderer';
     }
     config.rendererDirectory = config.rendererDirectory.replace(/\//g, path.sep);
 
     if (!config.entrypointDirectory) {
-        config.entrypointDirectory = ConfigDefault.ENTRYPOINT_DIRECTORY;
+        config.entrypointDirectory = 'src/entrypoint';
     }
     config.entrypointDirectory = config.entrypointDirectory.replace(/\//g, path.sep);
 
-    if (!config.framework) {
-        config.framework = detectFramework(config);
+    if (!isValidFramework(config.framework)) {
+        config.framework = guessFramework(config.rootPath);
     }
 
     if (!config.port) {
-        config.port = ConfigDefault.PORT;
+        config.port = 9000;
     }
 
-    if (!config.npmClient) {
-        config.npmClient = ConfigDefault.NPM_CLIENT;
-    }
-
-    return config;
+    return config as Config;
 }

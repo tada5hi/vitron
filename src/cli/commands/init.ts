@@ -61,7 +61,7 @@ export class InitCommand implements CommandModule {
             }
 
             // Config
-            const config = useConfig(baseDirectoryPath);
+            const config = await useConfig(baseDirectoryPath);
 
             const entrypointDirectoryPath = path.join(config.rootPath, config.entrypointDirectory);
             const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);

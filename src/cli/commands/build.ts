@@ -5,6 +5,7 @@ import spawn from 'cross-spawn';
 import fs from 'fs-extra';
 import { build } from 'vite';
 import { useConfig } from '../../config';
+import { Environment } from '../../constants';
 import { buildEntryPointConfig } from '../../entrypoint';
 import {
     clearRendererBuilds,
@@ -52,7 +53,8 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...['--project', rootPath]);
 
         // Config
-        const config = useConfig(rootPath);
+        const config = await useConfig(rootPath);
+        config.env = Environment.PRODUCTION;
 
         const configFileName = args.config || 'electron-builder.yml';
         builderArgs.push(...['--config', configFileName]);
@@ -66,12 +68,12 @@ export class BuildCommand implements CommandModule {
         fs.removeSync(path.join(rootPath, config.buildDirectory));
 
         // Clear old renderer data
-        clearRendererBuilds(config);
+        await clearRendererBuilds(config);
 
         // build renderer output
-        runRendererBuildCommand(config);
+        await runRendererBuildCommand(config);
 
-        await build(buildEntryPointConfig('production', config));
+        await build(await buildEntryPointConfig(config));
 
         const spawnOptions: SpawnSyncOptions = {
             cwd: rootPath,

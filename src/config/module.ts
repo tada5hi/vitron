@@ -5,21 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
-import fs from 'fs-extra';
-import { Config } from '../type';
-import { extendConfig } from './utils';
+import { Config, ConfigInput } from '../type';
+import { buildConfig, findConfig } from './utils';
 
-export function useConfig(directoryPath: string) : Config {
-    const filePath : string = path.join(directoryPath, 'vitron.config.js');
+let instance : Config | undefined;
+let instancePromise : Promise<ConfigInput> | undefined;
 
-    if (!fs.existsSync(filePath)) {
-        return extendConfig({}, directoryPath);
+export async function useConfig(directoryPath: string) : Promise<Config> {
+    if (typeof instance !== 'undefined') {
+        return instance;
     }
 
-    // todo: validation required
-    // eslint-disable-next-line global-require,import/no-dynamic-require,@typescript-eslint/no-var-requires
-    const config : Config = require(filePath);
+    if (!instancePromise) {
+        instancePromise = findConfig(directoryPath);
+    }
 
-    return extendConfig(config, directoryPath);
+    instance = buildConfig(await instancePromise);
+
+    return instance;
 }

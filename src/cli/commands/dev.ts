@@ -4,6 +4,7 @@ import path from 'path';
 import { build } from 'vite';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
+import { Environment } from '../../constants';
 import { buildEntryPointConfig } from '../../entrypoint';
 import { runRendererDevCommand } from '../../renderer';
 
@@ -39,10 +40,11 @@ export class DevCommand implements CommandModule {
             const baseDirectoryPath = args.root || process.cwd();
 
             // Config
-            const config = useConfig(baseDirectoryPath);
+            const config = await useConfig(baseDirectoryPath);
 
             // Port
             config.port = args.port ? parseInt(args.port, 10) : config.port || 9000;
+            config.env = Environment.DEVELOPMENT;
 
             // ----------------------------------------
 
@@ -119,7 +121,7 @@ export class DevCommand implements CommandModule {
 
             startRendererInstance();
 
-            const devOptions = buildEntryPointConfig('development', config);
+            const devOptions = await buildEntryPointConfig(config);
             await build(devOptions);
 
             startMainProcess();

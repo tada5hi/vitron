@@ -8,18 +8,11 @@
 import path from 'path';
 import { merge } from 'smob';
 import { InlineConfig } from 'vite';
-import { useConfig } from '../../config';
-import { Environment } from '../../constants';
 import { Config } from '../../type';
 
-export function buildRendererConfig(
-    env: `${Environment}`,
-    config?: string | Config,
-) : InlineConfig {
-    if (typeof config === 'string' || typeof config === 'undefined') {
-        config = useConfig(config || process.cwd());
-    }
-
+export async function buildRendererConfig(
+    config: Config,
+) : Promise<InlineConfig> {
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
     const packageJson = require(path.join(config.rootPath, 'package.json'));
 
@@ -27,10 +20,11 @@ export function buildRendererConfig(
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});
 
     const inlineConfig : InlineConfig = {
-        mode: env,
+        mode: config.env,
         root: path.join(config.rootPath, config.rendererDirectory),
         build: {
             outDir: 'dist',
+            emptyOutDir: false,
             rollupOptions: {
                 external: [
                     ...dependencies,
@@ -57,7 +51,7 @@ export function buildRendererConfig(
     };
 
     if (config.rendererConfig) {
-        merge(config.rendererConfig(inlineConfig), inlineConfig);
+        merge(inlineConfig, config.rendererConfig(inlineConfig));
     }
 
     return inlineConfig;

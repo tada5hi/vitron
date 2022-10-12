@@ -8,19 +8,12 @@
 import path from 'path';
 import { merge } from 'smob';
 import { InlineConfig } from 'vite';
-import { useConfig } from '../../config';
-import { Environment } from '../../constants';
 import { Config } from '../../type';
 import { getNodeBuiltInModules } from './node-builtin';
 
-export function buildEntryPointConfig(
-    env: `${Environment}`,
-    config?: string | Config,
-) : InlineConfig {
-    if (typeof config === 'string' || typeof config === 'undefined') {
-        config = useConfig(config || process.cwd());
-    }
-
+export async function buildEntryPointConfig(
+    config: Config,
+) : Promise<InlineConfig> {
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
     const packageJson = require(path.join(config.rootPath, 'package.json'));
 
@@ -28,7 +21,7 @@ export function buildEntryPointConfig(
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});
 
     const inlineConfig : InlineConfig = {
-        mode: env,
+        mode: config.env,
         root: path.join(config.rootPath, config.entrypointDirectory),
         build: {
             emptyOutDir: false,

@@ -8,10 +8,11 @@
 import path from 'path';
 import spawn from 'cross-spawn';
 import { SpawnOptions } from 'child_process';
+import { Framework } from '../../constants';
 import { Config } from '../../type';
 import { moveRendererBuildDirectory } from './utils';
 
-export function runRendererBuildCommand(config: Config): void {
+export async function runRendererBuildCommand(config: Config): Promise<void> {
     const renderDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
 
     const execOptions: SpawnOptions = {
@@ -20,30 +21,31 @@ export function runRendererBuildCommand(config: Config): void {
         detached: false,
     };
 
-    if (config.rendererBuildCommands) {
-        config.rendererBuildCommands({
-            env: 'production',
-            rootPath: config.rootPath,
-            exec: spawn,
-            execSync: spawn.sync,
+    if (config.rendererBuildCommand) {
+        config.rendererBuildCommand({
+            config,
+
+            exec: spawn.sync,
             execOptions,
         });
-    }
-
-    if (config.framework) {
+    } else {
         switch (config.framework) {
-            case 'nuxt':
+            case Framework.NUXT: {
                 spawn.sync('nuxt', ['build', renderDirectoryPath], execOptions);
                 spawn.sync('nuxt', ['generate', renderDirectoryPath], execOptions);
                 break;
-            case 'next':
+            }
+            case Framework.NEXT: {
                 spawn.sync('next', ['build', renderDirectoryPath], execOptions);
-                spawn.sync('next', ['export', '-o', path.join(config.rootPath, config.entrypointDirectory, 'dist'), renderDirectoryPath], execOptions);
+                spawn.sync('next', ['export', '-o', path.join(renderDirectoryPath, 'dist')], execOptions);
                 break;
+            }
+            default: {
+                spawn.sync('vitron', ['vite', '--cmd', 'build', '--root', config.rootPath], execOptions);
+                break;
+            }
         }
-    } else {
-        spawn.sync('vitron', ['vite', '--cmd', 'build', '--root', config.rootPath], execOptions);
     }
 
-    moveRendererBuildDirectory(config);
+    await moveRendererBuildDirectory(config);
 }

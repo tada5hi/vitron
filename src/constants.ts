@@ -5,12 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum NpmClient {
-    NPM = 'npm',
-    YARN = 'yarn',
-    PNPM = 'pnpm',
-}
-
 export enum Framework {
     NUXT = 'nuxt',
     NEXT = 'next',
@@ -19,5 +13,4 @@ export enum Framework {
 export enum Environment {
     PRODUCTION = 'production',
     DEVELOPMENT = 'development',
-    TEST = 'test',
 }

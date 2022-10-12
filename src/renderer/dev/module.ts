@@ -7,33 +7,34 @@
 
 import spawn from 'cross-spawn';
 import { ChildProcess, SpawnOptions } from 'child_process';
+import { Framework } from '../../constants';
 import { Config } from '../../type';
 
-export function runRendererDevCommand(config: Config): ChildProcess | undefined {
+export function runRendererDevCommand(config: Config): ChildProcess {
     const execOptions: SpawnOptions = {
         cwd: config.rootPath,
         stdio: 'inherit',
         detached: false,
     };
 
-    if (config.rendererDevCommands) {
-        return config.rendererDevCommands({
-            env: 'production',
-            rootPath: config.rootPath,
+    if (config.rendererDevCommand) {
+        return config.rendererDevCommand({
+            config,
+
             exec: spawn,
-            execSync: spawn.sync,
             execOptions,
         });
     }
-    if (config.framework) {
-        switch (config.framework) {
-            case 'nuxt': {
-                return spawn('nuxt', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
-            }
-            case 'next':
-                return spawn('next', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
+
+    switch (config.framework) {
+        case Framework.NUXT: {
+            return spawn('nuxt', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
+        }
+        case Framework.NEXT: {
+            return spawn('next', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
+        }
+        default: {
+            return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.port.toString()], execOptions);
         }
     }
-
-    return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.port.toString()], execOptions);
 }

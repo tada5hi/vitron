@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { InlineConfig, build, createServer } from 'vite';
+import { build, createServer } from 'vite';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
 import { Environment } from '../../constants';
@@ -48,16 +48,17 @@ export class ViteCommand implements CommandModule {
         const baseDirectoryPath = args.root || process.cwd();
 
         // Config
-        const config = useConfig(baseDirectoryPath);
+        const config = await useConfig(baseDirectoryPath);
 
         // Port
         config.port = args.port ? parseInt(args.port, 10) : config.port || 9000;
+        if (args.cmd === 'build') {
+            config.env = Environment.PRODUCTION;
+        } else {
+            config.env = Environment.DEVELOPMENT;
+        }
 
-        const env : `${Environment}` = args.cmd === 'build' ?
-            'production' :
-            'development';
-
-        const inlineConfig : InlineConfig = buildRendererConfig(env, config);
+        const inlineConfig = await buildRendererConfig(config);
 
         switch (args.cmd) {
             case 'build': {

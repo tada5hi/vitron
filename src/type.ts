@@ -1,33 +1,39 @@
-import { SpawnSyncOptions } from 'child_process';
+import { ChildProcess, SpawnOptions, SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import { UserConfig } from 'vite';
-import { Environment, Framework, NpmClient } from './constants';
+import { Environment, Framework } from './constants';
 
 export type Config = {
-    port?: number,
-    npmClient?: `${NpmClient}`,
+    env: `${Environment}`,
+    port: number,
+    rootPath: string,
 
     framework?: `${Framework}`,
 
-    rootPath?: string,
+    buildDirectory: string,
 
-    buildDirectory?: string,
-
-    entrypointDirectory?: string,
+    entrypointDirectory: string,
     entrypointConfig?: (config: UserConfig) => UserConfig,
 
-    rendererDirectory?: string,
-    rendererBuildPaths?: string[],
-    rendererBuildCommands?: (context: ConfigCommandContext) => any | undefined,
-    rendererDevCommands?: (context: ConfigCommandContext) => any | undefined,
-    rendererConfig?: (config: UserConfig) => UserConfig
+    rendererDirectory: string,
+    rendererBuildPath: string | string[],
+    rendererBuildCommand?: (context: RendererBuildCommandContext) => unknown,
+    rendererDevCommand?: (context: RendererDevCommandContext) => ChildProcess,
+    rendererConfig: (config: UserConfig) => UserConfig
 };
 
-export type ConfigCommandContext = {
-    env: `${Environment}`
-    rootPath: string,
+export type RendererBuildCommandContext = {
+    config: Config,
 
-    exec: typeof spawn,
-    execSync: typeof spawn.sync,
+    exec: typeof spawn.sync,
     execOptions: SpawnSyncOptions
 };
+
+export type RendererDevCommandContext = {
+    config: Config,
+
+    exec: typeof spawn,
+    execOptions: SpawnOptions
+};
+
+export type ConfigInput = Partial<Config>;
