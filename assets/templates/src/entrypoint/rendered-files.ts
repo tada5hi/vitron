@@ -17,7 +17,7 @@ export type RegisterRenderedFilesContext = {
     partition?: string
 };
 
-export async function getRendererPath(input: string) : Promise<string> {
+export async function getRendererPath(input: string) : Promise<string | undefined> {
     try {
 
         const result = await fs.promises.stat(input);
@@ -33,7 +33,7 @@ export async function getRendererPath(input: string) : Promise<string> {
         // ...
     }
 
-    return input;
+    return undefined;
 }
 
 export function registerRenderedFiles(
