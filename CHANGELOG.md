@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/tada5hi/vitron/compare/v1.0.4...v1.0.5) (2022-10-12)
+
+
+### Bug Fixes
+
+* entrypoint build + renderer build cleanup ([bda0829](https://github.com/tada5hi/vitron/commit/bda0829a8bba4e76d8b899ef16183e07f2a2415c))
+
 ## [1.0.4](https://github.com/tada5hi/vitron/compare/v1.0.3...v1.0.4) (2022-10-12)
 
 
