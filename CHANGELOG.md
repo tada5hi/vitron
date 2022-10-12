@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/tada5hi/vitron/compare/v1.0.5...v1.0.6) (2022-10-12)
+
+
+### Bug Fixes
+
+* rendered-files file template ([c2a25b0](https://github.com/tada5hi/vitron/commit/c2a25b0c3020e13800852de203881991b3d92f7e))
+
 ## [1.0.5](https://github.com/tada5hi/vitron/compare/v1.0.4...v1.0.5) (2022-10-12)
 
 
