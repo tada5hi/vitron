@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/tada5hi/vitron/compare/v1.0.8...v1.0.9) (2022-10-20)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 0.0.3 to 0.0.6 ([1963000](https://github.com/tada5hi/vitron/commit/196300025c406a9a57de7f3a3e3a6ff34a767b01))
+
 ## [1.0.8](https://github.com/tada5hi/vitron/compare/v1.0.7...v1.0.8) (2022-10-14)
 
 
