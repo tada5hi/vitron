@@ -1,4 +1,4 @@
-# Vitron 🍑
+# Vitron 🥁
 
 [![npm version](https://badge.fury.io/js/vitron.svg)](https://badge.fury.io/js/vitron)
 [![CI](https://github.com/tada5hi/vitron/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/vitron/actions/workflows/main.yml)
