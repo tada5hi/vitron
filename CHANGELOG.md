@@ -1,3 +1,10 @@
+## [1.0.11](https://github.com/tada5hi/vitron/compare/v1.0.10...v1.0.11) (2022-11-01)
+
+
+### Bug Fixes
+
+* **deps:** bump vite from 3.2.0 to 3.2.2 ([b13a01f](https://github.com/tada5hi/vitron/commit/b13a01f776a20229910b1d17dd8fb3006a6f2a6d))
+
 ## [1.0.10](https://github.com/tada5hi/vitron/compare/v1.0.9...v1.0.10) (2022-10-27)
 
 
