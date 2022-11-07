@@ -1,3 +1,10 @@
+## [1.0.12](https://github.com/tada5hi/vitron/compare/v1.0.11...v1.0.12) (2022-11-07)
+
+
+### Bug Fixes
+
+* **deps:** bump yargs from 17.6.0 to 17.6.2 ([d26b690](https://github.com/tada5hi/vitron/commit/d26b690c3681cd5f77b0d5fa826a56178831b3e5))
+
 ## [1.0.11](https://github.com/tada5hi/vitron/compare/v1.0.10...v1.0.11) (2022-11-01)
 
 
