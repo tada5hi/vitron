@@ -1,3 +1,11 @@
+## [1.0.15](https://github.com/tada5hi/vitron/compare/v1.0.14...v1.0.15) (2022-12-02)
+
+
+### Bug Fixes
+
+* **deps:** bump fs-extra from 10.1.0 to 11.1.0 ([fce5d15](https://github.com/tada5hi/vitron/commit/fce5d152fb786571b000efc6f2671c62f338d610))
+* **deps:** bump locter from 0.3.2 to 0.6.0 ([a7a1516](https://github.com/tada5hi/vitron/commit/a7a15165e76719c0ad5b7c5394c4195f466a1c4a))
+
 ## [1.0.14](https://github.com/tada5hi/vitron/compare/v1.0.13...v1.0.14) (2022-11-17)
 
 
