@@ -1,3 +1,11 @@
+## [1.0.18](https://github.com/tada5hi/vitron/compare/v1.0.17...v1.0.18) (2022-12-22)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 0.6.0 to 0.6.1 ([dcd8150](https://github.com/tada5hi/vitron/commit/dcd8150cd8e37e2eb0a0fce059cac69dff960b4c))
+* **deps:** bump vite from 4.0.1 to 4.0.3 ([d1fef0e](https://github.com/tada5hi/vitron/commit/d1fef0e7b6622618d730d8a9c0dba8267e58f216))
+
 ## [1.0.17](https://github.com/tada5hi/vitron/compare/v1.0.16...v1.0.17) (2022-12-16)
 
 
