@@ -1,3 +1,10 @@
+## [1.0.19](https://github.com/tada5hi/vitron/compare/v1.0.18...v1.0.19) (2023-01-04)
+
+
+### Bug Fixes
+
+* **deps:** bump vite from 4.0.3 to 4.0.4 ([fa3a3c6](https://github.com/tada5hi/vitron/commit/fa3a3c655245bbcf2d9c6b472a1bf62db9e64f7f))
+
 ## [1.0.18](https://github.com/tada5hi/vitron/compare/v1.0.17...v1.0.18) (2022-12-22)
 
 
