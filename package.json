@@ -68,7 +68,7 @@
         "@semantic-release/release-notes-generator": "^10.0.3",
         "@tada5hi/eslint-config-typescript": "^1.1.0",
         "@types/cross-spawn": "^6.0.2",
-        "@types/fs-extra": "^9.0.13",
+        "@types/fs-extra": "^11.0.1",
         "@types/glob": "^8.0.0",
         "@types/mustache": "^4.2.2",
         "@types/node": "^18.11.18",
