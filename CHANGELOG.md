@@ -1,3 +1,10 @@
+## [1.0.20](https://github.com/tada5hi/vitron/compare/v1.0.19...v1.0.20) (2023-01-11)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 0.6.1 to 0.6.2 ([268e856](https://github.com/tada5hi/vitron/commit/268e8562e6a80479fd373377984420c62984b3ea))
+
 ## [1.0.19](https://github.com/tada5hi/vitron/compare/v1.0.18...v1.0.19) (2023-01-04)
 
 
