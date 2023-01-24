@@ -1,3 +1,10 @@
+## [1.0.21](https://github.com/tada5hi/vitron/compare/v1.0.20...v1.0.21) (2023-01-24)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 0.0.6 to 0.0.7 ([#336](https://github.com/tada5hi/vitron/issues/336)) ([17a44ad](https://github.com/tada5hi/vitron/commit/17a44ad44ddcef5f6d2aa3eb16c0a876d8a8ae8b))
+
 ## [1.0.20](https://github.com/tada5hi/vitron/compare/v1.0.19...v1.0.20) (2023-01-11)
 
 
