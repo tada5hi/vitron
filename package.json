@@ -75,7 +75,7 @@
         "@types/yargs": "^17.0.19",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
-        "electron": "^22.0.1",
+        "electron": "^22.0.3",
         "eslint": "^8.31.0",
         "husky": "^8.0.3",
         "rimraf": "^4.0.4",
