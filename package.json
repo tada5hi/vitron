@@ -47,7 +47,7 @@
     "dependencies": {
         "cross-spawn": "^7.0.3",
         "fs-extra": "^11.1.0",
-        "glob": "^8.0.3",
+        "glob": "^8.1.0",
         "locter": "^0.6.2",
         "mustache": "^4.2.0",
         "smob": "^0.0.7",
@@ -69,7 +69,7 @@
         "@tada5hi/eslint-config-typescript": "^1.1.0",
         "@types/cross-spawn": "^6.0.2",
         "@types/fs-extra": "^11.0.1",
-        "@types/glob": "^8.0.0",
+        "@types/glob": "^8.0.1",
         "@types/mustache": "^4.2.2",
         "@types/node": "^18.11.18",
         "@types/yargs": "^17.0.19",
