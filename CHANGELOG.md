@@ -1,3 +1,11 @@
+## [1.0.22](https://github.com/tada5hi/vitron/compare/v1.0.21...v1.0.22) (2023-01-26)
+
+
+### Bug Fixes
+
+* **deps:** bump glob and @types/glob ([#345](https://github.com/tada5hi/vitron/issues/345)) ([4ad730b](https://github.com/tada5hi/vitron/commit/4ad730b816955e75928b78e04a8d96273e838e66))
+* **deps:** bump locter from 0.6.2 to 0.7.1 ([#346](https://github.com/tada5hi/vitron/issues/346)) ([e9a2a8d](https://github.com/tada5hi/vitron/commit/e9a2a8d76ad0903239185344223b04893e1544bf))
+
 ## [1.0.21](https://github.com/tada5hi/vitron/compare/v1.0.20...v1.0.21) (2023-01-24)
 
 
