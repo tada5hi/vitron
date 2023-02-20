@@ -1,3 +1,12 @@
+## [1.0.23](https://github.com/tada5hi/vitron/compare/v1.0.22...v1.0.23) (2023-02-20)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 0.0.7 to 0.1.0 ([#358](https://github.com/tada5hi/vitron/issues/358)) ([4b15f30](https://github.com/tada5hi/vitron/commit/4b15f30b18f379c8e04bef3794136d098366b02f))
+* **deps:** bump vite from 4.0.4 to 4.1.2 ([#362](https://github.com/tada5hi/vitron/issues/362)) ([8ff90dd](https://github.com/tada5hi/vitron/commit/8ff90dd98fac6264392f2cc7388bd0ead992aba9))
+* **deps:** bump vite from 4.1.2 to 4.1.3 ([#363](https://github.com/tada5hi/vitron/issues/363)) ([26b6ba9](https://github.com/tada5hi/vitron/commit/26b6ba93887a79294fd377d37883044b3d4301bd))
+
 ## [1.0.22](https://github.com/tada5hi/vitron/compare/v1.0.21...v1.0.22) (2023-01-26)
 
 
