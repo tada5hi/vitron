@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { loadScriptFileExport, locateFiles } from 'locter';
+import { getExportItem, load, locateMany } from 'locter';
 import { merge } from 'smob';
 import { ConfigInput } from '../../type';
 
@@ -14,12 +14,13 @@ export async function findConfig(directoryPath?: string) : Promise<ConfigInput> 
 
     const items : ConfigInput[] = [];
 
-    const fileInfos = await locateFiles('vitron.config.{ts,js,json}', {
+    const fileInfos = await locateMany('vitron.config.{ts,js,json}', {
         path: directoryPath,
     });
 
     for (let i = 0; i < fileInfos.length; i++) {
-        const fileExport = await loadScriptFileExport(fileInfos[i]);
+        const data = await load(fileInfos[i]);
+        const fileExport = getExportItem(data);
         if (fileExport.key === 'default') {
             items.push(fileExport.value);
         }
