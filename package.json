@@ -43,6 +43,9 @@
     "bin": {
         "vitron": "dist/cli/index.js"
     },
+    "engines": {
+        "node": ">=16.0.0"
+    },
     "license": "MIT",
     "dependencies": {
         "cross-spawn": "^7.0.3",
