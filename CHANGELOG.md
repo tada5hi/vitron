@@ -1,3 +1,11 @@
+## [1.0.25](https://github.com/tada5hi/vitron/compare/v1.0.24...v1.0.25) (2023-02-27)
+
+
+### Bug Fixes
+
+* **deps:** bump vite & zod ([abe4a82](https://github.com/tada5hi/vitron/commit/abe4a82ca9c57dbab2f790118396476994960914))
+* **deps:** updated locter dependency ([946c994](https://github.com/tada5hi/vitron/commit/946c99444fd01301627797477d5dbaf5803108e9))
+
 ## [1.0.24](https://github.com/tada5hi/vitron/compare/v1.0.23...v1.0.24) (2023-02-27)
 
 
