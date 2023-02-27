@@ -7,7 +7,7 @@
 
 import { getExportItem, load, locateMany } from 'locter';
 import { merge } from 'smob';
-import { ConfigInput } from '../../type';
+import type { ConfigInput } from '../../type';
 
 export async function findConfig(directoryPath?: string) : Promise<ConfigInput> {
     directoryPath ??= process.cwd();

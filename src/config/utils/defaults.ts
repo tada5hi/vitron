@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import { Config } from '../../type';
+import type { Config } from '../../type';
 import { guessFramework, isValidFramework } from '../../utils';
 
 export function extendConfigWithDefaults(config: Partial<Config>): Config {

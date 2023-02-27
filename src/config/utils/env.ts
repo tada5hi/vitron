@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Environment } from '../../constants';
-import { Config } from '../../type';
+import type { Environment } from '../../constants';
+import type { Config } from '../../type';
 import { hasEnv, requireFromEnv } from '../../utils';
 
 export function extractConfigFromEnv() : Partial<Config> {

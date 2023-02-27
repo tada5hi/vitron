@@ -7,7 +7,7 @@
 
 import path from 'path';
 import fs from 'fs-extra';
-import { Config } from '../../../type';
+import type { Config } from '../../../type';
 
 export async function moveRendererBuildDirectory(config: Config) : Promise<void> {
     const directoryPath = path.join(config.rootPath, config.rendererDirectory);

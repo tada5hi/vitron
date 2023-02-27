@@ -6,7 +6,7 @@
  */
 
 import { merge } from 'smob';
-import { Config, ConfigInput } from '../../type';
+import type { Config, ConfigInput } from '../../type';
 import { extendConfigWithDefaults } from './defaults';
 import { extractConfigFromEnv } from './env';
 import { validateConfig } from './validate';

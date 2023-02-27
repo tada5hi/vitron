@@ -6,7 +6,7 @@
  */
 
 import { build, createServer } from 'vite';
-import { Arguments, Argv, CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
 import { Environment } from '../../constants';
 import { buildRendererConfig } from '../../renderer';

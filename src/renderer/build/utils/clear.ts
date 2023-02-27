@@ -7,7 +7,7 @@
 
 import path from 'path';
 import fs from 'fs';
-import { Config } from '../../../type';
+import type { Config } from '../../../type';
 
 export async function clearRendererBuilds(config: Config) : Promise<void[]> {
     const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Config, ConfigInput } from '../type';
+import type { Config, ConfigInput } from '../type';
 import { buildConfig, findConfig } from './utils';
 
 let instance : Config | undefined;

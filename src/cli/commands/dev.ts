@@ -1,8 +1,8 @@
-import { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
 import spawn from 'cross-spawn';
 import path from 'path';
 import { build } from 'vite';
-import { Arguments, Argv, CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
 import { Environment } from '../../constants';
 import { buildEntryPointConfig } from '../../entrypoint';

@@ -6,7 +6,7 @@
  */
 
 import { removeFileNameExtension } from 'locter';
-import { Arguments, Argv, CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import path from 'path';
 import fs from 'fs-extra';
 import { render } from 'mustache';

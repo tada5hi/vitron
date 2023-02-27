@@ -7,8 +7,8 @@
 
 import path from 'path';
 import { merge } from 'smob';
-import { InlineConfig } from 'vite';
-import { Config } from '../../type';
+import type { InlineConfig } from 'vite';
+import type { Config } from '../../type';
 import { getNodeBuiltInModules } from './node-builtin';
 
 export async function buildEntryPointConfig(

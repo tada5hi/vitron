@@ -1,6 +1,6 @@
-import { Arguments, Argv, CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import path from 'path';
-import { SpawnSyncOptions } from 'child_process';
+import type { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
 import fs from 'fs-extra';
 import { build } from 'vite';

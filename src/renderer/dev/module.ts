@@ -6,9 +6,9 @@
  */
 
 import spawn from 'cross-spawn';
-import { ChildProcess, SpawnOptions } from 'child_process';
+import type { ChildProcess, SpawnOptions } from 'child_process';
 import { Framework } from '../../constants';
-import { Config } from '../../type';
+import type { Config } from '../../type';
 
 export function runRendererDevCommand(config: Config): ChildProcess {
     const execOptions: SpawnOptions = {

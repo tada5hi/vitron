@@ -1,7 +1,7 @@
-import { ChildProcess, SpawnOptions, SpawnSyncOptions } from 'child_process';
-import spawn from 'cross-spawn';
-import { UserConfig } from 'vite';
-import { Environment, Framework } from './constants';
+import type { ChildProcess, SpawnOptions, SpawnSyncOptions } from 'child_process';
+import type spawn from 'cross-spawn';
+import type { UserConfig } from 'vite';
+import type { Environment, Framework } from './constants';
 
 export type Config = {
     env: `${Environment}`,

@@ -7,9 +7,9 @@
 
 import path from 'path';
 import spawn from 'cross-spawn';
-import { SpawnOptions } from 'child_process';
+import type { SpawnOptions } from 'child_process';
 import { Framework } from '../../constants';
-import { Config } from '../../type';
+import type { Config } from '../../type';
 import { moveRendererBuildDirectory } from './utils';
 
 export async function runRendererBuildCommand(config: Config): Promise<void> {

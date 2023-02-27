@@ -7,7 +7,7 @@
 
 import zod from 'zod';
 import { Environment, Framework } from '../../constants';
-import { ConfigInput } from '../../type';
+import type { ConfigInput } from '../../type';
 
 const configValidation = zod.object({
     env: zod.nativeEnum(Environment),

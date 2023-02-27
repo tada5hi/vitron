@@ -7,8 +7,8 @@
 
 import path from 'path';
 import { merge } from 'smob';
-import { InlineConfig } from 'vite';
-import { Config } from '../../type';
+import type { InlineConfig } from 'vite';
+import type { Config } from '../../type';
 
 export async function buildRendererConfig(
     config: Config,
