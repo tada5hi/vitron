@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Config, ConfigInput } from '../type';
+import type { Continu } from 'continu';
+import type { Options, OptionsInput } from './type';
 import { buildConfig, findConfig } from './utils';
 
-let instance : Config | undefined;
-let instancePromise : Promise<ConfigInput> | undefined;
+let instance : Continu<Options, OptionsInput> | undefined;
+let instancePromise : Promise<OptionsInput> | undefined;
 
-export async function useConfig(directoryPath: string) : Promise<Config> {
+export async function useConfig(directoryPath: string) : Promise<Continu<Options, OptionsInput>> {
     if (typeof instance !== 'undefined') {
         return instance;
     }

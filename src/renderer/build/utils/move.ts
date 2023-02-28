@@ -7,23 +7,19 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import type { Config } from '../../../type';
+import type { Config } from '../../../config';
 
 export async function moveRendererBuildDirectory(config: Config) : Promise<void> {
-    const directoryPath = path.join(config.rootPath, config.rendererDirectory);
+    const directoryPath = path.join(config.get('rootPath'), config.get('rendererDirectory'));
 
-    const buildDirectories: string[] = Array.isArray(config.rendererBuildDirectory) ?
-        config.rendererBuildDirectory :
-        [config.rendererBuildDirectory];
-
-    const isSingle = buildDirectories.length === 1;
+    const buildDirectories: string[] = config.get('rendererBuildDirectory');
 
     const promises : Promise<void>[] = [];
 
     for (let i = 0; i < buildDirectories.length; i++) {
-        let destinationPath = path.join(config.rootPath, config.entrypointDirectory, 'dist');
+        let destinationPath = path.join(config.get('rootPath'), config.get('entrypointDirectory'), 'dist');
 
-        if (!isSingle) {
+        if (buildDirectories.length > 1) {
             const sourceFolderName = buildDirectories[i].split(path.sep).pop();
             destinationPath = path.join(destinationPath, sourceFolderName);
         }

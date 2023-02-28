@@ -4,7 +4,7 @@ import path from 'node:path';
 import { build } from 'vite';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
-import { Environment } from '../../constants';
+import { EnvironmentName } from '../../constants';
 import { buildEntryPointConfig } from '../../entrypoint';
 import { runRendererDevCommand } from '../../renderer';
 
@@ -43,8 +43,10 @@ export class DevCommand implements CommandModule {
             const config = await useConfig(baseDirectoryPath);
 
             // Port
-            config.port = args.port ? parseInt(args.port, 10) : config.port || 9000;
-            config.env = Environment.DEVELOPMENT;
+            const port = args.port ? parseInt(args.port, 10) : config.get('port');
+            config.set('port', port);
+
+            config.set('env', EnvironmentName.DEVELOPMENT);
 
             // ----------------------------------------
 
@@ -56,7 +58,7 @@ export class DevCommand implements CommandModule {
                 }
 
                 mainProcess = spawn('electron', [
-                    path.join(config.rootPath, config.entrypointDirectory, 'dist', 'index.js'),
+                    path.join(config.get('rootPath'), config.get('entrypointDirectory'), 'dist', 'index.js'),
                 ], {
                     cwd: baseDirectoryPath,
                     detached: false,

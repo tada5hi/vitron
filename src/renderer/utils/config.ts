@@ -9,19 +9,19 @@ import { load } from 'locter';
 import path from 'node:path';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
-import type { Config } from '../../type';
+import type { Config } from '../../config';
 
 export async function buildRendererConfig(
     config: Config,
 ) : Promise<InlineConfig> {
-    const packageJson = await load(path.join(config.rootPath, 'package.json'));
+    const packageJson = await load(path.join(config.get('rootPath'), 'package.json'));
 
     const dependencies : string[] = Object.keys(packageJson.dependencies || {});
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});
 
     const inlineConfig : InlineConfig = {
-        mode: config.env,
-        root: path.join(config.rootPath, config.rendererDirectory),
+        mode: config.get('env'),
+        root: path.join(config.get('rootPath'), config.get('rendererDirectory')),
         build: {
             outDir: 'dist',
             emptyOutDir: false,
@@ -50,8 +50,8 @@ export async function buildRendererConfig(
         },
     };
 
-    if (config.rendererConfig) {
-        merge(inlineConfig, config.rendererConfig(inlineConfig));
+    if (config.has('rendererConfig')) {
+        merge(inlineConfig, config.get('rendererConfig')(inlineConfig));
     }
 
     return inlineConfig;

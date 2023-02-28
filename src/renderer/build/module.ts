@@ -8,40 +8,46 @@
 import path from 'node:path';
 import spawn from 'cross-spawn';
 import type { SpawnOptions } from 'node:child_process';
-import { Framework } from '../../constants';
-import type { Config } from '../../type';
+import semver from 'semver';
+import type { Config } from '../../config';
+import { Framework } from '../framework';
 import { moveRendererBuildDirectory } from './utils';
 
 export async function runRendererBuildCommand(config: Config): Promise<void> {
-    const renderDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
-
     const execOptions: SpawnOptions = {
-        cwd: config.rootPath,
+        cwd: config.get('rootPath'),
         stdio: 'inherit',
         detached: false,
     };
 
-    if (config.rendererBuildCommand) {
-        config.rendererBuildCommand({
-            config,
+    if (config.has('rendererBuildCommand')) {
+        config.get('rendererBuildCommand')({
+            config: config.get(),
 
             exec: spawn.sync,
             execOptions,
         });
     } else {
-        switch (config.framework) {
+        const framework = config.get('framework');
+
+        switch (framework.name) {
             case Framework.NUXT: {
-                spawn.sync('nuxt', ['build', renderDirectoryPath], execOptions);
-                spawn.sync('nuxt', ['generate', renderDirectoryPath], execOptions);
+                if (semver.gte(framework.version, '3.0.0')) {
+                    spawn.sync('nuxi', ['build', config.get('rendererDirectory')], execOptions);
+                    spawn.sync('nuxi', ['generate', config.get('rendererDirectory')], execOptions);
+                } else {
+                    spawn.sync('nuxt', ['build', config.get('rendererDirectory')], execOptions);
+                    spawn.sync('nuxt', ['generate', config.get('rendererDirectory')], execOptions);
+                }
                 break;
             }
             case Framework.NEXT: {
-                spawn.sync('next', ['build', renderDirectoryPath], execOptions);
-                spawn.sync('next', ['export', '-o', path.join(renderDirectoryPath, 'dist')], execOptions);
+                spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions);
+                spawn.sync('next', ['export', '-o', path.join(config.get('rendererDirectory'), 'dist')], execOptions);
                 break;
             }
             default: {
-                spawn.sync('vitron', ['vite', '--cmd', 'build', '--root', config.rootPath], execOptions);
+                spawn.sync('vitron', ['vite', '--cmd', 'build', '--root', config.get('rootPath')], execOptions);
                 break;
             }
         }

@@ -7,4 +7,5 @@
 
 export * from './build';
 export * from './dev';
+export * from './framework';
 export * from './utils';

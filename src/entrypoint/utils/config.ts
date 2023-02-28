@@ -5,27 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { load } from 'locter';
 import path from 'node:path';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
-import type { Config } from '../../type';
+import type { Config } from '../../config';
 import { getNodeBuiltInModules } from './node-builtin';
 
 export async function buildEntryPointConfig(
     config: Config,
 ) : Promise<InlineConfig> {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const packageJson = require(path.join(config.rootPath, 'package.json'));
+    const packageJson = await load(path.join(config.get('rootPath'), 'package.json'));
 
     const dependencies : string[] = Object.keys(packageJson.dependencies || {});
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});
 
     const inlineConfig : InlineConfig = {
-        mode: config.env,
-        root: path.join(config.rootPath, config.entrypointDirectory),
+        mode: config.get('env'),
+        root: path.join(config.get('rootPath'), config.get('entrypointDirectory')),
         define: {
-            'process.env.NODE_ENV': `"${config.env}"`,
-            'process.env.PORT': `"${config.port}"`,
+            'process.env.NODE_ENV': `"${config.get('env')}"`,
+            'process.env.PORT': `"${config.get('port')}"`,
         },
         build: {
             emptyOutDir: false,
@@ -33,12 +33,12 @@ export async function buildEntryPointConfig(
             target: 'es6',
             outDir: 'dist',
             lib: {
-                entry: path.join(config.rootPath, config.entrypointDirectory, 'index.ts'),
+                entry: path.join(config.get('rootPath'), config.get('entrypointDirectory'), 'index.ts'),
                 fileName: 'index',
                 formats: ['cjs'],
             },
             rollupOptions: {
-                input: path.join(config.rootPath, config.entrypointDirectory, 'index.ts'),
+                input: path.join(config.get('rootPath'), config.get('entrypointDirectory'), 'index.ts'),
                 external: [
                     ...dependencies,
                     ...peerDependencies,
@@ -80,8 +80,8 @@ export async function buildEntryPointConfig(
         },
     };
 
-    if (config.entrypointConfig) {
-        merge(config.entrypointConfig(inlineConfig), inlineConfig);
+    if (config.has('entrypointConfig')) {
+        merge(config.get('entrypointConfig')(inlineConfig), inlineConfig);
     }
 
     return inlineConfig;

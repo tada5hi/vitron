@@ -7,12 +7,12 @@
 
 import { getExportItem, load, locateMany } from 'locter';
 import { merge } from 'smob';
-import type { ConfigInput } from '../../type';
+import type { OptionsInput } from '../type';
 
-export async function findConfig(directoryPath?: string) : Promise<ConfigInput> {
+export async function findConfig(directoryPath?: string) : Promise<OptionsInput> {
     directoryPath ??= process.cwd();
 
-    const items : ConfigInput[] = [];
+    const items : OptionsInput[] = [];
 
     const fileInfos = await locateMany('vitron.config.{ts,js,json}', {
         path: directoryPath,

@@ -8,7 +8,7 @@
 import { build, createServer } from 'vite';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
-import { Environment } from '../../constants';
+import { EnvironmentName } from '../../constants';
 import { buildRendererConfig } from '../../renderer';
 
 export interface CommandArguments extends Arguments {
@@ -51,11 +51,13 @@ export class ViteCommand implements CommandModule {
         const config = await useConfig(baseDirectoryPath);
 
         // Port
-        config.port = args.port ? parseInt(args.port, 10) : config.port || 9000;
+        const port = args.port ? parseInt(args.port, 10) : config.get('port');
+        config.set('port', port);
+
         if (args.cmd === 'build') {
-            config.env = Environment.PRODUCTION;
+            config.set('env', EnvironmentName.PRODUCTION);
         } else {
-            config.env = Environment.DEVELOPMENT;
+            config.set('env', EnvironmentName.DEVELOPMENT);
         }
 
         const inlineConfig = await buildRendererConfig(config);
@@ -70,7 +72,7 @@ export class ViteCommand implements CommandModule {
             case 'dev': {
                 const server = await createServer(inlineConfig);
 
-                await server.listen(config.port);
+                await server.listen(config.get('port'));
             }
         }
     }

@@ -6,7 +6,5 @@
  */
 
 export * from './build';
-export * from './defaults';
 export * from './env';
 export * from './find';
-export * from './validate';

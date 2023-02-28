@@ -7,14 +7,12 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import type { Config } from '../../../type';
+import type { Config } from '../../../config';
 
 export async function clearRendererBuilds(config: Config) : Promise<void[]> {
-    const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
+    const rendererDirectoryPath = path.join(config.get('rootPath'), config.get('rendererDirectory'));
 
-    const buildDirectories: string[] = [
-        ...(Array.isArray(config.rendererBuildDirectory) ? config.rendererBuildDirectory : [config.rendererBuildDirectory]),
-    ];
+    const buildDirectories: string[] = config.get('rendererBuildDirectory');
 
     const promises : Promise<void>[] = [];
 

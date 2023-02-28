@@ -7,34 +7,41 @@
 
 import spawn from 'cross-spawn';
 import type { ChildProcess, SpawnOptions } from 'node:child_process';
-import { Framework } from '../../constants';
-import type { Config } from '../../type';
+import semver from 'semver';
+import type { Config } from '../../config';
+import { Framework } from '../framework';
 
 export function runRendererDevCommand(config: Config): ChildProcess {
     const execOptions: SpawnOptions = {
-        cwd: config.rootPath,
+        cwd: config.get('rootPath'),
         stdio: 'inherit',
         detached: false,
     };
 
-    if (config.rendererDevCommand) {
-        return config.rendererDevCommand({
-            config,
+    if (config.get('rendererDevCommand')) {
+        return config.get('rendererDevCommand')({
+            config: config.get(),
 
             exec: spawn,
             execOptions,
         });
     }
 
-    switch (config.framework) {
+    const framework = config.get('framework');
+
+    switch (framework.name) {
         case Framework.NUXT: {
-            return spawn('nuxt', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
+            if (semver.gte(framework.version, '3.0.0')) {
+                return spawn('nuxi', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
+            }
+
+            return spawn('nuxt', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
         }
         case Framework.NEXT: {
-            return spawn('next', ['-p', config.port.toString(), config.rendererDirectory], execOptions);
+            return spawn('next', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
         }
         default: {
-            return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.port.toString()], execOptions);
+            return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.get('port').toString()], execOptions);
         }
     }
 }

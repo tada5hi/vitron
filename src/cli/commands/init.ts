@@ -63,8 +63,8 @@ export class InitCommand implements CommandModule {
             // Config
             const config = await useConfig(baseDirectoryPath);
 
-            const entrypointDirectoryPath = path.join(config.rootPath, config.entrypointDirectory);
-            const rendererDirectoryPath = path.join(config.rootPath, config.rendererDirectory);
+            const entrypointDirectoryPath = path.join(config.get('rootPath'), config.get('entrypointDirectory'));
+            const rendererDirectoryPath = path.join(config.get('rootPath'), config.get('rendererDirectory'));
 
             const directoryPaths : string[] = [
                 entrypointDirectoryPath,
@@ -84,7 +84,7 @@ export class InitCommand implements CommandModule {
 
                 const isTpl = templateFiles[i].split('.').pop() === 'tpl';
                 const destinationFilePath = path.join(
-                    config.rootPath,
+                    config.get('rootPath'),
                     isTpl ?
                         removeFileNameExtension(templateFiles[i], ['.tpl']) :
                         templateFiles[i],
@@ -102,8 +102,8 @@ export class InitCommand implements CommandModule {
 
                     if (isTpl) {
                         content = render(content, {
-                            entrypointDistDirectory: `${config.entrypointDirectory.replace(/\\/g, '/')}/dist`,
-                            buildDirectory: config.buildDirectory.replace(/\\/g, '/'),
+                            entrypointDistDirectory: `${config.get('entrypointDirectory').replace(/\\/g, '/')}/dist`,
+                            buildDirectory: config.get('buildDirectory').replace(/\\/g, '/'),
                         });
                     }
 

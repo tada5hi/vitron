@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Environment } from '../../constants';
-import type { Config } from '../../type';
+import type { EnvironmentName } from '../../constants';
 import { hasEnv, requireFromEnv } from '../../utils';
+import type { Options } from '../type';
 
-export function extractConfigFromEnv() : Partial<Config> {
-    const config : Partial<Config> = {};
+export function extractConfigFromEnv() : Partial<Options> {
+    const config : Partial<Options> = {};
 
     if (hasEnv('NODE_ENV')) {
-        config.env = requireFromEnv('NODE_ENV') as Environment;
+        config.env = requireFromEnv('NODE_ENV') as EnvironmentName;
     }
 
     return config;

@@ -6,5 +6,5 @@
  */
 
 export * from './env';
-export * from './framework';
+export * from '../renderer/framework/utils/guess';
 export * from './fs';

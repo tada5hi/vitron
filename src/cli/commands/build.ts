@@ -5,7 +5,7 @@ import spawn from 'cross-spawn';
 import fs from 'node:fs';
 import { build } from 'vite';
 import { useConfig } from '../../config';
-import { Environment } from '../../constants';
+import { EnvironmentName } from '../../constants';
 import { buildEntryPointConfig } from '../../entrypoint';
 import {
     clearRendererBuilds,
@@ -54,7 +54,7 @@ export class BuildCommand implements CommandModule {
 
         // Config
         const config = await useConfig(rootPath);
-        config.env = Environment.PRODUCTION;
+        config.set('env', EnvironmentName.PRODUCTION);
 
         const configFileName = args.config || 'electron-builder.yml';
         builderArgs.push(...['--config', configFileName]);
@@ -64,8 +64,8 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...flagsMapped);
 
         // Clear old build data
-        await fs.promises.rm(path.join(rootPath, config.entrypointDirectory, 'dist'), { recursive: true });
-        await fs.promises.rm(path.join(rootPath, config.buildDirectory), { recursive: true });
+        await fs.promises.rm(path.join(rootPath, config.get('entrypointDirectory'), 'dist'), { recursive: true });
+        await fs.promises.rm(path.join(rootPath, config.get('buildDirectory')), { recursive: true });
 
         // Clear old renderer data
         await clearRendererBuilds(config);
