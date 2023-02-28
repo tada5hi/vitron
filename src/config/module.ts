@@ -5,20 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Continu } from 'continu';
-import type { Options, OptionsInput } from './type';
-import { buildConfig, findConfig } from './utils';
+import type { Config, OptionsInput } from './type';
+import { buildConfig, loadOptions } from './utils';
 
-let instance : Continu<Options, OptionsInput> | undefined;
+let instance : Config | undefined;
 let instancePromise : Promise<OptionsInput> | undefined;
 
-export async function useConfig(directoryPath: string) : Promise<Continu<Options, OptionsInput>> {
+export async function useConfig(directoryPath: string) : Promise<Config> {
     if (typeof instance !== 'undefined') {
         return instance;
     }
 
     if (!instancePromise) {
-        instancePromise = findConfig(directoryPath);
+        instancePromise = loadOptions(directoryPath);
     }
 
     instance = buildConfig(await instancePromise);
