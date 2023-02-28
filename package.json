@@ -77,7 +77,7 @@
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
         "electron": "^23.1.1",
-        "eslint": "^8.34.0",
+        "eslint": "^8.35.0",
         "husky": "^8.0.3",
         "rimraf": "^4.1.2",
         "semantic-release": "^19.0.5",
