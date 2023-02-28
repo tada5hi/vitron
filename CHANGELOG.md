@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/tada5hi/vitron/compare/v1.0.25...v1.1.0) (2023-02-28)
+
+
+### Features
+
+* enhance config management + nuxt3 support ([34687a4](https://github.com/tada5hi/vitron/commit/34687a49687cbab42f167e794fa8443d296595dc))
+* removed glob & fs-extra dependencies ([32b97cb](https://github.com/tada5hi/vitron/commit/32b97cbde8d786465597ba73a271855e1c2168ca))
+
 ## [1.0.25](https://github.com/tada5hi/vitron/compare/v1.0.24...v1.0.25) (2023-02-27)
 
 
