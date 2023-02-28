@@ -1,8 +1,8 @@
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import path from 'path';
+import path from 'node:path';
 import type { SpawnSyncOptions } from 'child_process';
 import spawn from 'cross-spawn';
-import fs from 'fs-extra';
+import fs from 'node:fs';
 import { build } from 'vite';
 import { useConfig } from '../../config';
 import { Environment } from '../../constants';
@@ -64,8 +64,8 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...flagsMapped);
 
         // Clear old build data
-        fs.removeSync(path.join(rootPath, config.entrypointDirectory, 'dist'));
-        fs.removeSync(path.join(rootPath, config.buildDirectory));
+        await fs.promises.rm(path.join(rootPath, config.entrypointDirectory, 'dist'), { recursive: true });
+        await fs.promises.rm(path.join(rootPath, config.buildDirectory), { recursive: true });
 
         // Clear old renderer data
         await clearRendererBuilds(config);

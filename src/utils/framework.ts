@@ -1,5 +1,6 @@
-import path from 'path';
-import fs from 'fs-extra';
+import { loadSync } from 'locter';
+import path from 'node:path';
+import fs from 'node:fs';
 import { Framework } from '../constants';
 
 export function isValidFramework(input: unknown) : input is Framework {
@@ -20,8 +21,7 @@ export function guessFramework(rootPath?: string) : `${Framework}` | undefined {
         return undefined;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const { dependencies, devDependencies, peerDependencies } = require(packageJsonFilePath);
+    const { dependencies, devDependencies, peerDependencies } = loadSync(packageJsonFilePath);
 
     const dependencyNames : string[] = Object.keys({
         ...(dependencies || {}),

@@ -7,8 +7,8 @@
 
 import { removeFileNameExtension } from 'locter';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import path from 'path';
-import fs from 'fs-extra';
+import path from 'node:path';
+import fs from 'node:fs';
 import { render } from 'mustache';
 import { useConfig } from '../../config';
 import { createRecursiveDirectory } from '../../utils';

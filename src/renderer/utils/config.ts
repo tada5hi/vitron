@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { load } from 'locter';
 import path from 'path';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
@@ -13,8 +14,7 @@ import type { Config } from '../../type';
 export async function buildRendererConfig(
     config: Config,
 ) : Promise<InlineConfig> {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const packageJson = require(path.join(config.rootPath, 'package.json'));
+    const packageJson = await load(path.join(config.rootPath, 'package.json'));
 
     const dependencies : string[] = Object.keys(packageJson.dependencies || {});
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});

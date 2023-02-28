@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
-import fs from 'fs-extra';
+import path from 'node:path';
+import fs from 'node:fs';
 import type { Config } from '../../../type';
 
 export async function moveRendererBuildDirectory(config: Config) : Promise<void> {
@@ -28,9 +28,10 @@ export async function moveRendererBuildDirectory(config: Config) : Promise<void>
             destinationPath = path.join(destinationPath, sourceFolderName);
         }
 
-        const promise = fs.copy(
+        const promise = fs.promises.cp(
             path.join(directoryPath, buildDirectories[i]),
             destinationPath,
+            { recursive: true },
         );
 
         promises.push(promise);

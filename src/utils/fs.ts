@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import fs from 'fs-extra';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export async function createRecursiveDirectory(input: string) {
     if (!path.isAbsolute(input)) {
