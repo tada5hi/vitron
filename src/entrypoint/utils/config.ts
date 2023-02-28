@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import path from 'node:path';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
 import type { Config } from '../../type';

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import path from 'node:path';
 import spawn from 'cross-spawn';
-import type { SpawnOptions } from 'child_process';
+import type { SpawnOptions } from 'node:child_process';
 import { Framework } from '../../constants';
 import type { Config } from '../../type';
 import { moveRendererBuildDirectory } from './utils';

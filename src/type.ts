@@ -1,4 +1,4 @@
-import type { ChildProcess, SpawnOptions, SpawnSyncOptions } from 'child_process';
+import type { ChildProcess, SpawnOptions, SpawnSyncOptions } from 'node:child_process';
 import type spawn from 'cross-spawn';
 import type { UserConfig } from 'vite';
 import type { Environment, Framework } from './constants';

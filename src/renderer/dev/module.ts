@@ -6,7 +6,7 @@
  */
 
 import spawn from 'cross-spawn';
-import type { ChildProcess, SpawnOptions } from 'child_process';
+import type { ChildProcess, SpawnOptions } from 'node:child_process';
 import { Framework } from '../../constants';
 import type { Config } from '../../type';
 
