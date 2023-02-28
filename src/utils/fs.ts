@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export async function createRecursiveDirectory(input: string) {
+export async function ensureDirectoryExists(input: string) : Promise<void> {
     if (!path.isAbsolute(input)) {
         input = path.join(process.cwd(), input);
     }

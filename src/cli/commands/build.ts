@@ -64,8 +64,21 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...flagsMapped);
 
         // Clear old build data
-        await fs.promises.rm(path.join(rootPath, config.get('entrypointDirectory'), 'dist'), { recursive: true });
-        await fs.promises.rm(path.join(rootPath, config.get('buildDirectory')), { recursive: true });
+        try {
+            const entrypointDistDirectory = path.join(rootPath, config.get('entrypointDirectory'), 'dist');
+            await fs.promises.access(entrypointDistDirectory, fs.constants.R_OK | fs.constants.O_DIRECTORY);
+            await fs.promises.rm(entrypointDistDirectory, { recursive: true });
+        } catch (e) {
+            // ...
+        }
+
+        try {
+            const buildDirectory = path.join(rootPath, config.get('buildDirectory'));
+            await fs.promises.access(buildDirectory, fs.constants.R_OK | fs.constants.O_DIRECTORY);
+            await fs.promises.rm(buildDirectory, { recursive: true });
+        } catch (e) {
+            // ...
+        }
 
         // Clear old renderer data
         await clearRendererBuilds(config);

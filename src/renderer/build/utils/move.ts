@@ -10,22 +10,25 @@ import fs from 'node:fs';
 import type { Config } from '../../../config';
 
 export async function moveRendererBuildDirectory(config: Config) : Promise<void> {
-    const directoryPath = path.join(config.get('rootPath'), config.get('rendererDirectory'));
+    const sourceBasePath = path.join(config.get('rootPath'), config.get('rendererDirectory'));
+    const destinationBasePath = path.join(config.get('rootPath'), config.get('entrypointDirectory'));
 
     const buildDirectories: string[] = config.get('rendererBuildDirectory');
 
     const promises : Promise<void>[] = [];
 
     for (let i = 0; i < buildDirectories.length; i++) {
-        let destinationPath = path.join(config.get('rootPath'), config.get('entrypointDirectory'), 'dist');
+        let destinationPath = path.resolve(destinationBasePath, 'dist');
 
         if (buildDirectories.length > 1) {
-            const sourceFolderName = buildDirectories[i].split(path.sep).pop();
+            const sourceFolderName = path.basename(buildDirectories[i]);
             destinationPath = path.join(destinationPath, sourceFolderName);
         }
 
+        const sourcePath = path.resolve(sourceBasePath, buildDirectories[i]);
+
         const promise = fs.promises.cp(
-            path.join(directoryPath, buildDirectories[i]),
+            sourcePath,
             destinationPath,
             { recursive: true },
         );

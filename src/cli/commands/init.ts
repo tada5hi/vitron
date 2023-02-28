@@ -11,7 +11,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { render } from 'mustache';
 import { useConfig } from '../../config';
-import { createRecursiveDirectory } from '../../utils';
+import { ensureDirectoryExists } from '../../utils';
 
 async function getFiles(dir: string, relativePath = '') : Promise<string[]> {
     const direntMany = await fs.promises.readdir(dir, { withFileTypes: true });
@@ -73,7 +73,7 @@ export class InitCommand implements CommandModule {
 
             // Create directories
             for (let i = 0; i < directoryPaths.length; i++) {
-                await createRecursiveDirectory(directoryPaths[i]);
+                await ensureDirectoryExists(directoryPaths[i]);
             }
 
             const tplPath: string = path.join(__dirname, '..', '..', '..', 'assets', 'templates');
@@ -90,7 +90,7 @@ export class InitCommand implements CommandModule {
                         templateFiles[i],
                 );
                 const destinationDirectoryPath = path.dirname(destinationFilePath);
-                await createRecursiveDirectory(destinationDirectoryPath);
+                await ensureDirectoryExists(destinationDirectoryPath);
 
                 try {
                     await fs.promises.access(destinationFilePath, fs.constants.F_OK | fs.constants.R_OK);
@@ -102,8 +102,10 @@ export class InitCommand implements CommandModule {
 
                     if (isTpl) {
                         content = render(content, {
-                            entrypointDistDirectory: `${config.get('entrypointDirectory').replace(/\\/g, '/')}/dist`,
-                            buildDirectory: config.get('buildDirectory').replace(/\\/g, '/'),
+                            entrypointDistDirectory: `${config.get('entrypointDirectory')
+                                .replace(/\\/g, '/')}/dist`,
+                            buildDirectory: config.get('buildDirectory')
+                                .replace(/\\/g, '/'),
                         });
                     }
 

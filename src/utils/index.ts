@@ -6,5 +6,4 @@
  */
 
 export * from './env';
-export * from '../renderer/framework/utils/detect';
 export * from './fs';
