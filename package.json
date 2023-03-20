@@ -50,7 +50,7 @@
     "dependencies": {
         "continu": "^1.0.5",
         "cross-spawn": "^7.0.3",
-        "locter": "^1.0.5",
+        "locter": "^1.0.10",
         "mustache": "^4.2.0",
         "semver": "^7.3.8",
         "smob": "^0.1.0",
