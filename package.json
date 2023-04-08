@@ -67,7 +67,7 @@
         "@types/mustache": "^4.2.2",
         "@types/node": "^18.15.11",
         "@types/semver": "^7.3.13",
-        "@types/yargs": "^17.0.22",
+        "@types/yargs": "^17.0.24",
         "changelogen": "^0.5.2",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
