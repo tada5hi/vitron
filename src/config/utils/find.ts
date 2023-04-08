@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getExportItem, load, locateMany } from 'locter';
+import { getModuleExport, load, locateMany } from 'locter';
 import { merge } from 'smob';
 import type { OptionsInput } from '../type';
 
@@ -18,7 +18,7 @@ export async function loadOptions(path?: string) : Promise<OptionsInput> {
 
     for (let i = 0; i < fileInfos.length; i++) {
         const data = await load(fileInfos[i]);
-        const fileExport = getExportItem(data);
+        const fileExport = getModuleExport(data);
         if (fileExport.key === 'default') {
             items.push(fileExport.value);
         }
