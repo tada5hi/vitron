@@ -28,20 +28,23 @@ export function runRendererDevCommand(config: Config): ChildProcess {
     }
 
     const framework = config.get('framework');
+    if (
+        framework &&
+        framework.name
+    ) {
+        switch (framework.name) {
+            case Framework.NUXT: {
+                if (semver.gte(framework.version, '3.0.0')) {
+                    return spawn('nuxi', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
+                }
 
-    switch (framework.name) {
-        case Framework.NUXT: {
-            if (semver.gte(framework.version, '3.0.0')) {
-                return spawn('nuxi', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
+                return spawn('nuxt', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
             }
-
-            return spawn('nuxt', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
-        }
-        case Framework.NEXT: {
-            return spawn('next', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
-        }
-        default: {
-            return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.get('port').toString()], execOptions);
+            case Framework.NEXT: {
+                return spawn('next', ['-p', config.get('port').toString(), config.get('rendererDirectory')], execOptions);
+            }
         }
     }
+
+    return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.get('port').toString()], execOptions);
 }
