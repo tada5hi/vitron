@@ -1,3 +1,28 @@
+## v1.1.2
+
+[compare changes](https://github.com/tada5hi/vitron/compare/v1.1.1...v1.1.2)
+
+
+### 🩹 Fixes
+
+  - **deps:** Bump dependencies ([f05612e](https://github.com/tada5hi/vitron/commit/f05612e))
+  - Typings + extended readme section ([df78723](https://github.com/tada5hi/vitron/commit/df78723))
+
+### 📦 Build
+
+  - Replaced semantic-release with changelogen ([da3afa3](https://github.com/tada5hi/vitron/commit/da3afa3))
+  - **deps-dev:** Bump electron to v24 ([b725646](https://github.com/tada5hi/vitron/commit/b725646))
+  - **deps-dev:** Bump @tada5hi/eslint-config-typescript ([#397](https://github.com/tada5hi/vitron/pull/397))
+  - **deps-dev:** Bump rimraf from 4.1.2 to 4.4.1 ([#390](https://github.com/tada5hi/vitron/pull/390))
+  - **deps-dev:** Bump @types/node from 18.14.2 to 18.15.11 ([#400](https://github.com/tada5hi/vitron/pull/400))
+  - **deps-dev:** Bump @types/yargs from 17.0.22 to 17.0.24 ([#399](https://github.com/tada5hi/vitron/pull/399))
+  - **deps-dev:** Bump @tada5hi/commitlint-config from 1.0.0 to 1.0.1 ([#398](https://github.com/tada5hi/vitron/pull/398))
+  - **deps-dev:** Bump eslint from 8.34.0 to 8.38.0 ([#396](https://github.com/tada5hi/vitron/pull/396))
+
+### ❤️  Contributors
+
+- Tada5hi <peter.placzek1996@gmail.com>
+
 ## [1.1.1](https://github.com/tada5hi/vitron/compare/v1.1.0...v1.1.1) (2023-02-28)
 
 
