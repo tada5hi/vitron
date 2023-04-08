@@ -71,7 +71,7 @@
         "changelogen": "^0.5.2",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
-        "electron": "^23.1.1",
+        "electron": "^24.0.0",
         "eslint": "^8.34.0",
         "husky": "^8.0.3",
         "rimraf": "^4.1.2",
@@ -80,7 +80,7 @@
         "typescript": "^5.0.4"
     },
     "peerDependencies": {
-        "electron": "20.x || 21.x || 22.x || 23.x",
+        "electron": "20.x || 21.x || 22.x || 23.x || 24.x",
         "electron-builder": "22.x || 23.x || 24.x"
     }
 }
