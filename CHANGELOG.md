@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/tada5hi/vitron/compare/v1.1.0...v1.1.1) (2023-02-28)
+
+
+### Bug Fixes
+
+* moving renderer build directory ([565233b](https://github.com/tada5hi/vitron/commit/565233b5ef721fa32961aa5bec23245be4d7a53a))
+
 # [1.1.0](https://github.com/tada5hi/vitron/compare/v1.0.25...v1.1.0) (2023-02-28)
 
 
