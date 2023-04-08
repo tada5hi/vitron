@@ -47,6 +47,13 @@ This will create the following files/directories, if they do not already exist:
         - index.html
 - .electron-builder.yml
 
+After the directory structure has been created, 
+the dependencies must be installed using a package manager like npm, pnpm, .... In the following example, npm is used:
+
+```bash
+npm install
+```
+
 The default location of the `entrypoint` and `renderer` directory can
 be changed with a configuration file in the root directory  of the project.
 

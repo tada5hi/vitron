@@ -41,13 +41,17 @@ export function buildConfig(input: OptionsInput) : Config {
                     return input as FrameworkInfo;
                 }
 
-                const directoryPath = path.dirname(require.resolve(input));
-                const packageJson = loadSync(path.join(directoryPath, 'package.json'));
+                if (typeof input === 'string') {
+                    const directoryPath = path.dirname(require.resolve(input));
+                    const packageJson = loadSync(path.join(directoryPath, 'package.json'));
 
-                return {
-                    name: input,
-                    version: `${packageJson.version}`,
-                };
+                    return {
+                        name: input,
+                        version: `${packageJson.version}`,
+                    } as FrameworkInfo;
+                }
+
+                return undefined;
             },
             rendererBuildDirectory: (input) => {
                 if (!Array.isArray(input)) {
