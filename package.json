@@ -23,7 +23,7 @@
         "lint": "eslint --ext .js,.vue,.ts ./src",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "npx husky install",
-        "prepublishOnly": "npm run build"
+        "release": "npm run build && changelogen --release --push && npm publish"
     },
     "keywords": [
         "electron",
@@ -68,6 +68,7 @@
         "@types/node": "^18.14.2",
         "@types/semver": "^7.3.13",
         "@types/yargs": "^17.0.22",
+        "changelogen": "^0.5.2",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
         "electron": "^23.1.1",
