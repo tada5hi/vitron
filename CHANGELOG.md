@@ -1,3 +1,16 @@
+## v1.1.3
+
+[compare changes](https://github.com/tada5hi/vitron/compare/v1.1.2...v1.1.3)
+
+
+### 🩹 Fixes
+
+  - Renderer build and dev command for non framework ([9c983b4](https://github.com/tada5hi/vitron/commit/9c983b4))
+
+### ❤️  Contributors
+
+- Tada5hi <peter.placzek1996@gmail.com>
+
 ## v1.1.2
 
 [compare changes](https://github.com/tada5hi/vitron/compare/v1.1.1...v1.1.2)
