@@ -58,10 +58,9 @@
         "zod": "^3.21.4"
     },
     "devDependencies": {
-        "@semantic-release/changelog": "^6.0.3",
-        "@semantic-release/git": "^10.0.1",
         "@tada5hi/commitlint-config": "^1.0.2",
         "@tada5hi/eslint-config-typescript": "^1.1.7",
+        "@tada5hi/semantic-release": "^0.1.0",
         "@types/cross-spawn": "^6.0.2",
         "@types/fs-extra": "^11.0.1",
         "@types/glob": "^8.1.0",
