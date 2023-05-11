@@ -69,7 +69,7 @@ jobs:
 
     release:
         name: Release
-        needs: [lint, tests]
+        needs: [lint, build]
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout
