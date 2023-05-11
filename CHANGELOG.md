@@ -1,3 +1,12 @@
+## [1.1.5](https://github.com/tada5hi/vitron/compare/v1.1.4...v1.1.5) (2023-05-11)
+
+
+### Bug Fixes
+
+* **deps:** bump semver and @types/semver ([#417](https://github.com/tada5hi/vitron/issues/417)) ([9dd101f](https://github.com/tada5hi/vitron/commit/9dd101f9f8dce43149b9732c2b44e297eea92b40))
+* **deps:** bump vite from 4.2.1 to 4.3.5 ([#415](https://github.com/tada5hi/vitron/issues/415)) ([86acfd3](https://github.com/tada5hi/vitron/commit/86acfd3888fa79eb53eb6c5c7a42bbe822044c8b))
+* **deps:** bump yargs from 17.7.1 to 17.7.2 ([#422](https://github.com/tada5hi/vitron/issues/422)) ([f549fa0](https://github.com/tada5hi/vitron/commit/f549fa0cf91d28312b3e6751ea180bf7248e8e11))
+
 ## v1.1.4
 
 [compare changes](https://github.com/tada5hi/vitron/compare/v1.1.3...v1.1.4)
