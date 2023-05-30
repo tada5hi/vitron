@@ -10,7 +10,7 @@ import spawn from 'cross-spawn';
 import type { SpawnOptions } from 'node:child_process';
 import semver from 'semver';
 import type { Config } from '../../config';
-import { Framework } from '../framework';
+import { Framework, isPackageInfo } from '../../utils';
 import { moveRendererBuildDirectory } from './utils';
 
 export async function runRendererBuildCommand(config: Config): Promise<void> {
@@ -29,10 +29,7 @@ export async function runRendererBuildCommand(config: Config): Promise<void> {
         });
     } else {
         const framework = config.get('framework');
-        if (
-            framework &&
-            framework.name
-        ) {
+        if (isPackageInfo(framework)) {
             switch (framework.name) {
                 case Framework.NUXT: {
                     if (semver.gte(framework.version, '3.0.0')) {

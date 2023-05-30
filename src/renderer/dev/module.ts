@@ -9,7 +9,8 @@ import spawn from 'cross-spawn';
 import type { ChildProcess, SpawnOptions } from 'node:child_process';
 import semver from 'semver';
 import type { Config } from '../../config';
-import { Framework } from '../framework';
+import { Framework } from '../../utils';
+import { isPackageInfo } from '../../utils/package';
 
 export function runRendererDevCommand(config: Config): ChildProcess {
     const execOptions: SpawnOptions = {
@@ -28,10 +29,7 @@ export function runRendererDevCommand(config: Config): ChildProcess {
     }
 
     const framework = config.get('framework');
-    if (
-        framework &&
-        framework.name
-    ) {
+    if (isPackageInfo(framework)) {
         switch (framework.name) {
             case Framework.NUXT: {
                 if (semver.gte(framework.version, '3.0.0')) {

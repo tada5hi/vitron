@@ -8,24 +8,16 @@
 import { loadSync } from 'locter';
 import path from 'node:path';
 import fs from 'node:fs';
-import { hasOwnProperty } from 'smob';
+import { hasOwnProperty, isObject } from 'smob';
+import type { PackageInfo } from '../../package';
 import { Framework } from '../constants';
-import type { FrameworkInfo } from '../type';
 
-export function detectFramework(rootPath?: string) : FrameworkInfo | undefined {
-    if (typeof rootPath === 'undefined') {
-        rootPath = process.cwd();
-    } else if (!path.isAbsolute(rootPath)) {
-        rootPath = path.join(process.cwd(), rootPath);
-    }
-
-    const packageJsonFilePath = path.join(rootPath, 'package.json');
-
-    if (!fs.existsSync(packageJsonFilePath)) {
+function parsePackageJSONOutput(input: unknown) {
+    if (!isObject(input)) {
         return undefined;
     }
 
-    const { dependencies, devDependencies, peerDependencies } = loadSync(packageJsonFilePath);
+    const { dependencies, devDependencies, peerDependencies } = input;
 
     const dependencyMap : Record<string, string> = {
         ...(dependencies || {}),
@@ -50,4 +42,26 @@ export function detectFramework(rootPath?: string) : FrameworkInfo | undefined {
     }
 
     return undefined;
+}
+
+function buildPackageJSONPath(rootPath?: string) {
+    if (typeof rootPath === 'undefined') {
+        rootPath = process.cwd();
+    } else if (!path.isAbsolute(rootPath)) {
+        rootPath = path.join(process.cwd(), rootPath);
+    }
+
+    return path.join(rootPath, 'package.json');
+}
+
+export function detectFrameworkSync(rootPath?: string) : PackageInfo | undefined {
+    const packageJsonFilePath = buildPackageJSONPath(rootPath);
+
+    if (!fs.existsSync(packageJsonFilePath)) {
+        return undefined;
+    }
+
+    const packageJson = loadSync(packageJsonFilePath);
+
+    return parsePackageJSONOutput(packageJson);
 }

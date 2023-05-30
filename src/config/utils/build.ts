@@ -7,12 +7,19 @@
 
 import { Continu } from 'continu';
 import { loadSync } from 'locter';
-import { isObject, merge } from 'smob';
+import { merge } from 'smob';
 import zod from 'zod';
 import path from 'node:path';
 import { EnvironmentName } from '../../constants';
-import { Framework, detectFramework } from '../../renderer';
-import type { FrameworkInfo } from '../../renderer/framework/type';
+import {
+    Framework,
+    detectFrameworkSync,
+    isPackageInfo,
+    isPackageNameWithVersion,
+    parsePackageNameWithVersion,
+} from '../../utils';
+
+import type { PackageInfo } from '../../utils';
 import type { Config, Options, OptionsInput } from '../type';
 import { extractConfigFromEnv } from './env';
 
@@ -37,18 +44,22 @@ export function buildConfig(input: OptionsInput) : Config {
                 return path.isAbsolute(input) ? `${input}` : path.join(process.cwd(), `${input}`);
             },
             framework: (input) => {
-                if (isObject(input)) {
-                    return input as FrameworkInfo;
+                if (isPackageInfo(input)) {
+                    return input;
                 }
 
                 if (typeof input === 'string') {
+                    if (isPackageNameWithVersion(input)) {
+                        return parsePackageNameWithVersion(input);
+                    }
+
                     const directoryPath = path.dirname(require.resolve(input));
                     const packageJson = loadSync(path.join(directoryPath, 'package.json'));
 
                     return {
                         name: input,
                         version: `${packageJson.version}`,
-                    } as FrameworkInfo;
+                    } as PackageInfo;
                 }
 
                 return undefined;
@@ -87,7 +98,7 @@ export function buildConfig(input: OptionsInput) : Config {
     instance.setRaw(raw);
 
     if (!instance.has('framework')) {
-        const framework = detectFramework(instance.get('rootPath'));
+        const framework = detectFrameworkSync(instance.get('rootPath'));
         if (framework) {
             instance.set('framework', framework);
         }

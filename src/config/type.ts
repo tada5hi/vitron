@@ -9,16 +9,15 @@ import type { Continu } from 'continu';
 import type { ChildProcess } from 'node:child_process';
 import type { UserConfig } from 'vite';
 import type { EnvironmentName } from '../constants';
-import type { Framework } from '../renderer';
-import type { FrameworkInfo } from '../renderer/framework/type';
 import type { RendererBuildCommandContext, RendererDevCommandContext } from '../type';
+import type { PackageInfo } from '../utils/package';
 
 export type Options = {
     env: `${EnvironmentName}`,
     port: number,
     rootPath: string,
 
-    framework?: FrameworkInfo,
+    framework?: PackageInfo,
 
     buildDirectory: string,
 
@@ -33,7 +32,7 @@ export type Options = {
 };
 
 export type OptionsInput = Partial<Omit<Options, 'framework' | 'rendererBuildDirectory'>> & {
-    framework?: FrameworkInfo | `${Framework}`,
+    framework?: PackageInfo | string,
     rendererBuildDirectory?: string | string[]
 };
 
