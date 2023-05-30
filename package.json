@@ -70,7 +70,7 @@
         "@types/yargs": "^17.0.24",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
-        "electron": "^24.3.1",
+        "electron": "^25.0.0",
         "eslint": "^8.41.0",
         "husky": "^8.0.3",
         "rimraf": "^5.0.1",
