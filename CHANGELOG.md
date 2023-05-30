@@ -1,3 +1,19 @@
+# [1.2.0](https://github.com/tada5hi/vitron/compare/v1.1.5...v1.2.0) (2023-05-30)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.1.0 to 1.1.2 ([#445](https://github.com/tada5hi/vitron/issues/445)) ([0ad1c98](https://github.com/tada5hi/vitron/commit/0ad1c98306bc0dc88a5ab1c8db3ba02f3a2dd9dc))
+* **deps:** bump semver from 7.5.0 to 7.5.1 ([#426](https://github.com/tada5hi/vitron/issues/426)) ([d0d8250](https://github.com/tada5hi/vitron/commit/d0d8250a9300847273191444a13df399b2c0df17))
+* **deps:** bump smob from 1.0.0 to 1.4.0 ([#443](https://github.com/tada5hi/vitron/issues/443)) ([f9087a1](https://github.com/tada5hi/vitron/commit/f9087a159b425a3f25a48e12241a2ad373ee3ab9))
+* **deps:** bump vite from 4.3.5 to 4.3.8 ([#435](https://github.com/tada5hi/vitron/issues/435)) ([eba8b20](https://github.com/tada5hi/vitron/commit/eba8b20525162d5c84d020b608231e89dfa5c922))
+* **deps:** bump vite from 4.3.8 to 4.3.9 ([#444](https://github.com/tada5hi/vitron/issues/444)) ([1de234b](https://github.com/tada5hi/vitron/commit/1de234b8d6af62ef281480799b78d726a4d4cf45))
+
+
+### Features
+
+* enhance and optimize framework detection & validation ([1850822](https://github.com/tada5hi/vitron/commit/1850822299a4e1a0a228b5b2cba95e2eda47b1f7))
+
 ## [1.1.5](https://github.com/tada5hi/vitron/compare/v1.1.4...v1.1.5) (2023-05-11)
 
 
