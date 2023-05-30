@@ -6,12 +6,13 @@
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
 This is a library to build beautiful (win, linux, mac) desktop apps
-for modern web projects with **vite** and **electron**.
+for modern web projects with **vite** and **electron** 🔥.
 
 **Table of Contents**
 
 - [Installation](#installation)
 - [Setup](#setup)
+  - [Frameworks](#frameworks)
 - [Usage](#usage)
 - [License](#license)
 
@@ -20,14 +21,6 @@ for modern web projects with **vite** and **electron**.
 ```bash
 npm install --save vitron
 ```
-
----
-**Important NOTE**
-
-The `README.md` file is under construction ☂ at the moment.
-So please stay patient or contribute to it, till it covers all parts ⭐.
-
----
 
 ## Setup
 
@@ -68,6 +61,11 @@ module.exports = {
     rendererDirectory: 'src/renderer',
 }
 ```
+
+### Frameworks
+
+Various frontend frameworks, such as `Nuxt.js` and `Next.js`, can be used out of the box and do not require any special configuration 🎉. 
+The framework files only need to be placed in the `rendererDirectory`.
 
 ## Usage
 
