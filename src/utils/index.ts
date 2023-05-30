@@ -6,4 +6,6 @@
  */
 
 export * from './env';
-export * from './fs';
+export * from './file-system';
+export * from './package';
+export * from './framework';

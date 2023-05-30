@@ -4,16 +4,13 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
-import type { Framework } from './constants';
-
-export type FrameworkInfo = {
+export type PackageInfo = {
     /**
      * Name
      *
      * e.g. nuxt, next, ...
      */
-    name: `${Framework}`,
+    name: string,
     /**
      * Semver version number
      * e.g. v2.0.0
