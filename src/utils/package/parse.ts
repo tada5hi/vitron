@@ -13,8 +13,12 @@ export function parsePackageNameWithVersion(input: string) : PackageInfo {
         version,
     ] = input.split('@');
 
+    if (!version) {
+        throw new SyntaxError('The package version is missing in the input string.');
+    }
+
     return {
         name,
-        version: version || '1.0.0',
+        version,
     };
 }
