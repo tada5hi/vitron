@@ -1,0 +1,15 @@
+{
+    "extends": "@tada5hi/tsconfig",
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "declarationDir": "dist",
+        "lib": [
+            "ESNext"
+        ],
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "target": "ESNext",
+        "esModuleInterop": true,
+        "resolveJsonModule": true
+    }
+}

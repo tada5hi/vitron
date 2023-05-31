@@ -1,0 +1,19 @@
+{
+    "name": "nuxt",
+    "private": true,
+    "version": "1.0.0",
+    "main": "index.js",
+    "description": "This is my first vitron app.",
+    "scripts": {
+        "dev": "vitron dev",
+        "build": "vitron build",
+        "prepare": "nuxi prepare"
+    },
+    "license": "ISC",
+    "devDependencies": {
+        "electron": "^25.0.0",
+        "nuxt": "^3.5.2",
+        "vitron": "^1.2.0",
+        "electron-builder": "^23.6.0"
+    }
+}

@@ -1,0 +1,24 @@
+appId: com.example.electron
+copyright: Copyright © 2021 tada5hi
+electronVersion: 25.0.0
+directories:
+    output: dist
+    buildResources: resources
+artifactName: app-${version}.${ext}
+extraMetadata:
+    main: src/entrypoint/dist/index.js
+files:
+    - from: .
+      filter:
+          - package.json
+          - src/entrypoint/dist/**/*
+publish: null
+win:
+    publisherName: tada5hi
+    target: nsis
+nsis:
+    differentialPackage: true
+linux:
+    target: deb
+mac:
+    target: dmg
