@@ -15,4 +15,4 @@ runs:
             shell: bash
             if: steps.cache.outputs.cache-hit != 'true'
             run: |
-                npm run build
+                npm run build --workspace=packages/**
