@@ -3,23 +3,16 @@
 This is a library to build and develop desktop apps with **vite** and **electron** 🔥.
 
 **Table of Contents**
-
-- [Packages](#packages)
-  - [Core](#core)
+- [Documentation](#documentation)
 - [Examples](#examples)
-  - [Vanilla](#vanilla)
-  - [Nuxt](#nuxt)
+    - [Vanilla](#vanilla)
+    - [Nuxt](#nuxt)
+- [Packages](#packages)
+    - [Core](#core)
 - [License](#license)
-  
-## Packages
 
-The repository contains the following packages:
-
-### Core
-
-This is the main package of the Vitron ecosystem.
-
-[Documentation](./packages/vitron/README.md)
+## Documentation
+Read the [docs](./packages/vitron/README.md) to find out how to use Vitron.
 
 ## Examples
 
@@ -55,6 +48,15 @@ To build the application
 ```shell
 npm run build --workspace=examples/nuxt
 ```
+
+## Packages
+The repository contains the following packages:
+
+### Core
+
+This is the main package of the Vitron ecosystem.
+
+[Documentation](./packages/vitron/README.md)
 
 ## License
 
