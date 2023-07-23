@@ -1,3 +1,27 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+# [1.3.0](https://github.com/tada5hi/vitron/compare/v1.2.0...v1.3.0) (2023-07-23)
+
+
+### Bug Fixes
+
+* **deps:** bump continu from 1.3.1 to 1.3.2 ([#482](https://github.com/tada5hi/vitron/issues/482)) ([21e41ab](https://github.com/tada5hi/vitron/commit/21e41ab1e8d3730867c9447bc3e16c339e2bca4a))
+* **deps:** bump locter from 1.1.2 to 1.2.0 ([#480](https://github.com/tada5hi/vitron/issues/480)) ([ec5c744](https://github.com/tada5hi/vitron/commit/ec5c744a81f9e1dc0bbc9c1b878ed04ae4858bee))
+* **deps:** bump semver from 7.5.1 to 7.5.4 ([#471](https://github.com/tada5hi/vitron/issues/471)) ([cfbab99](https://github.com/tada5hi/vitron/commit/cfbab990e35be0ac18fd3bdb111ad1f322237c57))
+* **deps:** bump vite from 4.3.9 to 4.4.6 ([#484](https://github.com/tada5hi/vitron/issues/484)) ([4cb1698](https://github.com/tada5hi/vitron/commit/4cb16985f3a4aceea32ed6d9703bd11e2d81018b))
+
+
+### Features
+
+* add examples for nuxt + vanilla & switched to monorepo ([de996f9](https://github.com/tada5hi/vitron/commit/de996f951412f5a42acc865bd00858ac008cd1a3))
+
+
+
+
+
 # [1.2.0](https://github.com/tada5hi/vitron/compare/v1.1.5...v1.2.0) (2023-05-30)
 
 
