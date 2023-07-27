@@ -11,7 +11,7 @@
     },
     "license": "ISC",
     "devDependencies": {
-        "electron": "^25.3.1",
+        "electron": "^25.3.2",
         "electron-builder": "^24.4.0",
         "nuxt": "^3.5.2",
         "vitron": "^1.3.0"
