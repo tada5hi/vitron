@@ -6,8 +6,8 @@
  */
 
 import path from 'node:path';
-import spawn from 'cross-spawn';
 import type { SpawnOptions } from 'node:child_process';
+import spawn from 'cross-spawn';
 import semver from 'semver';
 import type { Config } from '../../config';
 import { Framework, isPackageInfo } from '../../utils';

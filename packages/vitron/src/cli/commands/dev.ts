@@ -1,6 +1,6 @@
 import type { ChildProcess } from 'node:child_process';
-import spawn from 'cross-spawn';
 import path from 'node:path';
+import spawn from 'cross-spawn';
 import { build } from 'vite';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';

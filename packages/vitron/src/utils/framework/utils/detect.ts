@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { loadSync } from 'locter';
 import path from 'node:path';
 import fs from 'node:fs';
+import { loadSync } from 'locter';
 import { hasOwnProperty, isObject } from 'smob';
 import { removePackageVersionCaret } from '../../package';
 import type { PackageInfo } from '../../package';

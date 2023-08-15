@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { load } from 'locter';
 import path from 'node:path';
+import { load } from 'locter';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
 import type { Config } from '../../config';

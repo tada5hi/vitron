@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Continu } from 'continu';
 import type { ChildProcess } from 'node:child_process';
+import type { Continu } from 'continu';
 import type { UserConfig } from 'vite';
 import type { EnvironmentName } from '../constants';
 import type { RendererBuildCommandContext, RendererDevCommandContext } from '../type';

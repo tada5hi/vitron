@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { removeFileNameExtension } from 'locter';
-import type { Arguments, Argv, CommandModule } from 'yargs';
 import path from 'node:path';
 import fs from 'node:fs';
+import { removeFileNameExtension } from 'locter';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import { render } from 'mustache';
 import { useConfig } from '../../config';
 import { ensureDirectoryExists } from '../../utils';

@@ -1,5 +1,5 @@
-import type spawn from 'cross-spawn';
 import type { SpawnOptions, SpawnSyncOptions } from 'node:child_process';
+import type spawn from 'cross-spawn';
 import type { Options } from './config';
 
 export type RendererBuildCommandContext = {

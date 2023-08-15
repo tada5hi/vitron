@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import spawn from 'cross-spawn';
 import type { ChildProcess, SpawnOptions } from 'node:child_process';
+import spawn from 'cross-spawn';
 import semver from 'semver';
 import type { Config } from '../../config';
 import { Framework, isPackageInfo } from '../../utils';

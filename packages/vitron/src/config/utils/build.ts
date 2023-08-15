@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import * as process from 'process';
+import path from 'node:path';
 import { Continu } from 'continu';
 import { loadSync } from 'locter';
-import * as process from 'process';
 import { merge } from 'smob';
 import zod from 'zod';
-import path from 'node:path';
 import { EnvironmentName } from '../../constants';
 import {
     Framework,

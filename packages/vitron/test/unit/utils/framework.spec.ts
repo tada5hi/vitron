@@ -11,7 +11,9 @@ describe('src/utils/framework', () => {
     it('should detect framework', () => {
         const framework = detectFrameworkSync('test/data');
         expect(framework).toBeDefined();
-        expect(framework.name).toEqual('nuxt');
-        expect(framework.version).toEqual('^3.5.2');
+        if (framework) {
+            expect(framework.name).toEqual('nuxt');
+            expect(framework.version).toEqual('3.5.2');
+        }
     });
 });
