@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.1](https://github.com/tada5hi/vitron/compare/v1.3.0...v1.3.1) (2023-08-15)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.2.0 to 1.2.1 ([#488](https://github.com/tada5hi/vitron/issues/488)) ([77483d9](https://github.com/tada5hi/vitron/commit/77483d9f8320e14a13143ea2cfe9495be9123b1e))
+* **deps:** bump vite from 4.4.6 to 4.4.9 ([#496](https://github.com/tada5hi/vitron/issues/496)) ([adaabdb](https://github.com/tada5hi/vitron/commit/adaabdbb386c1e622da9de18c80a40c78a614e6d))
+* **deps:** bump zod from 3.21.4 to 3.22.0 ([#505](https://github.com/tada5hi/vitron/issues/505)) ([166db94](https://github.com/tada5hi/vitron/commit/166db94c44067d615419cc358010d715ea6cc82a))
+
+
+
+
+
 # [1.3.0](https://github.com/tada5hi/vitron/compare/v1.2.0...v1.3.0) (2023-07-23)
 
 
