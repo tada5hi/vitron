@@ -27,10 +27,15 @@ export async function buildEntryPointConfig(
             'process.env.NODE_ENV': `"${config.get('env')}"`,
             'process.env.PORT': `"${config.get('port')}"`,
         },
+        optimizeDeps: {
+            esbuildOptions: {
+                target: 'es2020',
+            },
+        },
         build: {
             emptyOutDir: false,
             manifest: true,
-            target: 'es6',
+            target: 'es2020',
             outDir: 'dist',
             lib: {
                 entry: path.join(config.get('rootPath'), config.get('entrypointDirectory'), 'index.ts'),
