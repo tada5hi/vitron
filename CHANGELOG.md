@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.2](https://github.com/tada5hi/vitron/compare/v1.3.1...v1.3.2) (2023-08-23)
+
+
+### Bug Fixes
+
+* **deps:** bump zod from 3.22.0 to 3.22.2 ([#511](https://github.com/tada5hi/vitron/issues/511)) ([c4ad2e3](https://github.com/tada5hi/vitron/commit/c4ad2e3fb7702cf69d4a4f0eeac98df542eaa3e3))
+* set entrypoint target to es2020 instead of es6 ([026d72c](https://github.com/tada5hi/vitron/commit/026d72c907cf0c143a713299c29b40e2066d4a56))
+
+
+
+
+
 ## [1.3.1](https://github.com/tada5hi/vitron/compare/v1.3.0...v1.3.1) (2023-08-15)
 
 
