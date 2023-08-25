@@ -5,9 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import path from 'node:path';
+
 export enum EnvironmentName {
     PRODUCTION = 'production',
     DEVELOPMENT = 'development',
-
     TEST = 'test',
 }
+
+export const ASSETS_PATH = path.join(__dirname, '..', 'assets');

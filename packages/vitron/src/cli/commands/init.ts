@@ -7,10 +7,9 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import { removeFileNameExtension } from 'locter';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { render } from 'mustache';
 import { useConfig } from '../../config';
+import { ASSETS_PATH } from '../../constants';
 import { ensureDirectoryExists } from '../../utils';
 
 async function getFiles(dir: string, relativePath = '') : Promise<string[]> {
@@ -63,51 +62,27 @@ export class InitCommand implements CommandModule {
             // Config
             const config = await useConfig(baseDirectoryPath);
 
-            const entrypointDirectoryPath = path.join(config.get('rootPath'), config.get('mainDirectory'));
-            const rendererDirectoryPath = path.join(config.get('rootPath'), config.get('rendererDirectory'));
-
-            const directoryPaths : string[] = [
-                entrypointDirectoryPath,
-                rendererDirectoryPath,
-            ];
-
-            // Create directories
-            for (let i = 0; i < directoryPaths.length; i++) {
-                await ensureDirectoryExists(directoryPaths[i]);
-            }
-
-            const tplPath: string = path.join(__dirname, '..', '..', '..', 'assets', 'templates');
+            const tplPath: string = path.join(ASSETS_PATH, 'templates');
 
             const templateFiles = await getFiles(tplPath);
             for (let i = 0; i < templateFiles.length; i++) {
                 const sourceFilePath = path.join(tplPath, templateFiles[i]);
 
-                const isTpl = templateFiles[i].split('.').pop() === 'tpl';
                 const destinationFilePath = path.join(
                     config.get('rootPath'),
-                    isTpl ?
-                        removeFileNameExtension(templateFiles[i], ['.tpl']) :
-                        templateFiles[i],
+                    templateFiles[i],
                 );
+
                 const destinationDirectoryPath = path.dirname(destinationFilePath);
                 await ensureDirectoryExists(destinationDirectoryPath);
 
                 try {
                     await fs.promises.access(destinationFilePath, fs.constants.F_OK | fs.constants.R_OK);
                 } catch (e) {
-                    let content = await fs.promises.readFile(
+                    const content = await fs.promises.readFile(
                         path.join(sourceFilePath),
                         { encoding: 'utf-8' },
                     );
-
-                    if (isTpl) {
-                        content = render(content, {
-                            entrypointDistDirectory: `${config.get('mainDirectory')
-                                .replace(/\\/g, '/')}/dist`,
-                            buildDirectory: config.get('buildDirectory')
-                                .replace(/\\/g, '/'),
-                        });
-                    }
 
                     await fs.promises.writeFile(
                         destinationFilePath,

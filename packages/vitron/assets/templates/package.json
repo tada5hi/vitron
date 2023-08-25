@@ -1,13 +1,13 @@
 {
     "name": "vitron-app",
     "version": "1.0.0",
-    "main": "index.js",
+    "main": ".vitron/main/index.js",
     "description": "This is my first vitron app.",
     "scripts": {
         "dev": "vitron dev",
         "build": "vitron build"
     },
-    "license": "ISC",
+    "license": "MIT",
     "devDependencies": {
         "electron": "latest",
         "vitron": "latest",

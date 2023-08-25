@@ -13,7 +13,7 @@ let mainWindow : BrowserWindow;
 
 (async () => {
     if(isProd) {
-        registerRenderedFiles({directory: '{{{entrypointDistDirectory}}}'});
+        registerRenderedFiles({directory: '.vitron/renderer'});
     }
 
     await app.whenReady();
