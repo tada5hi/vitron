@@ -1,16 +1,15 @@
-import path from 'node:path';
 import type { SpawnSyncOptions } from 'node:child_process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import spawn from 'cross-spawn';
-import { build } from 'vite';
+import { buildEntrypointApp } from '../../apps/entrypoint';
+import { buildPreloadApp } from '../../apps/preload';
+import { clearBuildDirectory, createBuildDirectory } from '../../apps/utils';
 import { useConfig } from '../../config';
 import { EnvironmentName } from '../../constants';
-import { buildEntryPointConfig } from '../../entrypoint';
 import {
-    clearRendererBuilds,
-    runRendererBuildCommand,
-} from '../../renderer';
-import { ensureDirectoryNotExists } from '../../utils';
+
+    buildRendererApp,
+} from '../../apps/renderer';
 
 export interface BuildArguments extends Arguments {
     root: string;
@@ -63,20 +62,24 @@ export class BuildCommand implements CommandModule {
         const flagsMapped = args.flags.map((flag) => `--${flag}`);
         builderArgs.push(...flagsMapped);
 
-        // Clear old build data
-        const entrypointDistDirectory = path.join(rootPath, config.get('entrypointDirectory'), 'dist');
-        await ensureDirectoryNotExists(entrypointDistDirectory);
+        // ----------------------------------------------------
 
-        const buildDirectory = path.join(rootPath, config.get('buildDirectory'));
-        await ensureDirectoryNotExists(buildDirectory);
+        await clearBuildDirectory(config);
+        await createBuildDirectory(config);
 
-        // Clear old renderer data
-        await clearRendererBuilds(config);
+        // ----------------------------------------------------
 
-        // build renderer output
-        await runRendererBuildCommand(config);
+        await buildRendererApp(config);
 
-        await build(await buildEntryPointConfig(config));
+        // ----------------------------------------------------
+
+        await buildEntrypointApp(config);
+
+        // ----------------------------------------------------
+
+        await buildPreloadApp(config);
+
+        // ----------------------------------------------------
 
         const spawnOptions: SpawnSyncOptions = {
             cwd: rootPath,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2021-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -12,21 +12,18 @@ import type { Config } from '../../config';
 import { Framework, isPackageInfo } from '../../utils';
 import type { PackageInfo } from '../../utils';
 
-export function runRendererDevCommand(config: Config): ChildProcess {
+export function spawnRendererFrameworkProcess(
+    config: Config,
+) : ChildProcess | undefined {
     const execOptions: SpawnOptions = {
         cwd: config.get('rootPath'),
         stdio: 'inherit',
         detached: false,
     };
 
-    const devCommand = config.get('rendererDevCommand');
-    if (devCommand) {
-        return devCommand({
-            config: config.get(),
-
-            exec: spawn,
-            execOptions,
-        });
+    const command = config.get('rendererDevCommand');
+    if (command) {
+        return spawn(command(config.get()));
     }
 
     const framework = config.get('framework') as PackageInfo;
@@ -44,5 +41,6 @@ export function runRendererDevCommand(config: Config): ChildProcess {
             }
         }
     }
-    return spawn('vitron', ['vite', '--cmd', 'dev', '--port', config.get('port').toString()], execOptions);
+
+    return undefined;
 }

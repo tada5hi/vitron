@@ -1,12 +1,16 @@
-import type { ChildProcess } from 'node:child_process';
-import path from 'node:path';
-import spawn from 'cross-spawn';
-import { build } from 'vite';
+import process from 'node:process';
+import { createLogger } from 'vite';
 import type { Arguments, Argv, CommandModule } from 'yargs';
+import {
+    clearBuildDirectory,
+    createBuildDirectory,
+    createRenderer,
+    startEntrypointApp,
+    startPreloadApp,
+} from '../../apps';
+import { createElectron } from '../../core';
 import { useConfig } from '../../config';
 import { EnvironmentName } from '../../constants';
-import { buildEntryPointConfig } from '../../entrypoint';
-import { runRendererDevCommand } from '../../renderer';
 
 export interface DevArguments extends Arguments {
     root: string;
@@ -36,6 +40,8 @@ export class DevCommand implements CommandModule {
         try {
             const args = raw as DevArguments;
 
+            const logger = createLogger();
+
             // Project directory
             const baseDirectoryPath = args.root || process.cwd();
 
@@ -50,65 +56,43 @@ export class DevCommand implements CommandModule {
 
             // ----------------------------------------
 
-            let mainProcess: ChildProcess | undefined;
-
-            const startMainProcess = () => {
-                if (mainProcess) {
-                    return;
-                }
-
-                mainProcess = spawn('electron', [
-                    path.join(config.get('rootPath'), config.get('entrypointDirectory'), 'dist', 'index.js'),
-                ], {
-                    cwd: baseDirectoryPath,
-                    detached: false,
-                    stdio: 'inherit',
-                });
-
-                mainProcess.on('message', (data) => {
-                    console.log(data);
-                });
-
-                mainProcess.on('error', (e) => {
-                    console.log(e);
-                });
-
-                mainProcess.on('exit', () => {
-                    stopMainProcess();
-                });
-
-                mainProcess.unref();
-            };
-
-            const stopMainProcess = () : void => {
-                if (mainProcess) {
-                    mainProcess.kill();
-                }
-
-                mainProcess = undefined;
-            };
+            await clearBuildDirectory(config);
+            await createBuildDirectory(config);
 
             // ----------------------------------------
 
-            let rendererProcess: ChildProcess | undefined;
-
-            const startRendererInstance = () : void => {
-                rendererProcess = runRendererDevCommand(config);
-            };
-
-            const stopRendererInstance = () : void => {
-                if (rendererProcess) {
-                    rendererProcess.kill();
+            const electronProcess = createElectron(config, logger);
+            const rendererProcess = createRenderer(config);
+            /**
+             * Entrypoint
+             */
+            await startEntrypointApp(config, async () => {
+                if (!electronProcess.up()) {
+                    return;
                 }
 
-                rendererProcess = undefined;
-            };
+                electronProcess.stop();
+
+                electronProcess.start();
+            });
+
+            /**
+             * Preload
+             */
+            await startPreloadApp(config, async () => {
+                if (!rendererProcess.up()) {
+                    return;
+                }
+
+                await rendererProcess.reload();
+            });
 
             // ----------------------------------------
 
             const killAllProcesses = async () => {
-                stopMainProcess();
-                stopRendererInstance();
+                electronProcess.stop();
+
+                await rendererProcess.stop();
             };
 
             process.on('SIGINT', killAllProcesses);
@@ -117,12 +101,8 @@ export class DevCommand implements CommandModule {
 
             // ----------------------------------------
 
-            startRendererInstance();
-
-            const devOptions = await buildEntryPointConfig(config);
-            await build(devOptions);
-
-            startMainProcess();
+            await rendererProcess.start();
+            electronProcess.start();
         } catch (e) {
             // eslint-disable-next-line no-console
             console.log(e);

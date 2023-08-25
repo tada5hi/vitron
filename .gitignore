@@ -12,3 +12,4 @@ reports
 .env
 .nuxt
 .output
+.vitron

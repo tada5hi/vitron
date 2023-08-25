@@ -13,7 +13,7 @@ let mainWindow : BrowserWindow;
 
 (async () => {
     if(isProd) {
-        registerRenderedFiles({directory: 'src/entrypoint/dist'});
+        registerRenderedFiles({directory: '.vitron/renderer'});
     }
 
     await app.whenReady();
@@ -24,9 +24,8 @@ let mainWindow : BrowserWindow;
         autoHideMenuBar: true,
         title: 'Vitron',
         webPreferences: {
-            devTools: !app.isPackaged,
-            nodeIntegration: true,
-            contextIsolation: false,
+            devTools: true,
+            sandbox: false
         }
     });
 

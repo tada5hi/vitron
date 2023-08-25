@@ -6,12 +6,12 @@ directories:
     buildResources: resources
 artifactName: app-${version}.${ext}
 extraMetadata:
-    main: src/entrypoint/dist/index.js
+    main: .vitron/entrypoint/index.js
 files:
     - from: .
       filter:
           - package.json
-          - src/entrypoint/dist/**/*
+          - .vitron/**/*
 publish: null
 win:
     publisherName: tada5hi

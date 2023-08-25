@@ -31,9 +31,10 @@ export function buildConfig(input: OptionsInput) : Config {
         defaults: {
             port: 9000,
             rootPath: process.cwd(),
-            buildDirectory: 'dist',
+            buildDirectory: '.vitron',
+            preloadDirectory: 'src/preload',
             rendererDirectory: 'src/renderer',
-            rendererBuildDirectory: ['dist'],
+            rendererBuildDirectory: 'dist',
             entrypointDirectory: 'src/entrypoint',
         },
         transformers: {
@@ -65,13 +66,6 @@ export function buildConfig(input: OptionsInput) : Config {
 
                 return undefined;
             },
-            rendererBuildDirectory: (input) => {
-                if (!Array.isArray(input)) {
-                    return [input];
-                }
-
-                return input;
-            },
         },
         validators: {
             env: (value) => zod.nativeEnum(EnvironmentName).safeParse(value),
@@ -85,11 +79,14 @@ export function buildConfig(input: OptionsInput) : Config {
 
             buildDirectory: (value) => zod.string().safeParse(value),
 
+            preloadDirectory: (value) => zod.string().safeParse(value),
+            preloadConfig: (value) => zod.any().optional().safeParse(value),
+
             entrypointDirectory: (value) => zod.string().safeParse(value),
             entrypointConfig: (value) => zod.any().optional().safeParse(value),
 
             rendererDirectory: (value) => zod.string().safeParse(value),
-            rendererBuildDirectory: (value) => zod.array(zod.string()).safeParse(value),
+            rendererBuildDirectory: (value) => zod.string().safeParse(value),
             rendererBuildCommand: (value) => zod.function().returns(zod.any()).optional().safeParse(value),
             rendererDevCommand: (value) => zod.function().returns(zod.any()).optional().safeParse(value),
             rendererConfig: (value) => zod.any().optional().safeParse(value),

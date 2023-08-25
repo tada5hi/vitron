@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ChildProcess } from 'node:child_process';
 import type { Continu } from 'continu';
 import type { UserConfig } from 'vite';
 import type { EnvironmentName } from '../constants';
-import type { RendererBuildCommandContext, RendererDevCommandContext } from '../type';
-import type { PackageInfo } from '../utils/package';
+import type { PackageInfo } from '../utils';
 
 export type Options = {
     env: `${EnvironmentName}`,
@@ -21,19 +19,21 @@ export type Options = {
 
     buildDirectory: string,
 
+    preloadDirectory: string,
+    preloadConfig?: (config: UserConfig) => UserConfig,
+
     entrypointDirectory: string,
     entrypointConfig?: (config: UserConfig) => UserConfig,
 
     rendererDirectory: string,
-    rendererBuildDirectory: string[],
-    rendererBuildCommand?: (context: RendererBuildCommandContext) => unknown,
-    rendererDevCommand?: (context: RendererDevCommandContext) => ChildProcess,
+    rendererBuildDirectory: string
+    rendererBuildCommand?: (options: Options) => string,
+    rendererDevCommand?: (options: Options) => string,
     rendererConfig: (config: UserConfig) => UserConfig
 };
 
-export type OptionsInput = Partial<Omit<Options, 'framework' | 'rendererBuildDirectory'>> & {
-    framework?: PackageInfo | string,
-    rendererBuildDirectory?: string | string[]
+export type OptionsInput = Partial<Omit<Options, 'framework'>> & {
+    framework?: PackageInfo | string
 };
 
 export type Config = Continu<Options, OptionsInput>;

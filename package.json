@@ -29,8 +29,8 @@
         "lerna": "^7.1.5",
         "nx": "^16.7.3",
         "rimraf": "^5.0.1",
-        "typescript": "5.1.6",
-        "ts-jest": "^29.1.1"
+        "ts-jest": "^29.1.1",
+        "typescript": "5.1.6"
     },
     "scripts": {
         "bootstrap": "lerna bootstrap",
@@ -42,5 +42,8 @@
         "lint": "eslint --ext .ts ./packages/",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky install"
+    },
+    "dependencies": {
+        "picocolors": "^1.0.0"
     }
 }
