@@ -8,13 +8,13 @@
 import type { Config } from '../../config';
 import { buildWithWatchHook } from '../../core';
 import type { ViteWatchHook } from '../../core';
-import { buildEntryPointConfig } from './config';
+import { buildMainConfig } from './config';
 
-export async function startEntrypointApp(
+export async function startMainApp(
     config: Config,
     watchHook: ViteWatchHook,
 ) {
-    const viteConfig = await buildEntryPointConfig(config);
+    const viteConfig = await buildMainConfig(config);
 
     await buildWithWatchHook(viteConfig, watchHook);
 }

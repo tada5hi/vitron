@@ -14,8 +14,8 @@ export function getAppDirectoryPath(config: Config, app: `${AppName}`) {
     let directoryPath : string;
 
     switch (app) {
-        case AppName.ENTRYPOINT: {
-            directoryPath = path.resolve(config.get('rootPath'), config.get('entrypointDirectory'));
+        case AppName.MAIN: {
+            directoryPath = path.resolve(config.get('rootPath'), config.get('mainDirectory'));
             break;
         }
         case AppName.PRELOAD: {

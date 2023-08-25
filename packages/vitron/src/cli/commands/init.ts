@@ -63,7 +63,7 @@ export class InitCommand implements CommandModule {
             // Config
             const config = await useConfig(baseDirectoryPath);
 
-            const entrypointDirectoryPath = path.join(config.get('rootPath'), config.get('entrypointDirectory'));
+            const entrypointDirectoryPath = path.join(config.get('rootPath'), config.get('mainDirectory'));
             const rendererDirectoryPath = path.join(config.get('rootPath'), config.get('rendererDirectory'));
 
             const directoryPaths : string[] = [
@@ -102,7 +102,7 @@ export class InitCommand implements CommandModule {
 
                     if (isTpl) {
                         content = render(content, {
-                            entrypointDistDirectory: `${config.get('entrypointDirectory')
+                            entrypointDistDirectory: `${config.get('mainDirectory')
                                 .replace(/\\/g, '/')}/dist`,
                             buildDirectory: config.get('buildDirectory')
                                 .replace(/\\/g, '/'),

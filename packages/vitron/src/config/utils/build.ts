@@ -35,7 +35,7 @@ export function buildConfig(input: OptionsInput) : Config {
             preloadDirectory: 'src/preload',
             rendererDirectory: 'src/renderer',
             rendererBuildDirectory: 'dist',
-            entrypointDirectory: 'src/entrypoint',
+            mainDirectory: 'src/main',
         },
         transformers: {
             rootPath: (input) => {
@@ -82,8 +82,8 @@ export function buildConfig(input: OptionsInput) : Config {
             preloadDirectory: (value) => zod.string().safeParse(value),
             preloadConfig: (value) => zod.any().optional().safeParse(value),
 
-            entrypointDirectory: (value) => zod.string().safeParse(value),
-            entrypointConfig: (value) => zod.any().optional().safeParse(value),
+            mainDirectory: (value) => zod.string().safeParse(value),
+            mainConfig: (value) => zod.any().optional().safeParse(value),
 
             rendererDirectory: (value) => zod.string().safeParse(value),
             rendererBuildDirectory: (value) => zod.string().safeParse(value),

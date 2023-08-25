@@ -6,7 +6,7 @@
  */
 
 export enum AppName {
-    ENTRYPOINT = 'entrypoint',
+    MAIN = 'main',
     PRELOAD = 'preload',
     RENDERER = 'renderer',
 }

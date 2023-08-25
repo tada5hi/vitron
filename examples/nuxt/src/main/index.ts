@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { BrowserWindow, app } from 'electron';
 import { registerRenderedFiles } from './rendered-files';
 
 app.on('window-all-closed', () => {
@@ -12,8 +12,8 @@ const isProd: boolean = process.env.NODE_ENV === 'production';
 let mainWindow : BrowserWindow;
 
 (async () => {
-    if(isProd) {
-        registerRenderedFiles({directory: '.vitron/renderer'});
+    if (isProd) {
+        registerRenderedFiles({ directory: '.vitron/renderer' });
     }
 
     await app.whenReady();
@@ -25,12 +25,12 @@ let mainWindow : BrowserWindow;
         title: 'Vitron',
         webPreferences: {
             devTools: true,
-            sandbox: false
-        }
+            sandbox: false,
+        },
     });
 
     if (isProd) {
-        await mainWindow.loadURL(`app://-`);
+        await mainWindow.loadURL('app://-');
     } else {
         const port = process.env.PORT || 9000;
         await mainWindow.loadURL(`http://localhost:${port}`);

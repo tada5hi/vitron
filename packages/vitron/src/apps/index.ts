@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './entrypoint';
+export * from './main';
 export * from './preload';
 export * from './renderer';
 export * from './utils';

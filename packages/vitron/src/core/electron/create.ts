@@ -28,7 +28,7 @@ export function createElectron(config: Config, logger: Logger) : ElectronHandler
         }
 
         myProcess = spawn('electron', [
-            getAppDestinationDirectoryPath(config, AppName.ENTRYPOINT),
+            getAppDestinationDirectoryPath(config, AppName.MAIN),
         ], {
             cwd: config.get('rootPath'),
             stdio: 'inherit',

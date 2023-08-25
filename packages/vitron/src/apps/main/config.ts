@@ -10,13 +10,16 @@ import { load } from 'locter';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
 import type { Config } from '../../config';
-import { getElectronDependencies, getElectronMainDependencies } from '../../utils/electron-dependencies';
-import { findEntryFile } from '../../utils/entry-file';
-import { getNodeBuiltInModules } from '../../utils/node-builtin';
+import {
+    findEntryFile,
+    getElectronDependencies,
+    getElectronMainDependencies,
+    getNodeBuiltInModules,
+} from '../../utils';
 import { AppName } from '../constants';
 import { getAppDestinationDirectoryPath, getAppDirectoryPath } from '../utils';
 
-export async function buildEntryPointConfig(
+export async function buildMainConfig(
     config: Config,
 ) : Promise<InlineConfig> {
     const packageJson = await load(path.join(config.get('rootPath'), 'package.json'));
@@ -24,14 +27,14 @@ export async function buildEntryPointConfig(
     const dependencies : string[] = Object.keys(packageJson.dependencies || {});
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});
 
-    const entryFile = await findEntryFile(path.join(config.get('rootPath'), config.get('entrypointDirectory')));
+    const entryFile = await findEntryFile(path.join(config.get('rootPath'), config.get('mainDirectory')));
     if (!entryFile) {
         throw new Error('The main entrypoint file could not be located...');
     }
 
     const inlineConfig : InlineConfig = {
         mode: config.get('env'),
-        root: getAppDirectoryPath(config, AppName.ENTRYPOINT),
+        root: getAppDirectoryPath(config, AppName.MAIN),
         define: {
             'process.env.NODE_ENV': `"${config.get('env')}"`,
             'process.env.PORT': `"${config.get('port')}"`,
@@ -46,7 +49,7 @@ export async function buildEntryPointConfig(
             emptyOutDir: false,
             manifest: true,
             target: 'es2020',
-            outDir: getAppDestinationDirectoryPath(config, AppName.ENTRYPOINT),
+            outDir: getAppDestinationDirectoryPath(config, AppName.MAIN),
             lib: {
                 entry: entryFile,
                 fileName: 'index',
@@ -72,7 +75,7 @@ export async function buildEntryPointConfig(
         },
     };
 
-    const customConfig = config.get('entrypointConfig');
+    const customConfig = config.get('mainConfig');
     if (customConfig) {
         return merge(customConfig(inlineConfig), inlineConfig);
     }

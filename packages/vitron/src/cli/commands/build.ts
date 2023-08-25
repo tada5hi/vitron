@@ -1,7 +1,7 @@
 import type { SpawnSyncOptions } from 'node:child_process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import spawn from 'cross-spawn';
-import { buildEntrypointApp } from '../../apps/entrypoint';
+import { buildMainApp } from '../../apps/main';
 import { buildPreloadApp } from '../../apps/preload';
 import { clearBuildDirectory, createBuildDirectory } from '../../apps/utils';
 import { useConfig } from '../../config';
@@ -73,7 +73,7 @@ export class BuildCommand implements CommandModule {
 
         // ----------------------------------------------------
 
-        await buildEntrypointApp(config);
+        await buildMainApp(config);
 
         // ----------------------------------------------------
 

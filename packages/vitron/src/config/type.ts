@@ -22,8 +22,8 @@ export type Options = {
     preloadDirectory: string,
     preloadConfig?: (config: UserConfig) => UserConfig,
 
-    entrypointDirectory: string,
-    entrypointConfig?: (config: UserConfig) => UserConfig,
+    mainDirectory: string,
+    mainConfig?: (config: UserConfig) => UserConfig,
 
     rendererDirectory: string,
     rendererBuildDirectory: string

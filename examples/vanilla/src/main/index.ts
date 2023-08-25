@@ -27,7 +27,7 @@ let mainWindow : BrowserWindow;
         webPreferences: {
             preload: path.join(`${__dirname}/../preload/index.js`),
             devTools: true,
-            sandbox: true,
+            sandbox: false,
         },
     });
 

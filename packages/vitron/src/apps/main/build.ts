@@ -7,10 +7,10 @@
 
 import { build } from 'vite';
 import type { Config } from '../../config';
-import { buildEntryPointConfig } from './config';
+import { buildMainConfig } from './config';
 
-export async function buildEntrypointApp(config: Config) {
-    const viteConfig = await buildEntryPointConfig(config);
+export async function buildMainApp(config: Config) {
+    const viteConfig = await buildMainConfig(config);
     if (viteConfig.build?.watch) {
         viteConfig.build.watch = null;
     }

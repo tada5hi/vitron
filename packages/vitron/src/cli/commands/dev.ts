@@ -5,7 +5,7 @@ import {
     clearBuildDirectory,
     createBuildDirectory,
     createRenderer,
-    startEntrypointApp,
+    startMainApp,
     startPreloadApp,
 } from '../../apps';
 import { createElectron } from '../../core';
@@ -66,7 +66,7 @@ export class DevCommand implements CommandModule {
             /**
              * Entrypoint
              */
-            await startEntrypointApp(config, async () => {
+            await startMainApp(config, async () => {
                 if (!electronProcess.up()) {
                     return;
                 }
