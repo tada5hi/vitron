@@ -12,7 +12,7 @@ import type { Config } from '../../config';
 import { Framework, isPackageInfo } from '../../utils';
 import type { PackageInfo } from '../../utils';
 
-export function spawnRendererFrameworkProcess(
+export function spawnRendererProcess(
     config: Config,
 ) : ChildProcess | undefined {
     const execOptions: SpawnOptions = {

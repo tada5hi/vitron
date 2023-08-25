@@ -10,7 +10,7 @@ import { createServer } from 'vite';
 import type { UserConfig, ViteDevServer } from 'vite';
 import type { Config } from '../../config';
 import { EnvironmentName } from '../../constants';
-import { spawnRendererFrameworkProcess } from './ps';
+import { spawnRendererProcess } from './ps';
 import { buildRendererConfig } from './config';
 
 type RendererProcess = {
@@ -29,7 +29,7 @@ export function createRenderer(config: Config) : RendererProcess {
     const start = async () : Promise<void> => {
         if (myProcess || viteServer) return;
 
-        myProcess = spawnRendererFrameworkProcess(config);
+        myProcess = spawnRendererProcess(config);
         if (myProcess) {
             return;
         }

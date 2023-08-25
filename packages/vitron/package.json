@@ -49,6 +49,7 @@
         "locter": "^1.2.1",
         "mustache": "^4.2.0",
         "semver": "^7.5.4",
+        "picocolors": "^1.0.0",
         "smob": "^1.4.0",
         "tree-kill": "^1.2.2",
         "vite": "^4.4.9",

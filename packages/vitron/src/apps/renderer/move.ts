@@ -19,8 +19,7 @@ export async function moveAppRendererDirectory(
     await ensureDirectoryExists(destinationBasePath);
 
     const sourcePath = getAppDirectoryPath(config, AppName.RENDERER);
-    // todo: is it allways dist directory ?!
-    const sourceDistPath = path.join(sourcePath, 'dist');
+    const sourceDistPath = path.join(sourcePath, config.get('rendererBuildDirectory'));
 
     const destinationPath = path.join(destinationBasePath, AppName.RENDERER);
 

@@ -42,8 +42,5 @@
         "lint": "eslint --ext .ts ./packages/",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky install"
-    },
-    "dependencies": {
-        "picocolors": "^1.0.0"
     }
 }
