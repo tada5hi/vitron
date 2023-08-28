@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2021-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,9 +8,9 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { useConfig } from '../../config';
-import { ASSETS_PATH } from '../../constants';
-import { ensureDirectoryExists } from '../../utils';
+import { useConfig } from '../config';
+import { ASSETS_PATH } from '../constants';
+import { ensureDirectoryExists } from '../utils';
 
 async function getFiles(dir: string, relativePath = '') : Promise<string[]> {
     const direntMany = await fs.promises.readdir(dir, { withFileTypes: true });

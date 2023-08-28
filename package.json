@@ -17,6 +17,8 @@
     },
     "license": "MIT",
     "devDependencies": {
+        "@rollup/plugin-node-resolve": "^15.2.1",
+        "@swc/core": "^1.3.80",
         "@tada5hi/commitlint-config": "^1.1.1",
         "@tada5hi/eslint-config-vue-typescript": "^1.3.3",
         "@tada5hi/tsconfig": "^0.5.0",
@@ -29,6 +31,7 @@
         "lerna": "^7.1.5",
         "nx": "^16.7.3",
         "rimraf": "^5.0.1",
+        "rollup": "^3.28.1",
         "ts-jest": "^29.1.1",
         "typescript": "5.1.6"
     },
@@ -42,5 +45,8 @@
         "lint": "eslint --ext .ts ./packages/",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky install"
+    },
+    "dependencies": {
+        "@rollup/plugin-swc": "^0.1.1"
     }
 }

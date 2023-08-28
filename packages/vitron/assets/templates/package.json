@@ -8,6 +8,9 @@
         "build": "vitron build"
     },
     "license": "MIT",
+    "dependencies": {
+        "@vitron/main": "latest"
+    },
     "devDependencies": {
         "electron": "latest",
         "vitron": "latest",

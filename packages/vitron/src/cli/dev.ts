@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2023.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import process from 'node:process';
 import { createLogger } from 'vite';
 import type { Arguments, Argv, CommandModule } from 'yargs';
@@ -7,10 +14,10 @@ import {
     createRenderer,
     startMainApp,
     startPreloadApp,
-} from '../../apps';
-import { createElectron } from '../../core';
-import { useConfig } from '../../config';
-import { EnvironmentName } from '../../constants';
+} from '../apps';
+import { createElectron } from '../core';
+import { useConfig } from '../config';
+import { EnvironmentName } from '../constants';
 
 export interface DevArguments extends Arguments {
     root: string;

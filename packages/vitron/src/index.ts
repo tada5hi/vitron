@@ -1,10 +1,18 @@
-/*
- * Copyright (c) 2021.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
+#!/usr/bin/env node
 
-export * from './config';
-export * from './constants';
-export * from './type';
+import yargs from 'yargs';
+import { BuildCommand, DevCommand, InitCommand } from './cli';
+
+// eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
+yargs
+    .scriptName('vitron')
+    .usage('Usage: $0 <command> [options]')
+    .demandCommand(1)
+    .command(new BuildCommand())
+    .command(new DevCommand())
+    .command(new InitCommand())
+    .strict()
+    .alias('v', 'version')
+    .help('h')
+    .alias('h', 'help')
+    .argv;

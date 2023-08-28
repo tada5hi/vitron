@@ -1,6 +1,7 @@
 import path from 'node:path';
-import { BrowserWindow, app } from 'electron';
-import { registerRenderedFiles } from './rendered-files';
+import process from 'node:process';
+import { serve } from '@vitron/main';
+import { BrowserWindow, app, ipcMain } from 'electron';
 
 app.on('window-all-closed', () => {
     // On mac-os it is common for applications and their menu bar
@@ -8,15 +9,9 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
-const isProd: boolean = process.env.NODE_ENV === 'production';
-
 let mainWindow : BrowserWindow;
 
 (async () => {
-    if (isProd) {
-        registerRenderedFiles({ directory: '.vitron/renderer' });
-    }
-
     await app.whenReady();
 
     mainWindow = new BrowserWindow({
@@ -31,12 +26,13 @@ let mainWindow : BrowserWindow;
         },
     });
 
-    if (isProd) {
-        await mainWindow.loadURL('app://-');
-    } else {
-        const port = process.env.PORT || 9000;
-        await mainWindow.loadURL(`http://localhost:${port}`);
-    }
+    await serve(mainWindow, {
+        directory: path.join(`${__dirname}/../renderer/`),
+        env: process.env.NODE_ENV || 'production',
+        port: process.env.PORT,
+    });
+
+    ipcMain.handle('ping', () => 'pong');
 })();
 
 app.on('window-all-closed', () => {

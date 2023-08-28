@@ -1,11 +1,4 @@
-import { contextBridge } from 'electron';
+import { provide } from 'vitron/provide';
+import { ipcRenderer } from 'electron';
 
-if (process.contextIsolated) {
-    try {
-        contextBridge.exposeInMainWorld('foo', 'bar');
-    } catch (error) {
-        console.error(error);
-    }
-} else {
-    window.foo = 'bar';
-}
+provide('foo', ipcRenderer);

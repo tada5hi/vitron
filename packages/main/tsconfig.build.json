@@ -9,8 +9,7 @@
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,
         "isolatedModules": true,
-        "module": "CommonJS",
-        "lib": ["DOM", "ESNext"]
+        "module": "CommonJS"
     },
 
     "include": [

@@ -1,15 +1,22 @@
+/*
+ * Copyright (c) 2023.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import type { SpawnSyncOptions } from 'node:child_process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import spawn from 'cross-spawn';
-import { buildMainApp } from '../../apps/main';
-import { buildPreloadApp } from '../../apps/preload';
-import { clearBuildDirectory, createBuildDirectory } from '../../apps/utils';
-import { useConfig } from '../../config';
-import { EnvironmentName } from '../../constants';
+import { buildMainApp } from '../apps/main';
+import { buildPreloadApp } from '../apps/preload';
+import { clearBuildDirectory, createBuildDirectory } from '../apps/utils';
+import { useConfig } from '../config';
+import { EnvironmentName } from '../constants';
 import {
 
     buildRendererApp,
-} from '../../apps/renderer';
+} from '../apps/renderer';
 
 export interface BuildArguments extends Arguments {
     root: string;

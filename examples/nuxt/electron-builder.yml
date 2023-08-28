@@ -5,8 +5,6 @@ directories:
     output: dist
     buildResources: resources
 artifactName: app-${version}.${ext}
-extraMetadata:
-    main: .vitron/entrypoint/index.js
 files:
     - from: .
       filter:
