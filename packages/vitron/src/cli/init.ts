@@ -8,7 +8,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { useConfig } from '../config';
+import { createConfig } from '../config';
 import { ASSETS_PATH } from '../constants';
 import { ensureDirectoryExists } from '../utils';
 
@@ -60,7 +60,7 @@ export class InitCommand implements CommandModule {
             }
 
             // Config
-            const config = await useConfig(baseDirectoryPath);
+            const config = await createConfig(baseDirectoryPath);
 
             const tplPath: string = path.join(ASSETS_PATH, 'templates');
 

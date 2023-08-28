@@ -16,7 +16,7 @@ import {
     startPreloadApp,
 } from '../apps';
 import { createElectron } from '../core';
-import { useConfig } from '../config';
+import { createConfig } from '../config';
 import { EnvironmentName } from '../constants';
 
 export interface DevArguments extends Arguments {
@@ -53,7 +53,7 @@ export class DevCommand implements CommandModule {
             const baseDirectoryPath = args.root || process.cwd();
 
             // Config
-            const config = await useConfig(baseDirectoryPath);
+            const config = await createConfig(baseDirectoryPath);
 
             // Port
             const port = args.port ? parseInt(args.port, 10) : config.get('port');

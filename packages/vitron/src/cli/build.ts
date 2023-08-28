@@ -11,7 +11,7 @@ import spawn from 'cross-spawn';
 import { buildMainApp } from '../apps/main';
 import { buildPreloadApp } from '../apps/preload';
 import { clearBuildDirectory, createBuildDirectory } from '../apps/utils';
-import { useConfig } from '../config';
+import { createConfig } from '../config';
 import { EnvironmentName } from '../constants';
 import {
 
@@ -59,7 +59,7 @@ export class BuildCommand implements CommandModule {
         builderArgs.push(...['--project', rootPath]);
 
         // Config
-        const config = await useConfig(rootPath);
+        const config = await createConfig(rootPath);
         config.set('env', EnvironmentName.PRODUCTION);
 
         const configFileName = args.config || 'electron-builder.yml';

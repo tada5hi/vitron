@@ -37,7 +37,6 @@ export async function buildPreloadConfig(
         root: getAppDirectoryPath(config, AppName.PRELOAD),
         define: {
             'process.env.NODE_ENV': `"${config.get('env')}"`,
-            'process.env.PORT': `"${config.get('port')}"`,
         },
         optimizeDeps: {
             esbuildOptions: {

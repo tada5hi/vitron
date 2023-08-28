@@ -5,22 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Config, OptionsInput } from './type';
+import { getPort } from 'get-port-please';
+import type { Config } from './type';
 import { buildConfig, loadOptions } from './utils';
 
 let instance : Config | undefined;
-let instancePromise : Promise<OptionsInput> | undefined;
 
-export async function useConfig(directoryPath: string) : Promise<Config> {
+export async function createConfig(directoryPath: string) : Promise<Config> {
     if (typeof instance !== 'undefined') {
         return instance;
     }
 
-    if (!instancePromise) {
-        instancePromise = loadOptions(directoryPath);
-    }
+    const input = await loadOptions(directoryPath);
+    instance = buildConfig(input);
 
-    instance = buildConfig(await instancePromise);
+    // find open port
+    if (!instance.has('port')) {
+        const port = await getPort();
+        instance.set('port', port);
+    }
 
     return instance;
 }
