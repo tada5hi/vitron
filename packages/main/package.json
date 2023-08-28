@@ -1,6 +1,6 @@
 {
     "name": "@vitron/main",
-    "version": "2.0.0-alpha.0",
+    "version": "2.0.0-alpha.1",
     "description": "This is a utility package for the main process.",
     "exports": {
         "./package.json": "./package.json",
