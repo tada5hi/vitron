@@ -8,6 +8,7 @@
 import { createServer } from 'node:http';
 import process from 'node:process';
 import path from 'node:path';
+import { app } from 'electron';
 import { createHandler } from '@routup/static';
 import { getPort } from 'get-port-please';
 import { Router } from 'routup';
@@ -18,8 +19,8 @@ export async function serve(
     mainWindow: BrowserWindow,
     options: ServeOptions,
 ) : Promise<void> {
-    if (options.env !== 'production') {
-        await mainWindow.loadURL(`http://localhost:${options.port || 9000}/index.html`);
+    if (!app.isPackaged) {
+        await mainWindow.loadURL(`http://localhost:${options.port || 9000}`);
         return;
     }
 
@@ -52,6 +53,6 @@ export async function serve(
     const port = await getPort();
 
     server.listen(port, async () => {
-        await mainWindow.loadURL(`http://localhost:${port}/index.html`);
+        await mainWindow.loadURL(`http://localhost:${port}`);
     });
 }

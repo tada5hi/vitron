@@ -17,10 +17,5 @@ export type ServeOptions = {
      * The port value will be ignored in production,
      * but should be provided in development.
      */
-    port?: number | string,
-
-    /**
-     * The env should either be 'development' or 'production'
-     */
-    env: string,
+    port?: number | string
 };
