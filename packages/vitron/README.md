@@ -40,7 +40,7 @@ This will create the following files/directories, if they do not already exist:
     - preload
         - index.ts
     - renderer
-        - index.js
+        - main.ts
         - index.html
 - .electron-builder.yml
 
