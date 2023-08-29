@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.1...v2.0.0-alpha.2) (2023-08-29)
+
+
+### Features
+
+* pick random port for renderer process ([79d65f6](https://github.com/tada5hi/vitron/commit/79d65f69500c9d01175dde1633a5cef2879edd2a))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.0...v2.0.0-alpha.1) (2023-08-28)
 
 **Note:** Version bump only for package nuxt
