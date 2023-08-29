@@ -35,7 +35,9 @@ npx vitron@latest init
 This will create the following files/directories, if they do not already exist:
 
 - src
-    - entrypoint
+    - main
+        - index.ts
+    - preload
         - index.ts
     - renderer
         - index.js
@@ -49,17 +51,15 @@ the dependencies must be installed using a package manager like npm, pnpm, .... 
 npm install
 ```
 
-The default location of the `entrypoint` and `renderer` directory can
+The default location of the `main`, `preload` and `renderer` directory can
 be changed with a configuration file in the root directory  of the project.
 
 Therefore, create a `vitron.config.js` file in the root folder with the following content:
 
 ```javascript
 module.exports = {
-    port: 9000,
-    
-    entrypointDirectory: 'src/entrypoint',
-    
+    mainDirectory: 'src/main',
+    preloadDirectory: 'src/preload',
     rendererDirectory: 'src/renderer',
 }
 ```
