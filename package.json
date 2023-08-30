@@ -47,6 +47,6 @@
         "prepare": "husky install"
     },
     "dependencies": {
-        "@rollup/plugin-swc": "^0.1.1"
+        "@rollup/plugin-swc": "^0.2.0"
     }
 }
