@@ -44,7 +44,7 @@
     "dependencies": {
         "@routup/static": "^1.0.1",
         "ebec": "^1.1.0",
-        "get-port-please": "^3.0.1",
+        "get-port-please": "^3.0.2",
         "routup": "^1.0.2"
     },
     "devDependencies": {
