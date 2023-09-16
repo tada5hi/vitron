@@ -1,4 +1,4 @@
-import { provide } from 'vitron/provide';
+import { provide } from 'vitron/preload';
 import { ipcRenderer } from 'electron';
 
 provide('foo', ipcRenderer);

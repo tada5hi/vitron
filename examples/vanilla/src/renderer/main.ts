@@ -1,5 +1,5 @@
 import type { IpcRenderer } from 'electron';
-import { inject } from 'vitron/inject';
+import { inject } from 'vitron/renderer';
 
 const ipcRenderer = inject<IpcRenderer>('foo');
 setTimeout(async () => {

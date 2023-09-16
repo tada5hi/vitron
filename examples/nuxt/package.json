@@ -9,9 +9,6 @@
         "build": "vitron build"
     },
     "license": "ISC",
-    "dependencies": {
-        "@vitron/main": "^2.0.0-alpha.1"
-    },
     "devDependencies": {
         "electron": "^26.1.0",
         "electron-builder": "^24.6.3",

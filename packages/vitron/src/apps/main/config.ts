@@ -6,6 +6,7 @@
  */
 
 import path from 'node:path';
+import replace from '@rollup/plugin-replace';
 import { load } from 'locter';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
@@ -67,6 +68,12 @@ export async function buildMainConfig(
 
                     // node built-in internals
                     ...getNodeBuiltInModules(),
+                ],
+
+                plugins: [
+                    replace({
+                        uncrypto: 'crypto',
+                    }),
                 ],
             },
         },

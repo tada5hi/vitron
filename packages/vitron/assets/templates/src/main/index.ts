@@ -1,6 +1,6 @@
 import path from 'node:path';
 import process from 'node:process';
-import { serve } from '@vitron/main';
+import { serve } from 'vitron/main';
 import { BrowserWindow, app } from 'electron';
 
 app.on('window-all-closed', () => {

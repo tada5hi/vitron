@@ -6,8 +6,10 @@
  */
 
 import fs from 'node:fs';
-import {createConfig, createPlugins} from '../../rollup.config.mjs';
+import {createPlugins} from '../../rollup.config.mjs';
 import {builtinModules} from "node:module";
+import ts from 'rollup-plugin-ts';
+import path from "node:path";
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), {encoding: 'utf-8'}));
 
@@ -34,42 +36,86 @@ export default [
                 banner: '#!/usr/bin/env node'
             }
         ],
-        plugins: createPlugins({})
+        plugins: [
+            ts({
+                tsconfig: 'tsconfig.build.json'
+            }),
+            ...createPlugins({})
+        ]
     },
     {
-        input: 'src/di/inject.ts',
+        input: 'src/exports/main/index.ts',
         external,
         output: [
             {
                 format: 'cjs',
-                file: pkg.exports['./inject'].require,
-                exports: 'named',
-                sourcemap: true
+                file: pkg.exports['./main'].require.default,
+                exports: 'named'
             },
             {
                 format: 'es',
-                file: pkg.exports['./inject'].import,
-                sourcemap: true
+                file: pkg.exports['./main'].import.default
             }
         ],
-        plugins: createPlugins({})
+        plugins: [
+            ts({
+                tsconfig: 'tsconfig.build.json',
+                include: ['src/exports/main/*.ts'],
+                hook: {
+                    outputPath: (filePath) => path.join('main', path.basename(filePath))
+                }
+            }),
+            ...createPlugins({})
+        ]
     },
     {
-        input: 'src/di/provide.ts',
+        input: 'src/exports/preload/index.ts',
         external,
         output: [
             {
                 format: 'cjs',
-                file: pkg.exports['./provide'].require,
-                exports: 'named',
-                sourcemap: true
+                file: pkg.exports['./preload'].require.default,
+                exports: 'named'
             },
             {
                 format: 'es',
-                file: pkg.exports['./provide'].import,
-                sourcemap: true
+                file: pkg.exports['./preload'].import.default
             }
         ],
-        plugins: createPlugins({})
+        plugins: [
+            ts({
+                tsconfig: 'tsconfig.build.json',
+                include: ['src/exports/preload/*.ts'],
+                hook: {
+                    outputPath: (filePath) => path.join('preload', path.basename(filePath))
+                }
+            }),
+            ...createPlugins({})
+        ]
+    },
+    {
+        input: 'src/exports/renderer/index.ts',
+        external,
+        output: [
+            {
+                format: 'cjs',
+                file: pkg.exports['./renderer'].require.default,
+                exports: 'named'
+            },
+            {
+                format: 'es',
+                file: pkg.exports['./renderer'].import.default
+            }
+        ],
+        plugins: [
+            ts({
+                tsconfig: 'tsconfig.build.json',
+                include: ['src/exports/renderer/*.ts'],
+                hook: {
+                    outputPath: (filePath) => path.join('renderer', path.basename(filePath))
+                }
+            }),
+            ...createPlugins({})
+        ]
     }
 ]
