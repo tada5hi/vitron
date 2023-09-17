@@ -108,7 +108,6 @@ const mainWindow = new BrowserWindow({
 
 await serve(mainWindow, {
     directory: path.join(`${__dirname}/../renderer/`),
-    env: process.env.NODE_ENV || 'production',
     port: process.env.PORT,
 });
 ```
