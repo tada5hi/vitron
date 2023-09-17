@@ -9,13 +9,22 @@ import fs from 'node:fs';
 import {createPlugins} from '../../rollup.config.mjs';
 import {builtinModules} from "node:module";
 import ts from 'rollup-plugin-ts';
+import copy from "rollup-plugin-copy";
 import path from "node:path";
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), {encoding: 'utf-8'}));
 
 const external = Object.keys(pkg.dependencies || {})
     .concat(Object.keys(pkg.peerDependencies || {}))
-    .concat(builtinModules)
+    .concat(builtinModules);
+
+const copyPackageJson = (destination) => {
+    return copy({
+        targets: [
+            { src: 'assets/package.json', dest: destination}
+        ]
+    })
+}
 
 export default [
     {
@@ -65,6 +74,7 @@ export default [
                     outputPath: (filePath) => path.join('main', path.basename(filePath))
                 }
             }),
+            copyPackageJson('main'),
             ...createPlugins({})
         ]
     },
@@ -90,6 +100,7 @@ export default [
                     outputPath: (filePath) => path.join('preload', path.basename(filePath))
                 }
             }),
+            copyPackageJson('preload'),
             ...createPlugins({})
         ]
     },
@@ -115,6 +126,7 @@ export default [
                     outputPath: (filePath) => path.join('renderer', path.basename(filePath))
                 }
             }),
+            copyPackageJson('renderer'),
             ...createPlugins({})
         ]
     }
