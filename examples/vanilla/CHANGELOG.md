@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.3](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.2...v2.0.0-alpha.3) (2023-09-17)
+
+
+### Features
+
+* provide exports for main, preload & renderer ([0ed7c56](https://github.com/tada5hi/vitron/commit/0ed7c561f07ae7feb26829e4baa95b5315a7835a))
+
+
+
+
+
 # [2.0.0-alpha.2](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.1...v2.0.0-alpha.2) (2023-08-29)
 
 

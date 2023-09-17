@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.3](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.2...v2.0.0-alpha.3) (2023-09-17)
+
+
+### Bug Fixes
+
+* **deps:** bump ebec from 1.1.0 to 1.1.1 ([#532](https://github.com/tada5hi/vitron/issues/532)) ([df7a81b](https://github.com/tada5hi/vitron/commit/df7a81be96f823ce1a52af07f448947c09c1cb22))
+* **deps:** bump get-port-please from 3.0.1 to 3.0.2 ([#534](https://github.com/tada5hi/vitron/issues/534)) ([b425e8c](https://github.com/tada5hi/vitron/commit/b425e8cbf62e892bfc83ae70c47fc78c4fa0ce26))
+* **deps:** bump locter from 1.2.1 to 1.2.2 ([#538](https://github.com/tada5hi/vitron/issues/538)) ([c716b81](https://github.com/tada5hi/vitron/commit/c716b8101c7c2f212e49c390e5c8cf68134b40ea))
+* include missing files from source ([1197daf](https://github.com/tada5hi/vitron/commit/1197dafab1945036290ecc7da19ab9cbb1016fa5))
+
+
+### Features
+
+* provide exports for main, preload & renderer ([0ed7c56](https://github.com/tada5hi/vitron/commit/0ed7c561f07ae7feb26829e4baa95b5315a7835a))
+* provide package.json to custom epxort paths ([dd4a512](https://github.com/tada5hi/vitron/commit/dd4a5128e4bae5ba7886995ac59a4cfc506e4f0c))
+
+
+
+
+
 # [2.0.0-alpha.2](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.1...v2.0.0-alpha.2) (2023-08-29)
 
 
