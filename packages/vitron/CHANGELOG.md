@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.3...v2.0.0-alpha.4) (2023-09-17)
+
+
+### Bug Fixes
+
+* add missing main directory in file list ([2874332](https://github.com/tada5hi/vitron/commit/2874332d458ff53e52f1e976da0a2e98a22a3ce2))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/tada5hi/vitron/compare/v2.0.0-alpha.2...v2.0.0-alpha.3) (2023-09-17)
 
 
