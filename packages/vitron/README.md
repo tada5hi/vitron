@@ -5,7 +5,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/vitron/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/vitron?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-This is a library to build and develop desktop apps with **vite** and **electron** 🔥.
+A library to build and develop desktop apps with **vite** and **electron** 🔥.
 
 ## Features
 - Hot Module Replacement
@@ -16,6 +16,7 @@ This is a library to build and develop desktop apps with **vite** and **electron
 - [Setup](#setup)
   - [Frameworks](#frameworks)
 - [Usage](#usage)
+- [Utilities](#utilities)
 - [License](#license)
 
 ## Installation
@@ -85,6 +86,69 @@ The best way to use the following commands, is by creating shortcuts in the `pac
     }
 }
 ```
+
+## Utilities
+
+Vitron provides different utilities for the main, preload and renderer code.
+
+### Main
+For the main code, the import path `vitron/main` is provided.
+
+**`serve`**
+
+Serve the renderer app (ink. static assets) for production and development.
+
+```typescript
+import { serve } from 'vitron/main';
+import { BrowserWindow } from 'electron';
+
+const mainWindow = new BrowserWindow({
+    /* ... */
+});
+
+await serve(mainWindow, {
+    directory: path.join(`${__dirname}/../renderer/`),
+    env: process.env.NODE_ENV || 'production',
+    port: process.env.PORT,
+});
+```
+
+To see an exemplary use, the following example can be used as a basis
+**examples/vanilla/src/main/index.ts**.
+
+### Preload
+For the preload code, the import path `vitron/preload` is provided.
+
+**`provide`**
+
+Simple abstraction to expose an API to the renderer process.
+
+```typescript
+import { provide } from 'vitron/preload';
+
+provide('foo', 'bar');
+```
+
+To see an exemplary use, the following example can be used as a basis
+**examples/vanilla/src/preload/index.ts**.
+
+## Renderer
+For the preload code, the import path `vitron/preload` is provided.
+
+**`inject`**
+
+Simple abstraction to inject an API from the preload script.
+
+```typescript
+import { inject } from 'vitron/renderer';
+
+const foo = inject<string>('foo');
+console.log(foo);
+// bar
+```
+
+To see an exemplary use, the following example can be used as a basis
+**examples/vanilla/src/preload/index.ts**.
 
 ## License
 
