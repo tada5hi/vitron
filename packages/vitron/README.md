@@ -133,7 +133,7 @@ To see an exemplary use, the following example can be used as a basis
 **examples/vanilla/src/preload/index.ts**.
 
 ## Renderer
-For the preload code, the import path `vitron/preload` is provided.
+For the preload code, the import path `vitron/renderer` is provided.
 
 **`inject`**
 
@@ -148,7 +148,7 @@ console.log(foo);
 ```
 
 To see an exemplary use, the following example can be used as a basis
-**examples/vanilla/src/preload/index.ts**.
+**examples/vanilla/src/renderer/index.ts**.
 
 ## License
 
