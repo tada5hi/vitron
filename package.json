@@ -65,7 +65,7 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/glob": "^8.1.0",
         "@types/jest": "^29.5.1",
-        "@types/mustache": "^4.2.2",
+        "@types/mustache": "^4.2.4",
         "@types/node": "^20.2.5",
         "@types/semver": "^7.5.0",
         "@types/yargs": "^17.0.24",
