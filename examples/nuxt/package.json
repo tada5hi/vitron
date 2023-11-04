@@ -1,4 +1,5 @@
 {
+    "name": "@vitron/nuxt",
     "private": true,
     "version": "2.0.0-alpha.4",
     "main": ".vitron/main/index.js",
