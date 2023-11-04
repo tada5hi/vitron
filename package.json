@@ -61,7 +61,7 @@
     "devDependencies": {
         "@tada5hi/commitlint-config": "^1.0.2",
         "@tada5hi/eslint-config-typescript": "^1.1.9",
-        "@tada5hi/semantic-release": "^0.1.0",
+        "@tada5hi/semantic-release": "^0.3.0",
         "@types/cross-spawn": "^6.0.2",
         "@types/glob": "^8.1.0",
         "@types/jest": "^29.5.1",
