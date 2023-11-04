@@ -1,7 +1,7 @@
 {
     "name": "@vitron/nuxt",
     "private": true,
-    "version": "2.0.0-alpha.4",
+    "version": "2.0.0",
     "main": ".vitron/main/index.js",
     "description": "This is my first vitron app.",
     "scripts": {
@@ -18,6 +18,6 @@
         "electron": "^27.0.3",
         "electron-builder": "^24.6.4",
         "nuxt": "^3.5.2",
-        "vitron": "^2.0.0-alpha.4"
+        "vitron": "^2.0.0"
     }
 }
