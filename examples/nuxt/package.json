@@ -9,6 +9,11 @@
         "build": "vitron build"
     },
     "license": "ISC",
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
     "devDependencies": {
         "electron": "^27.0.3",
         "electron-builder": "^24.6.4",

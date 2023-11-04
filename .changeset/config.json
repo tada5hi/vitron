@@ -1,6 +1,6 @@
 {
     "$schema": "https://unpkg.com/@changesets/config@2.3.1/schema.json",
-    "changelog": ["@changesets/changelog-github", { "repo": "authup/authup" }],
+    "changelog": ["@changesets/changelog-github", { "repo": "tada5hi/vitron" }],
     "commit": false,
     "fixed": [],
     "linked": [],
