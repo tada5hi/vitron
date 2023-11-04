@@ -17,6 +17,8 @@
     },
     "license": "MIT",
     "devDependencies": {
+        "@changesets/changelog-github": "^0.4.8",
+        "@changesets/cli": "^2.26.2",
         "@rollup/plugin-node-resolve": "^15.2.3",
         "@rollup/plugin-swc": "^0.2.0",
         "@swc/core": "^1.3.84",
@@ -33,8 +35,8 @@
         "nx": "^17.0.3",
         "rimraf": "^5.0.5",
         "rollup": "^3.28.1",
-        "rollup-plugin-ts": "^3.4.5",
         "rollup-plugin-copy": "^3.5.0",
+        "rollup-plugin-ts": "^3.4.5",
         "ts-jest": "^29.1.1",
         "typescript": "5.2.2"
     },
@@ -47,6 +49,7 @@
         "pub": "npm run build && lerna publish",
         "lint": "eslint --ext .ts ./packages/",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "release": "changeset publish"
     }
 }
