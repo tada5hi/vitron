@@ -106,7 +106,7 @@
         "electron": "^26.1.0"
     },
     "peerDependencies": {
-        "electron": "20.x || 21.x || 22.x || 23.x || 24.x || 25.x || 26.x",
+        "electron": "20.x || 21.x || 22.x || 23.x || 24.x || 25.x || 26.x || 27.x",
         "electron-builder": "22.x || 23.x || 24.x"
     }
 }
