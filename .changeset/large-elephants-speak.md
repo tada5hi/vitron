@@ -1,5 +1,0 @@
----
-"vitron": major
----
-
-bump version
