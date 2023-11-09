@@ -15,7 +15,7 @@
         "url": "https://github.com/tada5hi"
     },
     "devDependencies": {
-        "electron": "^27.0.3",
+        "electron": "^27.0.4",
         "electron-builder": "^24.6.4",
         "nuxt": "^3.5.2",
         "vitron": "^2.0.0"
