@@ -1,3 +1,5 @@
 {
-    "vitron": "2.0.0"
+    "examples/nuxt": "2.0.0",
+    "examples/vanilla": "2.0.0",
+    "packages/vitron": "2.0.0"
 }

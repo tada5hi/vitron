@@ -5,6 +5,12 @@
     "bump-minor-pre-major": true,
     "bump-patch-for-minor-pre-major": true,
     "packages": {
+        "examples/nuxt": {
+            "component": "examples-nuxt"
+        },
+        "examples/vanilla": {
+            "component": "examples-vanilla"
+        },
         "packages/vitron": {
             "component": "vitron"
         }
@@ -18,6 +24,8 @@
             "type": "linked-versions",
             "groupName": "main",
             "components": [
+                "examples-nuxt",
+                "examples-vanilla",
                 "vitron"
             ]
         }
