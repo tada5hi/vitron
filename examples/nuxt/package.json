@@ -5,8 +5,8 @@
     "main": ".vitron/main/index.js",
     "description": "This is my first vitron app.",
     "scripts": {
-        "dev": "vitron dev",
-        "build": "vitron build"
+        "dev": "npx vitron dev",
+        "build": "npx vitron build"
     },
     "license": "ISC",
     "author": {
