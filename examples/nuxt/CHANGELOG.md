@@ -1,5 +1,19 @@
 # Change Log
 
+## [2.1.0](https://github.com/tada5hi/vitron/compare/examples-nuxt-v2.0.0...examples-nuxt-v2.1.0) (2024-01-13)
+
+
+### Miscellaneous Chores
+
+* **examples-nuxt:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * vitron bumped from ^2.0.0 to ^2.1.0
+
 ## 2.0.0
 
 ### Major Changes
