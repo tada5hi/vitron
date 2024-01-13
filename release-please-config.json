@@ -1,0 +1,26 @@
+{
+    "bootstrap-sha": "ff3ee2d15ae0f146402e4907d071a3c8bcb9b95c",
+    "include-component-in-tag": true,
+    "release-type": "node",
+    "bump-minor-pre-major": true,
+    "bump-patch-for-minor-pre-major": true,
+    "packages": {
+        "packages/vitron": {
+            "component": "vitron"
+        }
+    },
+    "plugins": [
+        {
+            "type": "node-workspace",
+            "updatePeerDependencies": true
+        },
+        {
+            "type": "linked-versions",
+            "groupName": "main",
+            "components": [
+                "vitron"
+            ]
+        }
+    ],
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}

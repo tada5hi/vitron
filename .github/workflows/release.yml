@@ -1,44 +1,53 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - master
+    push:
+        branches:
+            - master
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+env:
+    NODE_VERSION: 18
+
 permissions:
-  packages: write
-  contents: write
-  pull-requests: write
+    packages: write
+    contents: write
+    pull-requests: write
+
+defaults:
+    run:
+        shell: bash
 
 jobs:
-  release:
-    name: Release
-    runs-on: ubuntu-latest
+    release:
+        name: Release
+        runs-on: ubuntu-latest
 
-    steps:
-      -   name: Checkout
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
+        steps:
+            -   uses: google-github-actions/release-please-action@v4
+                id: release
+                with:
+                    token: ${{ secrets.GITHUB_TOKEN }}
 
-      -   name: Install
-          uses: ./.github/actions/install
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-            node-registry: ${{ env.NODE_REGISTRY }}
+            -   name: Checkout
+                if: steps.release.outputs.releases_created == 'true'
+                uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
 
-      -   name: Build
-          uses: ./.github/actions/build
+            -   name: Install
+                if: steps.release.outputs.releases_created == 'true'
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
 
-      -   name: Commit & Publish
-          id: changesets
-          uses: changesets/action@v1
-          with:
-            publish: npm run release
-            commit: "chore(release): publish"
-            title: "chore(release): publish"
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+            -   name: Build
+                if: steps.release.outputs.releases_created == 'true'
+                uses: ./.github/actions/build
+
+            -   name: Publish
+                if: steps.release.outputs.releases_created == 'true'
+                run: npx workspaces-publish
+                env:
+                    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
