@@ -100,6 +100,8 @@ export class DevCommand implements CommandModule {
                 electronProcess.stop();
 
                 await rendererProcess.stop();
+
+                process.exit(0);
             };
 
             process.on('SIGINT', killAllProcesses);

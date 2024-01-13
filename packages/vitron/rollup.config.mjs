@@ -35,14 +35,12 @@ export default [
                 format: 'cjs',
                 file: pkg.main,
                 exports: 'named',
-                sourcemap: true,
-                banner: '#!/usr/bin/env node'
+                sourcemap: true
             },
             {
                 format: 'es',
                 file: pkg.module,
-                sourcemap: true,
-                banner: '#!/usr/bin/env node'
+                sourcemap: true
             }
         ],
         plugins: [

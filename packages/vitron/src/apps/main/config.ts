@@ -37,8 +37,8 @@ export async function buildMainConfig(
         mode: config.get('env'),
         root: getAppDirectoryPath(config, AppName.MAIN),
         define: {
-            'process.env.NODE_ENV': `"${config.get('env')}"`,
-            'process.env.PORT': `"${config.get('port')}"`,
+            NODE_ENV: `"${config.get('env')}"`,
+            PORT: `"${config.get('port')}"`,
         },
         optimizeDeps: {
             esbuildOptions: {
@@ -72,7 +72,10 @@ export async function buildMainConfig(
 
                 plugins: [
                     replace({
+                        preventAssignment: true,
                         uncrypto: 'crypto',
+                        'process.env.NODE_ENV': `"${config.get('env')}"`,
+                        'process.env.PORT': `"${config.get('port')}"`,
                     }),
                 ],
             },

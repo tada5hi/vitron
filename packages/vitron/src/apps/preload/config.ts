@@ -35,9 +35,6 @@ export async function buildPreloadConfig(
     const inlineConfig : InlineConfig = {
         mode: config.get('env'),
         root: getAppDirectoryPath(config, AppName.PRELOAD),
-        define: {
-            'process.env.NODE_ENV': `"${config.get('env')}"`,
-        },
         optimizeDeps: {
             esbuildOptions: {
                 target: 'es2020',
