@@ -1,5 +1,18 @@
 # Change Log
 
+## [2.1.0](https://github.com/tada5hi/vitron/compare/vitron@2.0.0...vitron-v2.1.0) (2024-01-13)
+
+
+### Features
+
+* bump vite to v5.x and rollup to v4.x ([a243f28](https://github.com/tada5hi/vitron/commit/a243f28d4bac116b13319660f683bcc0b283acdd))
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.2.2 to 1.3.0 ([#665](https://github.com/tada5hi/vitron/issues/665)) ([23a1ea6](https://github.com/tada5hi/vitron/commit/23a1ea65d11d7d2fc50c41180d28e3ddcfafb3c1))
+* permit electron v28.x ([919a77e](https://github.com/tada5hi/vitron/commit/919a77e4842d6b64231eb0d9423ae5499954fbdc))
+
 ## 2.0.0
 
 ### Major Changes
