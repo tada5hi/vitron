@@ -88,7 +88,7 @@
         "cross-spawn": "^7.0.3",
         "get-port-please": "^3.1.1",
         "locter": "^2.1.0",
-        "picocolors": "^1.0.0",
+        "picocolors": "^1.0.1",
         "routup": "^2.0.0",
         "semver": "^7.5.4",
         "smob": "^1.4.0",
