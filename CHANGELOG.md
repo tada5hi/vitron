@@ -84,6 +84,27 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
+## [2.2.0](https://github.com/tada5hi/vitron/compare/v2.1.0...v2.2.0) (2024-05-20)
+
+
+### Features
+
+* bump vite to v5.x and rollup to v4.x ([a243f28](https://github.com/tada5hi/vitron/commit/a243f28d4bac116b13319660f683bcc0b283acdd))
+* support for electron v29 ([1e8591d](https://github.com/tada5hi/vitron/commit/1e8591dd96f713fd654bd0ed401b008ab91c49f4))
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.2.2 to 1.3.0 ([#665](https://github.com/tada5hi/vitron/issues/665)) ([23a1ea6](https://github.com/tada5hi/vitron/commit/23a1ea65d11d7d2fc50c41180d28e3ddcfafb3c1))
+* **deps:** bump locter to v2.x ([7c1efd2](https://github.com/tada5hi/vitron/commit/7c1efd26d920a5dadd0e0dceaab726fef88a5bc8))
+* **deps:** bump picocolors from 1.0.0 to 1.0.1 ([#770](https://github.com/tada5hi/vitron/issues/770)) ([9818644](https://github.com/tada5hi/vitron/commit/981864494953dfd96c43d5e8106eaedafd1b0bea))
+* **deps:** bump semver and @types/semver ([#771](https://github.com/tada5hi/vitron/issues/771)) ([35eae09](https://github.com/tada5hi/vitron/commit/35eae0993bf9ca6038ee49e9bf7ff63e485f539b))
+* **deps:** bump smob from 1.4.1 to 1.5.0 ([#775](https://github.com/tada5hi/vitron/issues/775)) ([6230888](https://github.com/tada5hi/vitron/commit/6230888fc2236e7300875d2b6284456213e1d5f9))
+* **deps:** bump vite from 5.0.11 to 5.2.8 ([#758](https://github.com/tada5hi/vitron/issues/758)) ([d959ef3](https://github.com/tada5hi/vitron/commit/d959ef3478623f97342a2e9e0a3ae578e8a7fe9c))
+* **deps:** bump vite from 5.2.8 to 5.2.11 ([#779](https://github.com/tada5hi/vitron/issues/779)) ([beea370](https://github.com/tada5hi/vitron/commit/beea37016f89bfffe0c08490eeee73785df7a669))
+* **deps:** bump zod from 3.22.4 to 3.23.8 ([#773](https://github.com/tada5hi/vitron/issues/773)) ([3d8c5d2](https://github.com/tada5hi/vitron/commit/3d8c5d21d8442f15aea01e5fa7fd79b41806eab0))
+* permit electron v28.x ([919a77e](https://github.com/tada5hi/vitron/commit/919a77e4842d6b64231eb0d9423ae5499954fbdc))
+
 ## [1.3.2](https://github.com/tada5hi/vitron/compare/v1.3.1...v1.3.2) (2023-08-23)
 
 
