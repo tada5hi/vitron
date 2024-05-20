@@ -1,10 +1,13 @@
 {
     "bootstrap-sha": "ff3ee2d15ae0f146402e4907d071a3c8bcb9b95c",
-    "include-component-in-tag": true,
+    "include-component-in-tag": false,
     "release-type": "node",
     "bump-minor-pre-major": true,
     "bump-patch-for-minor-pre-major": true,
     "packages": {
+        ".": {
+            "component": "root"
+        },
         "examples/nuxt": {
             "component": "examples-nuxt"
         },
@@ -24,6 +27,7 @@
             "type": "linked-versions",
             "groupName": "main",
             "components": [
+                "root",
                 "examples-nuxt",
                 "examples-vanilla",
                 "vitron"

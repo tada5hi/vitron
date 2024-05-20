@@ -1,6 +1,6 @@
 {
-    "name": "root",
-    "version": "0.0.0",
+    "name": "@vitron/root",
+    "version": "2.1.0",
     "private": true,
     "author": {
         "name": "Peter Placzek",
