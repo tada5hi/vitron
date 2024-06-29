@@ -1,6 +1,6 @@
 {
-    ".": "2.2.0",
-    "examples/nuxt": "2.1.1",
-    "examples/vanilla": "2.1.1",
-    "packages/vitron": "2.2.0"
+    ".": "2.3.0",
+    "examples/nuxt": "2.1.2",
+    "examples/vanilla": "2.1.2",
+    "packages/vitron": "2.3.0"
 }
