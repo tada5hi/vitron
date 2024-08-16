@@ -103,7 +103,7 @@
         "@types/node": "^20.14.9",
         "@types/semver": "^7.5.8",
         "@types/yargs": "^17.0.29",
-        "electron": "^31.1.0"
+        "electron": "^31.4.0"
     },
     "peerDependencies": {
         "electron": "20.x || 21.x || 22.x || 23.x || 24.x || 25.x || 26.x || 27.x || 28.x || 29.x || 30.x || 31.x",
