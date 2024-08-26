@@ -34,7 +34,7 @@
         "rollup": "^4.18.0",
         "rollup-plugin-copy": "^3.5.0",
         "rollup-plugin-ts": "^3.4.5",
-        "ts-jest": "^29.1.1",
+        "ts-jest": "^29.2.5",
         "typescript": "5.5.2",
         "workspaces-publish": "^1.4.4"
     },
