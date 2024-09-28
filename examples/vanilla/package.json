@@ -1,7 +1,7 @@
 {
     "name": "@vitron/vanilla",
     "private": true,
-    "version": "2.1.2",
+    "version": "2.1.3",
     "main": "index.js",
     "description": "This is my first vitron app.",
     "scripts": {
@@ -17,6 +17,6 @@
     "devDependencies": {
         "electron": "^31.1.0",
         "electron-builder": "^24.13.3",
-        "vitron": "^2.3.0"
+        "vitron": "^2.4.0"
     }
 }
