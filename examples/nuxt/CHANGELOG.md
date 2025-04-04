@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.1.3](https://github.com/tada5hi/vitron/compare/v2.1.2...v2.1.3) (2025-04-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * vitron bumped from ^2.3.0 to ^2.4.0
+
 ## [2.1.2](https://github.com/tada5hi/vitron/compare/v2.1.1...v2.1.2) (2024-06-29)
 
 
