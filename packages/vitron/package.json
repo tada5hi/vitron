@@ -89,7 +89,7 @@
         "get-port-please": "^3.1.1",
         "locter": "^2.1.6",
         "picocolors": "^1.1.0",
-        "routup": "^4.0.1",
+        "routup": "^4.0.2",
         "semver": "^7.7.1",
         "smob": "^1.5.0",
         "tree-kill": "^1.2.2",
