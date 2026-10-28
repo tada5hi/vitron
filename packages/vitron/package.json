@@ -1,6 +1,6 @@
 {
     "name": "vitron",
-    "version": "2.4.0",
+    "version": "2.5.0",
     "description": "This is a library to build beautiful (win, linux, mac) desktop apps for modern web projects with vite and electron.",
     "main": "./dist/index.cjs",
     "module": "./dist/index.mjs",
