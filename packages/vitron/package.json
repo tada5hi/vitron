@@ -99,7 +99,6 @@
     },
     "devDependencies": {
         "@types/cross-spawn": "^6.0.6",
-        "@types/glob": "^9.0.0",
         "@types/node": "^24.5.2",
         "@types/semver": "^7.7.0",
         "@types/yargs": "^17.0.29",

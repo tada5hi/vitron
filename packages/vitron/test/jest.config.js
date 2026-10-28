@@ -1,7 +1,9 @@
 module.exports = {
     testEnvironment: 'node',
     transform: {
-        '^.+\\.tsx?$': 'ts-jest',
+        '^.+\\.tsx?$': ['ts-jest', {
+            tsconfig: { noEmit: false, declaration: false, isolatedModules: true },
+        }],
     },
     moduleFileExtensions: [
         'ts',
