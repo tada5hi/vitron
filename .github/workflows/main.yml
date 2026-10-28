@@ -19,7 +19,11 @@ permissions:
     pull-requests: write
 
 env:
+<<<<<<< HEAD
     PRIMARY_NODE_VERSION: 20
+=======
+    PRIMARY_NODE_VERSION: 20.19.0
+>>>>>>> eefbef8 (fix: adapt config validation and Node support to major dependencies)
 
 jobs:
     install:

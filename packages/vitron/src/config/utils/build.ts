@@ -87,8 +87,8 @@ export function buildConfig(input: OptionsInput) : Config {
 
             rendererDirectory: (value) => zod.string().safeParse(value),
             rendererBuildDirectory: (value) => zod.string().safeParse(value),
-            rendererBuildCommand: (value) => zod.function().returns(zod.any()).optional().safeParse(value),
-            rendererDevCommand: (value) => zod.function().returns(zod.any()).optional().safeParse(value),
+            rendererBuildCommand: (value) => zod.custom<(...args: unknown[]) => unknown>((value) => typeof value === 'function').optional().safeParse(value),
+            rendererDevCommand: (value) => zod.custom<(...args: unknown[]) => unknown>((value) => typeof value === 'function').optional().safeParse(value),
             rendererConfig: (value) => zod.any().optional().safeParse(value),
         },
     });
