@@ -91,7 +91,7 @@
         "picocolors": "^1.1.0",
         "routup": "^4.0.1",
         "semver": "^7.7.1",
-        "smob": "^1.5.0",
+        "smob": "^1.6.2",
         "tree-kill": "^1.2.2",
         "vite": "^7.1.6",
         "yargs": "^18.0.0",
@@ -100,13 +100,13 @@
     "devDependencies": {
         "@types/cross-spawn": "^6.0.6",
         "@types/node": "^24.5.2",
-        "@types/semver": "^7.7.0",
-        "@types/yargs": "^17.0.29",
+        "@types/semver": "^7.8.0",
+        "@types/yargs": "^17.0.35",
         "electron": "^38.1.2"
     },
     "peerDependencies": {
         "electron": ">=20.x",
-        "electron-builder": ">=22.x"
+        "electron-builder": "^26.18.0"
     },
     "publishConfig": {
         "access": "public"
