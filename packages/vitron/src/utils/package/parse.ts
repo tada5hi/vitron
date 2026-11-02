@@ -10,7 +10,7 @@ import { removePackageVersionCaret } from './utils';
 
 export function parsePackageNameWithVersion(input: string) : PackageInfo {
     const [
-        name,
+        name = '',
         version,
     ] = input.split('@');
 

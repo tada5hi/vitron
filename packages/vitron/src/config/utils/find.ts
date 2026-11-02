@@ -16,8 +16,9 @@ export async function loadOptions(path?: string) : Promise<OptionsInput> {
         path,
     });
 
-    for (let i = 0; i < fileInfos.length; i++) {
-        const data = await load(fileInfos[i]);
+    // eslint-disable-next-line no-restricted-syntax
+    for (const fileInfo of fileInfos) {
+        const data = await load(fileInfo);
         if (data.default) {
             items.push(data.default);
             continue;
