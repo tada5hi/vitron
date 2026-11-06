@@ -95,7 +95,15 @@ export class BuildCommand implements CommandModule {
             stdio: 'inherit',
         };
 
-        spawn.sync('electron-builder', builderArgs, spawnOptions);
+        const result = spawn.sync('electron-builder', builderArgs, spawnOptions);
+
+        if (result.error) {
+            throw result.error;
+        }
+
+        if (result.status !== 0) {
+            throw new Error(`electron-builder exited with status ${result.status}.`);
+        }
     }
 }
 export type { IBuildArguments };

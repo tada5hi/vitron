@@ -14,32 +14,32 @@
         },
         "./main": {
             "require": {
-                "default": "./main/index.cjs",
-                "types": "./main/index.d.cts"
+                "types": "./main/index.d.cts",
+                "default": "./main/index.cjs"
             },
             "import": {
-                "default": "./main/index.mjs",
-                "types": "./main/index.d.mts"
+                "types": "./main/index.d.mts",
+                "default": "./main/index.mjs"
             }
         },
         "./preload": {
             "require": {
-                "default": "./preload/index.cjs",
-                "types": "./preload/index.d.cts"
+                "types": "./preload/index.d.cts",
+                "default": "./preload/index.cjs"
             },
             "import": {
-                "default": "./preload/index.mjs",
-                "types": "./preload/index.d.mts"
+                "types": "./preload/index.d.mts",
+                "default": "./preload/index.mjs"
             }
         },
         "./renderer": {
             "require": {
-                "default": "./renderer/index.cjs",
-                "types": "./renderer/index.d.cts"
+                "types": "./renderer/index.d.cts",
+                "default": "./renderer/index.cjs"
             },
             "import": {
-                "default": "./renderer/index.mjs",
-                "types": "./renderer/index.d.mts"
+                "types": "./renderer/index.d.mts",
+                "default": "./renderer/index.mjs"
             }
         }
     },
@@ -94,7 +94,7 @@
         "get-port-please": "^3.1.1",
         "locter": "^2.1.6",
         "picocolors": "^1.1.0",
-        "routup": "^4.0.1",
+        "routup": "^2.0.0",
         "semver": "^7.7.1",
         "smob": "^1.5.0",
         "tree-kill": "^1.2.2",

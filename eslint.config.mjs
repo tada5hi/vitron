@@ -11,7 +11,7 @@ export default config(
             'unicorn/prefer-uint8array-hex': 'off',
             'unicorn/prefer-regexp-escape': 'off',
             'unicorn/prefer-promise-with-resolvers': 'off',
-        }, 
+        },
     },
-    { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/writable/**', '**/.nuxt/**', '**/.output/**', 'packages/vitron/assets/**', 'packages/vitron/main/**', 'packages/vitron/preload/**', 'packages/vitron/renderer/**'] },
+    { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/writable/**', '**/.nuxt/**', '**/.vitron/**', '**/.output/**', 'packages/vitron/assets/**', 'packages/vitron/main/**', 'packages/vitron/preload/**', 'packages/vitron/renderer/**'] },
 );

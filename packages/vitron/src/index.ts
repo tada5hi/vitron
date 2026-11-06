@@ -4,7 +4,7 @@ import yargs from 'yargs';
 import { BuildCommand, DevCommand, InitCommand } from './cli';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-yargs
+yargs(process.argv.slice(2))
     .scriptName('vitron')
     .usage('Usage: $0 <command> [options]')
     .demandCommand(1)

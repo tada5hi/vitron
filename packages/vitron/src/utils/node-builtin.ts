@@ -5,40 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function getNodeBuiltInModules() {
-    const modules : string[] = [
-        'assert',
-        'buffer',
-        'child_process',
-        'cluster',
-        'crypto',
-        'dgram',
-        'dns',
-        'domain',
-        'events',
-        'fs',
-        'http',
-        'https',
-        'net',
-        'os',
-        'path',
-        'punycode',
-        'querystring',
-        'readline',
-        'stream',
-        'string_decoder',
-        'timers',
-        'tls',
-        'tty',
-        'url',
-        'util',
-        'v8',
-        'vm',
-        'zlib',
-    ];
+import { builtinModules } from 'node:module';
 
+export function getNodeBuiltInModules() {
     return [
-        ...modules,
-        ...modules.map((module) => `node:${module}`),
+        ...builtinModules,
+        ...builtinModules.filter((module) => !module.startsWith('node:')).map((module) => `node:${module}`),
     ];
 }
