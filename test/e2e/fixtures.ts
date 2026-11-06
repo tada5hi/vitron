@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
 import {
+    access,
     cp,
     mkdir,
     mkdtemp,
@@ -91,6 +92,8 @@ export async function replaceSource(root: string, file: string, before: string, 
 export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Example }>({
     exampleName: ['vanilla', { option: true }],
     example: async ({ exampleName }, use, testInfo) => {
+        await access(requireFromFixture('electron'));
+
         const directory = await mkdtemp(path.join(tmpdir(), 'vitron-e2e-'));
         const root = path.join(directory, 'examples', exampleName);
         const children: ChildProcess[] = [];
