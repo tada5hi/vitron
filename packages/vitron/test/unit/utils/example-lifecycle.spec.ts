@@ -11,13 +11,23 @@ const state = vi.hoisted(() => ({
     windows: [] as object[],
     serve: vi.fn(async () => {}),
     handle: vi.fn(),
+    quit: vi.fn(),
+    platform: 'darwin',
 }));
 
+vi.mock('node:process', () => ({
+    default: {
+        get platform() {
+            return state.platform;
+        },
+        env: {},
+    },
+}));
 vi.mock('electron', () => ({
     app: {
         whenReady: async () => {},
         on: (event: string, listener: () => void) => state.listeners.set(event, listener),
-        quit: vi.fn(),
+        quit: state.quit,
     },
     ipcMain: { handle: state.handle },
     BrowserWindow: class {
@@ -35,6 +45,10 @@ vi.mock('electron', () => ({
 
         destroy() {
             state.windows = state.windows.filter((window) => window !== this);
+
+            if (state.windows.length === 0) {
+                state.listeners.get('window-all-closed')?.();
+            }
         }
     },
 }));
@@ -45,6 +59,7 @@ beforeEach(() => {
     vi.clearAllMocks();
     state.listeners.clear();
     state.windows = [];
+    state.platform = 'darwin';
     state.serve.mockReset();
     state.serve.mockResolvedValue(undefined);
 });
@@ -96,4 +111,20 @@ it.each(['vanilla', 'nuxt', 'scaffold'])('recovers the %s example after initial 
     state.listeners.get('activate')?.();
     await vi.waitFor(() => expect(state.serve).toHaveBeenCalledTimes(3));
     expect(state.windows).toHaveLength(1);
+    expect(state.quit).not.toHaveBeenCalled();
+});
+
+it.each([
+    ['vanilla', 'linux'],
+    ['vanilla', 'win32'],
+    ['nuxt', 'linux'],
+    ['nuxt', 'win32'],
+])('quits the %s example after a failed load on %s', async (example, platform) => {
+    state.platform = platform;
+    state.serve.mockRejectedValueOnce(new Error('Renderer unavailable'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await import(`../../../../../examples/${example}/src/main/index.ts`);
+    await vi.waitFor(() => expect(state.quit).toHaveBeenCalledOnce());
+    expect(state.windows).toHaveLength(0);
 });

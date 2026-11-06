@@ -6,6 +6,7 @@
  */
 
 import type { ChildProcess } from 'node:child_process';
+import { setTimeout } from 'node:timers/promises';
 import { createServer } from 'vite';
 import type { UserConfig, ViteDevServer } from 'vite';
 import type { Config } from '../../config';
@@ -34,7 +35,26 @@ export function createRenderer(config: Config) : RendererProcess {
         myProcess = spawnRendererProcess(config);
 
         if (myProcess) {
-            return;
+            const url = `http://localhost:${config.get('port')}`;
+            const signal = AbortSignal.timeout(60_000);
+
+            try {
+                for (;;) {
+                    const response = await fetch(url, { signal }).catch(() => undefined);
+
+                    await response?.body?.cancel();
+
+                    if (response?.ok) {
+                        return;
+                    }
+
+                    await setTimeout(100, undefined, { signal });
+                }
+            } catch (error) {
+                await stop();
+
+                throw new Error(`Timed out waiting for the renderer at ${url}.`, { cause: error });
+            }
         }
 
         if (!viteConfig) {
