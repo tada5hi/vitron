@@ -2,6 +2,8 @@
 
 `packages/vitron` owns the CLI and public library. `examples/vanilla` and `examples/nuxt` are private consumers that build real desktop packages. `packages/vitron/assets/templates/` supplies the scaffolded application source.
 
+README visuals live in `.github/assets/`. Published package README images use immutable commit URLs so each version keeps its matching diagrams.
+
 | Source | Responsibility |
 | --- | --- |
 | `src/cli/` | `init`, `dev` and `build` command orchestration |
