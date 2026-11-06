@@ -1,5 +1,19 @@
 # Change Log
 
+## [2.1.4](https://github.com/tada5hi/vitron/compare/v2.1.3...v2.1.4) (2026-11-06)
+
+
+### Bug Fixes
+
+* serialize Electron restarts and add Playwright coverage ([#1144](https://github.com/tada5hi/vitron/issues/1144)) ([08e07a5](https://github.com/tada5hi/vitron/commit/08e07a519ea55e6924a1fb7d1db7b7c6cf727351))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * vitron bumped from ^2.4.0 to ^2.5.0
+
 ## [2.1.3](https://github.com/tada5hi/vitron/compare/v2.1.2...v2.1.3) (2025-04-04)
 
 
