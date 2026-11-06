@@ -6,7 +6,7 @@
  */
 
 import { build } from 'vite';
-import type { InlineConfig, Rollup } from 'vite';
+import type { InlineConfig, Rolldown } from 'vite';
 import type { ViteWatchBuild, ViteWatchHook } from './types';
 
 export function buildWithWatchHook(
@@ -15,9 +15,13 @@ export function buildWithWatchHook(
 ): ViteWatchBuild {
     let resolveReady!: () => void;
     let rejectReady!: (error: unknown) => void;
-    let watcher: Rollup.RollupWatcher | undefined;
+    let watcher: Rolldown.RolldownWatcher | undefined;
     let closing: Promise<void> | undefined;
     let firstBundle = true;
+    let resolveStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+        resolveStarted = resolve;
+    });
     const ready = new Promise<void>((resolve, reject) => {
         resolveReady = resolve;
         rejectReady = reject;
@@ -35,6 +39,8 @@ export function buildWithWatchHook(
 
         watcher = result;
         watcher.on('event', async (event) => {
+            resolveStarted();
+
             if (closing) {
                 return;
             }
@@ -58,7 +64,13 @@ export function buildWithWatchHook(
             if (!closing) {
                 resolveReady();
                 closing = initializing.then(async () => {
-                    await watcher?.close();
+                    if (!watcher) {
+                        return;
+                    }
+
+                    // Rolldown installs native close only after asynchronous option hooks finish.
+                    await started;
+                    await watcher.close();
                 });
             }
 

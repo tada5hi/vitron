@@ -36,7 +36,7 @@ export async function buildPreloadConfig(
     const inlineConfig : InlineConfig = {
         mode: config.get('env'),
         root: getAppDirectoryPath(config, AppName.PRELOAD),
-        optimizeDeps: { esbuildOptions: { target: 'es2020' } },
+        optimizeDeps: { rolldownOptions: { transform: { target: 'es2020' } } },
         build: {
             watch: {},
             emptyOutDir: true,

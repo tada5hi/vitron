@@ -22,6 +22,14 @@ vi.mock('vite', async (importOriginal) => ({
     createServer: adapters.createServer,
 }));
 
+function rendererChild() {
+    const child = new ChildProcess();
+
+    vi.spyOn(child, 'kill').mockReturnValue(false);
+
+    return child;
+}
+
 beforeEach(async () => {
     const actual = await vi.importActual<typeof vite>('vite');
 
@@ -43,7 +51,7 @@ it.each(['127.0.0.1', '::1'])('waits for an external renderer on %s to return a 
         response.end(ready ? 'renderer ready' : 'renderer starting');
     });
 
-    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(new ChildProcess());
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(rendererChild());
 
     let started = false;
     const startup = renderer.start().then(() => {
@@ -78,13 +86,13 @@ it.each(['127.0.0.1', '::1'])('waits for an external renderer on %s to return a 
 it('cleans up an external renderer when readiness fails so startup can retry', async () => {
     const failure = new Error('Renderer startup timed out');
     const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port: 9000 }));
-    const child = new ChildProcess();
+    const child = rendererChild();
     const kill = vi.spyOn(child, 'kill');
     const controller = new AbortController();
 
     controller.abort(failure);
 
-    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValueOnce(child).mockImplementation(() => new ChildProcess());
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValueOnce(child).mockImplementation(() => rendererChild());
     vi.spyOn(AbortSignal, 'timeout').mockReturnValueOnce(controller.signal).mockReturnValue(new AbortController().signal);
 
     try {
@@ -177,7 +185,7 @@ it.each(['abort', 'stop'])('cancels external readiness on %s and permits a succe
 
         fixture.ready();
 
-        const replacement = new ChildProcess();
+        const replacement = rendererChild();
 
         vi.mocked(processes.spawnRendererProcess).mockReturnValue(replacement);
         await fixture.renderer.start(new AbortController().signal);

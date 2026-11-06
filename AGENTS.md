@@ -4,7 +4,7 @@ Vitron builds and develops Electron applications with Vite. The npm workspace co
 
 ## Development
 
-Use Node.js 24.15+ on the 24.x line, or Node.js 26+. Contributor tools and published runtime requirements differ; check `packages/vitron/package.json` for the public engine and peer contracts.
+Use Node.js 24.15+ on the 24.x line, or Node.js 26+. The published library uses the same Node.js requirement; check `packages/vitron/package.json` for the public engine and peer contracts.
 
 ```sh
 npm ci

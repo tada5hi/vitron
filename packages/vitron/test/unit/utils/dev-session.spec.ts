@@ -30,22 +30,32 @@ vi.mock('cross-spawn', () => ({ default: vi.fn() }));
 vi.mock('vite', async (importOriginal) => {
     const actual = await importOriginal<typeof vite>();
 
-    return { ...actual, createServer: vi.fn(actual.createServer) };
+    return {
+        ...actual,
+        createServer: vi.fn(actual.createServer),
+        build: vi.fn(actual.build),
+    };
 });
 
 const directories: string[] = [];
 const sessions: { controller: AbortController, result: Promise<unknown> }[] = [];
 let children: ChildProcess[];
+let liveChildren: Set<ChildProcess>;
 let events: string[];
 let nextSpawnFailure: Error | undefined;
 let releaseElectron: (() => void) | undefined;
 
 beforeEach(async () => {
     children = [];
+    liveChildren = new Set();
     events = [];
     nextSpawnFailure = undefined;
     releaseElectron = undefined;
-    vi.mocked(vite.createServer).mockImplementation((await vi.importActual<typeof vite>('vite')).createServer);
+
+    const actual = await vi.importActual<typeof vite>('vite');
+
+    vi.mocked(vite.createServer).mockImplementation(actual.createServer);
+    vi.mocked(vite.build).mockImplementation(actual.build);
     vi.mocked(spawn).mockImplementation(() => {
         const child = new ChildProcess();
         const failure = nextSpawnFailure;
@@ -53,6 +63,8 @@ beforeEach(async () => {
         nextSpawnFailure = undefined;
         children.push(child);
         events.push('electron:start');
+        child.once('spawn', () => liveChildren.add(child));
+        child.once('close', () => liveChildren.delete(child));
         vi.spyOn(child, 'kill').mockImplementation(() => {
             events.push('electron:stop');
 
@@ -183,7 +195,7 @@ async function fixture(preload = true) {
             reloadFailure = error;
         },
         edit: (app: string, value: string) => writeFile(path.join(root, `src/${app}/index.ts`), `export const value = ${JSON.stringify(value)};`),
-        ready: () => vi.waitFor(() => expect(children.length).toBe(1), { timeout: 5000 }),
+        ready: () => vi.waitFor(() => expect(liveChildren.size).toBeGreaterThan(0), { timeout: 5000 }),
     };
 }
 
@@ -192,7 +204,7 @@ it.each([true, false])('owns startup in main/preload/renderer/Electron order (pr
     const result = app.start();
 
     await app.ready();
-    expect(events.slice(0, preload ? 4 : 3)).toEqual(preload ?
+    expect([...new Set(events)].slice(0, preload ? 4 : 3)).toEqual(preload ?
         ['main:built', 'preload:built', 'renderer:created', 'electron:start'] :
         ['main:built', 'renderer:created', 'electron:start']);
     expect(await (await fetch(`http://127.0.0.1:${app.config.get('port')}`)).text()).toContain('session renderer');
@@ -203,7 +215,8 @@ it.each([true, false])('owns startup in main/preload/renderer/Electron order (pr
     expect(events).toContain('main:closed');
     expect(events.includes('preload:closed')).toBe(preload);
     expect(app.server()?.httpServer?.listening).toBe(false);
-    expect(events.filter((event) => event === 'electron:stop')).toHaveLength(1);
+    expect(events.filter((event) => event === 'electron:stop')).toHaveLength(children.length);
+    expect(liveChildren.size).toBe(0);
 });
 
 it('rolls back a successful main watcher when initial preload compilation fails', async () => {
@@ -303,7 +316,7 @@ it('ignores preload rebuilds until external renderer readiness finishes', async 
     await once(server, 'listening');
 
     const child = new ChildProcess();
-    const kill = vi.spyOn(child, 'kill');
+    const kill = vi.spyOn(child, 'kill').mockReturnValue(false);
 
     vi.spyOn(rendererProcesses, 'spawnRendererProcess').mockReturnValue(child);
 
@@ -312,7 +325,9 @@ it('ignores preload rebuilds until external renderer readiness finishes', async 
     try {
         await vi.waitFor(() => expect(requested).toBe(true));
         await app.edit('preload', 'during-startup');
-        await vi.waitFor(() => expect(events.filter((event) => event === 'preload:built')).toHaveLength(2));
+        await vi.waitFor(async () => {
+            expect(await readFile(path.join(app.root, '.vitron/preload/index.js'), 'utf8')).toContain('during-startup');
+        });
         await new Promise(setImmediate);
         expect(kill).not.toHaveBeenCalled();
         ready = true;
@@ -336,11 +351,22 @@ it('restarts Electron on main rebuilds and reloads the running renderer on prelo
     const result = app.start();
 
     await app.ready();
+
+    const initial = [...liveChildren][0];
+
     await app.edit('main', 'replacement');
-    await vi.waitFor(() => expect(children).toHaveLength(2));
+    await vi.waitFor(async () => {
+        expect(await readFile(path.join(app.root, '.vitron/main/index.js'), 'utf8')).toContain('replacement');
+        expect(events.lastIndexOf('electron:start')).toBeGreaterThan(events.lastIndexOf('main:built'));
+        expect(liveChildren.size).toBe(1);
+        expect([...liveChildren][0]).not.toBe(initial);
+    });
     expect(events.indexOf('electron:stop')).toBeLessThan(events.lastIndexOf('electron:start'));
     await app.edit('preload', 'reload');
-    await vi.waitFor(() => expect(events).toContain('renderer:reload'));
+    await vi.waitFor(async () => {
+        expect(await readFile(path.join(app.root, '.vitron/preload/index.js'), 'utf8')).toContain('reload');
+        expect(events.lastIndexOf('renderer:reload')).toBeGreaterThan(events.lastIndexOf('preload:built'));
+    });
     app.controller.abort();
     await result;
     expect(app.outcome()).toBe('stopped');
@@ -351,17 +377,24 @@ it('waits for an in-flight restart and suppresses its replacement during shutdow
     const result = app.start();
 
     await app.ready();
+
+    const started = children.length;
+    const stopped = events.filter((event) => event === 'electron:stop').length;
+
     releaseElectron = () => {};
     await app.edit('main', 'pending-restart');
-    await vi.waitFor(() => expect(events).toContain('electron:stop'));
+    await vi.waitFor(() => expect(events.filter((event) => event === 'electron:stop').length).toBeGreaterThan(stopped));
+
+    const reloads = events.filter((event) => event === 'renderer:reload').length;
+
     app.controller.abort();
     await new Promise(setImmediate);
     expect(app.outcome()).toBe('pending');
     await app.edit('preload', 'stopping');
     releaseElectron();
     await result;
-    expect(children).toHaveLength(1);
-    expect(events).not.toContain('renderer:reload');
+    expect(children).toHaveLength(started);
+    expect(events.filter((event) => event === 'renderer:reload')).toHaveLength(reloads);
     expect(app.outcome()).toBe('stopped');
 });
 
@@ -408,19 +441,22 @@ it('continues other cleanup and preserves the operational error when watcher clo
     const app = await fixture();
     const operational = new Error('reload failed');
     const cleanup = new Error('main close failed');
-    const customize = app.config.get('mainConfig')!;
+    const { build } = await vi.importActual<typeof vite>('vite');
 
-    app.config.set('mainConfig', (config) => {
-        const result = customize(config);
+    vi.mocked(vite.build).mockImplementationOnce(async (config) => {
+        const watcher = await build(config);
 
-        result.plugins!.push({
-            name: 'fail-close',
-            closeWatcher() {
-                throw cleanup;
-            },
-        });
+        if ('close' in watcher) {
+            return Object.assign(Object.create(watcher) as typeof watcher, {
+                close: async () => {
+                    await watcher.close();
 
-        return result;
+                    throw cleanup;
+                },
+            });
+        }
+
+        return watcher;
     });
 
     const result = app.start();

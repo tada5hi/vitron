@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
+import { stripVTControlCharacters } from 'node:util';
 import { expect, it, vi } from 'vitest';
 
 it('starts the built command line entry point', () => {
@@ -40,7 +41,7 @@ it('exits nonzero after initial main compilation fails without launching Electro
         expect(result.signal).toBeNull();
         expect(result.status).toBe(1);
         expect(`${result.stdout}${result.stderr}`).toContain('src/main/index.ts');
-        expect(`${result.stdout}${result.stderr}`).toContain('export const value = ;');
+        expect(stripVTControlCharacters(`${result.stdout}${result.stderr}`)).toContain('export const value = ;');
     } finally {
         await rm(root, { recursive: true, force: true });
     }

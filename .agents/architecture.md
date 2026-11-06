@@ -23,6 +23,6 @@ The embedded Vite renderer closes synchronously on session cancellation through 
 
 The Nuxt example's Electron main process has a TypeScript config independent of Nuxt-generated renderer state. Main/preload builds externalize Electron and Node builtins, including `node:` names. Renderer builds have their own framework configuration. Changes to shared configuration must work with both examples.
 
-`serve()` uses the supplied port in development. In a packaged app it binds a loopback-only HTTP server to an OS-assigned port, loads its actual address, rejects startup/load failures and closes the server with its window. Do not expose this local file server on external interfaces.
+`serve()` uses the supplied port in development. In a packaged app it binds a loopback-only HTTP server to an OS-assigned port, loads its actual address, rejects startup/load failures and closes the server with its window. File responses stream from canonical paths confined to the renderer directory; hidden path segments are blocked except the root `.well-known` directory, and symlinks escaping the renderer directory are not served. Do not expose this local file server on external interfaces.
 
 The vanilla example exposes a narrow `ping()` preload API and registers its main-process handler before loading the renderer. Do not pass the entire `ipcRenderer` object through the bridge. Example product names must be plain desktop names, independent of scoped npm names, so macOS helper lookup resolves correctly.

@@ -41,7 +41,7 @@ export async function buildMainConfig(
             NODE_ENV: `"${config.get('env')}"`,
             PORT: `"${config.get('port')}"`,
         },
-        optimizeDeps: { esbuildOptions: { target: 'es2020' } },
+        optimizeDeps: { rolldownOptions: { transform: { target: 'es2020' } } },
         build: {
             watch: {},
             emptyOutDir: false,

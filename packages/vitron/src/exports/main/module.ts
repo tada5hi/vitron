@@ -6,12 +6,13 @@
  */
 
 import { createServer } from 'node:http';
+import { createReadStream } from 'node:fs';
+import { realpath, stat } from 'node:fs/promises';
+import { Readable } from 'node:stream';
 import { once } from 'node:events';
 import process from 'node:process';
 import path from 'node:path';
 import { app } from 'electron';
-import { createHandler } from '@routup/static';
-import { Router, createNodeDispatcher } from 'routup';
 import type { BrowserWindow } from 'electron';
 import type { ServeOptions } from './types';
 
@@ -25,7 +26,13 @@ export async function serve(
         return;
     }
 
-    const router = new Router();
+    const {
+        App,
+        defineCoreHandler,
+        sendFile,
+        toNodeHandler,
+    } = await import('routup/node');
+    const router = new App();
 
     let defaultDirectory: string;
 
@@ -35,9 +42,71 @@ export async function serve(
         defaultDirectory = '.vitron/renderer';
     }
 
-    router.use('/', createHandler(options.directory || defaultDirectory));
+    const directory = await realpath(options.directory || defaultDirectory);
+    const visible = (relative: string) => relative.split(path.sep).every((part, index) => (
+        !part.startsWith('.') || (index === 0 && part === '.well-known')
+    ));
 
-    const server = createServer(createNodeDispatcher(router));
+    router.use(defineCoreHandler(async (event) => {
+        let requestPath: string;
+
+        try {
+            requestPath = decodeURIComponent(event.path);
+        } catch {
+            return event.next();
+        }
+
+        if (requestPath.includes('\\') || requestPath.includes('\0') || !visible(requestPath.slice(1).split('/').join(path.sep))) {
+            return event.next();
+        }
+
+        const filePath = path.resolve(directory, `.${requestPath}`);
+        const candidates = requestPath.endsWith('/') ? [] : [filePath];
+
+        if (!path.extname(filePath)) {
+            candidates.push(`${filePath}.html`, `${filePath}.htm`);
+        }
+
+        candidates.push(path.join(filePath, 'index.html'), path.join(filePath, 'index.htm'));
+
+        for (const candidate of candidates) {
+            try {
+                const resolved = await realpath(candidate);
+                const relative = path.relative(directory, resolved);
+
+                // Resolve symlinks before checking confinement, including sibling-prefix paths.
+                if (path.isAbsolute(relative) || !visible(relative)) {
+                    continue;
+                }
+
+                const stats = await stat(resolved);
+
+                if (stats.isFile()) {
+                    event.response.headers.set('cache-control', 'public,max-age=0,must-revalidate');
+
+                    if (event.headers.get('if-none-match') === `W/"${stats.size}-${stats.mtime.getTime()}"`) {
+                        return new Response(null, { status: 304, headers: event.response.headers });
+                    }
+
+                    return sendFile(event, {
+                        name: candidate,
+                        stats,
+                        content: (range) => (event.method === 'HEAD' ?
+                            new Uint8Array() :
+                            Readable.toWeb(createReadStream(resolved, { ...range, signal: event.signal }))),
+                    });
+                }
+            } catch (error) {
+                if (!['ENOENT', 'ENOTDIR', 'EACCES'].includes((error as NodeJS.ErrnoException).code || '')) {
+                    throw error;
+                }
+            }
+        }
+
+        return event.next();
+    }));
+
+    const server = createServer(toNodeHandler(router));
 
     const stop = async () => new Promise<void>((resolve, reject) => {
         if (!server.listening) {
