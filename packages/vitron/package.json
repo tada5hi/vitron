@@ -7,7 +7,11 @@
     "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
-        ".": "./dist/index.js",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        },
         "./main": {
             "require": {
                 "default": "./main/index.cjs",
@@ -56,8 +60,9 @@
         "url": "https://github.com/tada5hi/vitron.git"
     },
     "scripts": {
-        "build": "rimraf ./dist ./preload ./renderer ./main && cross-env NODE_ENV=production rollup -c",
-        "test": "jest --config ./test/jest.config.js"
+        "build": "tsdown",
+        "test": "vitest run --config test/vitest.config.mts",
+        "test:coverage": "npm test -- --coverage"
     },
     "keywords": [
         "electron",

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import * as process from 'process';
+import * as process from 'node:process';
 import path from 'node:path';
 import { Continu } from 'continu';
 import { loadSync } from 'locter';
@@ -17,11 +17,12 @@ import {
     detectFrameworkSync,
     isPackageInfo,
     isPackageNameWithVersion,
-    parsePackageNameWithVersion, removePackageVersionCaret,
+    parsePackageNameWithVersion,
+    removePackageVersionCaret,
 } from '../../utils';
 
 import type { PackageInfo } from '../../utils';
-import type { Config, Options, OptionsInput } from '../type';
+import type { Config, Options, OptionsInput } from '../types';
 import { extractConfigFromEnv } from './env';
 
 export function buildConfig(input: OptionsInput) : Config {
@@ -97,6 +98,7 @@ export function buildConfig(input: OptionsInput) : Config {
 
     if (!instance.has('framework')) {
         const framework = detectFrameworkSync(instance.get('rootPath'));
+
         if (framework) {
             instance.set('framework', framework);
         }

@@ -11,6 +11,7 @@ import { buildMainConfig } from './config';
 
 export async function buildMainApp(config: Config) {
     const viteConfig = await buildMainConfig(config);
+
     if (viteConfig.build?.watch) {
         viteConfig.build.watch = null;
     }

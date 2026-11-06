@@ -13,7 +13,7 @@ import { createHandler } from '@routup/static';
 import { getPort } from 'get-port-please';
 import { Router, createNodeDispatcher } from 'routup';
 import type { BrowserWindow } from 'electron';
-import type { ServeOptions } from './type';
+import type { ServeOptions } from './types';
 
 export async function serve(
     mainWindow: BrowserWindow,
@@ -21,12 +21,14 @@ export async function serve(
 ) : Promise<void> {
     if (!app.isPackaged) {
         await mainWindow.loadURL(`http://localhost:${options.port || 9000}`);
+
         return;
     }
 
     const router = new Router();
 
     let defaultDirectory: string;
+
     if (process.platform === 'win32') {
         defaultDirectory = path.join(process.cwd(), 'app.asar', '.vitron', 'renderer');
     } else {
@@ -41,6 +43,7 @@ export async function serve(
         server.close((err) => {
             if (err) {
                 reject(err);
+
                 return;
             }
 

@@ -8,7 +8,7 @@
 import { merge } from 'smob';
 import { build } from 'vite';
 import type { InlineConfig } from 'vite';
-import type { ViteWatchHook } from './type';
+import type { ViteWatchHook } from './types';
 
 export async function buildWithWatchHook(
     config: InlineConfig,

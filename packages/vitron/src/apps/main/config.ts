@@ -29,6 +29,7 @@ export async function buildMainConfig(
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});
 
     const entryFile = await findEntryFile(path.join(config.get('rootPath'), config.get('mainDirectory')));
+
     if (!entryFile) {
         throw new Error('The main entrypoint file could not be located...');
     }
@@ -40,11 +41,7 @@ export async function buildMainConfig(
             NODE_ENV: `"${config.get('env')}"`,
             PORT: `"${config.get('port')}"`,
         },
-        optimizeDeps: {
-            esbuildOptions: {
-                target: 'es2020',
-            },
-        },
+        optimizeDeps: { esbuildOptions: { target: 'es2020' } },
         build: {
             watch: {},
             emptyOutDir: false,
@@ -80,12 +77,11 @@ export async function buildMainConfig(
                 ],
             },
         },
-        server: {
-
-        },
+        server: {},
     };
 
     const customConfig = config.get('mainConfig');
+
     if (customConfig) {
         return merge(customConfig(inlineConfig), inlineConfig);
     }

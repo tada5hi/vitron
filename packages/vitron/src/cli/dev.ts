@@ -19,10 +19,9 @@ import { createElectron } from '../core';
 import { createConfig } from '../config';
 import { EnvironmentName } from '../constants';
 
-export interface DevArguments extends Arguments {
-    root: string;
-    port: string | null;
-}
+import type { IDevArguments } from './types';
+
+
 
 export class DevCommand implements CommandModule {
     command = 'dev';
@@ -45,7 +44,7 @@ export class DevCommand implements CommandModule {
 
     async handler(raw: Arguments) {
         try {
-            const args = raw as DevArguments;
+            const args = raw as IDevArguments;
 
             const logger = createLogger();
 
@@ -57,6 +56,7 @@ export class DevCommand implements CommandModule {
 
             // Port
             const port = args.port ? parseInt(args.port, 10) : config.get('port');
+
             config.set('port', port);
 
             config.set('env', EnvironmentName.DEVELOPMENT);
@@ -70,6 +70,7 @@ export class DevCommand implements CommandModule {
 
             const electronProcess = createElectron(config, logger);
             const rendererProcess = createRenderer(config);
+
             /**
              * Entrypoint
              */
@@ -120,3 +121,4 @@ export class DevCommand implements CommandModule {
         }
     }
 }
+export type { IDevArguments };

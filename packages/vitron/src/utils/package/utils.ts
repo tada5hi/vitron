@@ -7,5 +7,6 @@
 
 export function removePackageVersionCaret(input: string) {
     const caret = input.substring(0, 1);
+
     return caret === '^' ? input.substring(1) : input;
 }

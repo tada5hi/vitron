@@ -18,11 +18,9 @@ import {
     buildRendererApp,
 } from '../apps/renderer';
 
-export interface BuildArguments extends Arguments {
-    root: string;
-    flags: string[];
-    config: string | 'electron-builder.yml';
-}
+import type { IBuildArguments } from './types';
+
+
 
 export class BuildCommand implements CommandModule {
     command = 'build';
@@ -51,22 +49,26 @@ export class BuildCommand implements CommandModule {
     }
 
     async handler(raw: Arguments) {
-        const args : BuildArguments = raw as BuildArguments;
+        const args : IBuildArguments = raw as IBuildArguments;
         const builderArgs : string[] = [];
 
         // Project directory
         const rootPath = args.root || process.cwd();
+
         builderArgs.push(...['--project', rootPath]);
 
         // Config
         const config = await createConfig(rootPath);
+
         config.set('env', EnvironmentName.PRODUCTION);
 
         const configFileName = args.config || 'electron-builder.yml';
+
         builderArgs.push(...['--config', configFileName]);
 
         // Flags
         const flagsMapped = args.flags.map((flag) => `--${flag}`);
+
         builderArgs.push(...flagsMapped);
 
         // ----------------------------------------------------
@@ -96,3 +98,4 @@ export class BuildCommand implements CommandModule {
         spawn.sync('electron-builder', builderArgs, spawnOptions);
     }
 }
+export type { IBuildArguments };

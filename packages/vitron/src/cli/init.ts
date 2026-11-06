@@ -12,11 +12,14 @@ import { createConfig } from '../config';
 import { ASSETS_PATH } from '../constants';
 import { ensureDirectoryExists } from '../utils';
 
+import type { IInitArguments } from './types';
+
 async function getFiles(dir: string, relativePath = '') : Promise<string[]> {
     const direntMany = await fs.promises.readdir(dir, { withFileTypes: true });
 
     let files : string[] = [];
-    // eslint-disable-next-line no-restricted-syntax
+
+
     for (const dirent of direntMany) {
         if (dirent.isDirectory()) {
             files = [
@@ -31,9 +34,7 @@ async function getFiles(dir: string, relativePath = '') : Promise<string[]> {
     return files;
 }
 
-export interface InitArguments extends Arguments {
-    root: string;
-}
+
 
 export class InitCommand implements CommandModule {
     command = 'init';
@@ -51,10 +52,11 @@ export class InitCommand implements CommandModule {
 
     async handler(raw: Arguments) {
         try {
-            const args: InitArguments = raw as InitArguments;
+            const args: IInitArguments = raw as IInitArguments;
 
             // Project directory
             let baseDirectoryPath = args.root || process.cwd();
+
             if (!path.isAbsolute(baseDirectoryPath)) {
                 baseDirectoryPath = path.join(process.cwd(), args.root);
             }
@@ -65,20 +67,22 @@ export class InitCommand implements CommandModule {
             const tplPath: string = path.join(ASSETS_PATH, 'templates');
 
             const templateFiles = await getFiles(tplPath);
-            for (let i = 0; i < templateFiles.length; i++) {
-                const sourceFilePath = path.join(tplPath, templateFiles[i]);
+
+            for (const templateFile of templateFiles) {
+                const sourceFilePath = path.join(tplPath, templateFile);
 
                 const destinationFilePath = path.join(
                     config.get('rootPath'),
-                    templateFiles[i],
+                    templateFile,
                 );
 
                 const destinationDirectoryPath = path.dirname(destinationFilePath);
+
                 await ensureDirectoryExists(destinationDirectoryPath);
 
                 try {
                     await fs.promises.access(destinationFilePath, fs.constants.F_OK | fs.constants.R_OK);
-                } catch (e) {
+                } catch {
                     const content = await fs.promises.readFile(
                         path.join(sourceFilePath),
                         { encoding: 'utf-8' },
@@ -99,3 +103,4 @@ export class InitCommand implements CommandModule {
         }
     }
 }
+export type { IInitArguments };

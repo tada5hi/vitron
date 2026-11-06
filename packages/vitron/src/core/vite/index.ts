@@ -6,4 +6,4 @@
  */
 
 export * from './build';
-export * from './type';
+export * from './types';

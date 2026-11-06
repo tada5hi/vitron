@@ -7,19 +7,19 @@
 
 import { load, locateMany } from 'locter';
 import { merge } from 'smob';
-import type { OptionsInput } from '../type';
+import type { OptionsInput } from '../types';
 
 export async function loadOptions(path?: string) : Promise<OptionsInput> {
     const items : OptionsInput[] = [];
 
-    const fileInfos = await locateMany('vitron.config.{ts,cts,mts,cjs,mjs,js,json}', {
-        path,
-    });
+    const fileInfos = await locateMany('vitron.config.{ts,cts,mts,cjs,mjs,js,json}', { path });
 
-    for (let i = 0; i < fileInfos.length; i++) {
-        const data = await load(fileInfos[i]);
+    for (const fileInfo of fileInfos) {
+        const data = await load(fileInfo);
+
         if (data.default) {
             items.push(data.default);
+
             continue;
         }
 

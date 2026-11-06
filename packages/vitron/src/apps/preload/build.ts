@@ -11,6 +11,7 @@ import { buildPreloadConfig } from './config';
 
 export async function buildPreloadApp(config: Config) {
     const viteConfig = await buildPreloadConfig(config);
+
     if (!viteConfig) {
         return;
     }

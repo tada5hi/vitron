@@ -7,7 +7,7 @@
 
 import type { EnvironmentName } from '../../constants';
 import { hasEnv, requireFromEnv } from '../../utils';
-import type { Options } from '../type';
+import type { Options } from '../types';
 
 export function extractConfigFromEnv() : Partial<Options> {
     const config : Partial<Options> = {};

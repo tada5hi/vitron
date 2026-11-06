@@ -16,6 +16,7 @@ export async function moveAppRendererDirectory(
     config: Config,
 ) {
     const destinationBasePath = path.resolve(config.get('rootPath'), config.get('buildDirectory'));
+
     await ensureDirectoryExists(destinationBasePath);
 
     const sourcePath = getAppDirectoryPath(config, AppName.RENDERER);
@@ -26,7 +27,7 @@ export async function moveAppRendererDirectory(
     try {
         await fs.promises.access(destinationPath, fs.constants.R_OK);
         await fs.promises.rm(destinationPath, { recursive: true });
-    } catch (e) {
+    } catch {
         //
     }
 

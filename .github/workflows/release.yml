@@ -8,7 +8,7 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 env:
-    NODE_VERSION: 18
+    NODE_VERSION: 26
 
 permissions:
     packages: write
@@ -48,6 +48,6 @@ jobs:
 
             -   name: Publish
                 if: steps.release.outputs.releases_created == 'true'
-                run: npx workspaces-publish
+                run: npx monoship
                 env:
                     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -27,9 +27,12 @@ export function createRenderer(config: Config) : RendererProcess {
     let viteServer: ViteDevServer | undefined;
 
     const start = async () : Promise<void> => {
-        if (myProcess || viteServer) return;
+        if (myProcess || viteServer) {
+            return;
+        }
 
         myProcess = spawnRendererProcess(config);
+
         if (myProcess) {
             return;
         }
@@ -37,6 +40,7 @@ export function createRenderer(config: Config) : RendererProcess {
         if (!viteConfig) {
             viteConfig = await buildRendererConfig(config, EnvironmentName.DEVELOPMENT);
         }
+
         viteServer = await createServer(viteConfig);
 
         await viteServer.listen(config.get('port'));
@@ -52,10 +56,12 @@ export function createRenderer(config: Config) : RendererProcess {
             return;
         }
 
-        if (viteServer) {
-            await viteServer.close();
-            viteServer = undefined;
+        if (!viteServer) {
+            return;
         }
+
+        await viteServer.close();
+        viteServer = undefined;
     };
 
     const restart = async () : Promise<void> => {

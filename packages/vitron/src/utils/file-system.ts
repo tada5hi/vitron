@@ -15,7 +15,7 @@ export async function ensureDirectoryExists(input: string) : Promise<void> {
 
     try {
         await fs.promises.access(input, fs.constants.R_OK | fs.constants.O_DIRECTORY);
-    } catch (e) {
+    } catch {
         await fs.promises.mkdir(input, { recursive: true });
     }
 }
@@ -28,7 +28,7 @@ export async function ensureDirectoryNotExists(input: string) : Promise<void> {
     try {
         await fs.promises.access(input, fs.constants.R_OK | fs.constants.O_DIRECTORY);
         await fs.promises.rm(input, { recursive: true });
-    } catch (e) {
+    } catch {
         // do nothing
     }
 }

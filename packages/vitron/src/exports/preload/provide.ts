@@ -17,8 +17,6 @@ export function provide(key: string, value: unknown) {
     if (process.contextIsolated) {
         contextBridge.exposeInMainWorld(key, value);
     } else if (typeof window !== 'undefined') {
-        Object.assign(window, {
-            [key]: value,
-        });
+        Object.assign(window, { [key]: value });
     }
 }

@@ -3,7 +3,7 @@
 import yargs from 'yargs';
 import { BuildCommand, DevCommand, InitCommand } from './cli';
 
-// eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 yargs
     .scriptName('vitron')
     .usage('Usage: $0 <command> [options]')
