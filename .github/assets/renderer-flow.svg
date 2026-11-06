@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="350" viewBox="0 0 960 350" role="img" aria-labelledby="vitron-flow-title vitron-flow-desc">
+<title id="vitron-flow-title">One renderer loader, two environments</title>
+<desc id="vitron-flow-desc">The Electron main process calls serve. During development it loads localhost at the supplied port. In a packaged app it serves renderer files on an OS-assigned loopback port. Both paths load the BrowserWindow; the packaged server closes with its window.</desc>
+<style>
+:root{--paper:#f5f3fc;--panel:#fff;--ink:#253447;--muted:#56637a;--line:#bbc0d3;--main:#825bd4;--renderer:#087f8c;--chip:#e9e3fa}
+@media(prefers-color-scheme:dark){:root{--paper:#161c2b;--panel:#222b3d;--ink:#eef0f8;--muted:#bdc7db;--line:#62718a;--main:#b59aec;--renderer:#56c9d2;--chip:#3b3058}}
+text{font-family:system-ui,sans-serif;fill:var(--ink)}.small{font-size:15px;fill:var(--muted)}.label{font-size:19px;font-weight:650}.card{fill:var(--panel);stroke:var(--line);stroke-width:1.5}.arrow{fill:none;stroke:var(--main);stroke-width:2.5;marker-end:url(#vitron-flow-arrow)}
+</style>
+<defs><marker id="vitron-flow-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 7 3.5 0 7Z" fill="var(--main)"/></marker></defs>
+<rect width="960" height="350" rx="22" fill="var(--paper)"/>
+<text x="30" y="39" font-size="23" font-weight="700">One renderer loader, two environments</text>
+<rect class="card" x="30" y="135" width="190" height="93" rx="12"/>
+<text class="label" x="50" y="170">Electron main</text><text class="small" x="50" y="199">await serve(window, …)</text>
+<path class="arrow" d="M220 181H255V113H295"/><path class="arrow" d="M255 181V251H295"/>
+<rect class="card" x="303" y="67" width="320" height="99" rx="12"/>
+<text class="label" x="323" y="100" fill="var(--main)">Development</text><text class="small" x="323" y="126">http://localhost:PORT</text><text class="small" x="323" y="149">Load the running renderer server</text>
+<rect class="card" x="303" y="204" width="320" height="111" rx="12"/>
+<text class="label" x="323" y="237">Packaged application</text><text class="small" x="323" y="264">Renderer files → 127.0.0.1:assigned-port</text><text class="small" x="323" y="289">Server closes with its window</text>
+<path class="arrow" d="M623 116H663V181H698"/><path class="arrow" d="M623 259H663V181"/>
+<rect class="card" x="706" y="113" width="224" height="135" rx="12"/>
+<path d="M707 145H929" stroke="var(--line)"/><circle cx="724" cy="129" r="4" fill="var(--main)"/><circle cx="738" cy="129" r="4" fill="var(--renderer)"/>
+<text class="label" x="726" y="178">BrowserWindow</text><text class="small" x="726" y="205">await window.loadURL(…)</text><text class="small" x="726" y="229">Your renderer application</text>
+</svg>
