@@ -17,6 +17,7 @@
     },
     "license": "MIT",
     "devDependencies": {
+        "@playwright/test": "^1.65.0",
         "@swc/core": "^1.7.28",
         "@tada5hi/commitlint-config": "^1.2.1",
         "@tada5hi/eslint-config": "^3.3.1",
@@ -39,11 +40,17 @@
     "scripts": {
         "build": "npx nx run-many -t build",
         "test": "npx nx run-many -t test",
+        "test:e2e": "npm run build --workspace=vitron && playwright test",
         "lint": "eslint .",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky install"
     },
     "engines": {
         "node": "^24.15.0 || >=26.0.0"
+    },
+    "overrides": {
+        "extract-zip": {
+            "yauzl": "^3.3.1"
+        }
     }
 }

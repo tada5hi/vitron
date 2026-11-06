@@ -2,6 +2,8 @@
     "extends": "./tsconfig.json",
     "include": [
         "packages/**/*.ts",
-        "examples/**/*.ts"
+        "examples/**/*.ts",
+        "test/**/*.ts",
+        "playwright.config.ts"
     ]
 }

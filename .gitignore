@@ -14,3 +14,7 @@ reports
 .output
 .vitron
 .nx
+
+playwright-report
+test-results
+docs/superpowers/
