@@ -6,7 +6,6 @@
  */
 
 import path from 'node:path';
-import { load } from 'locter';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
 import type { Config } from '../../config';
@@ -19,7 +18,8 @@ export async function buildRendererConfig(
     config: Config,
     env: `${EnvironmentName}`,
 ) : Promise<InlineConfig> {
-    const packageJson = await load(path.join(config.get('rootPath'), 'package.json'));
+    const { read } = await import('locter');
+    const packageJson = await read(path.join(config.get('rootPath'), 'package.json'));
 
     const dependencies : string[] = Object.keys(packageJson.dependencies || {});
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});

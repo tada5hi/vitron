@@ -7,8 +7,8 @@
 
 import * as process from 'node:process';
 import path from 'node:path';
+import fs from 'node:fs';
 import { Continu } from 'continu';
-import { loadSync } from 'locter';
 import { merge } from 'smob';
 import zod from 'zod';
 import { EnvironmentName } from '../../constants';
@@ -57,7 +57,7 @@ export function buildConfig(input: OptionsInput) : Config {
                     }
 
                     const directoryPath = path.dirname(require.resolve(input));
-                    const packageJson = loadSync(path.join(directoryPath, 'package.json'));
+                    const packageJson = JSON.parse(fs.readFileSync(path.join(directoryPath, 'package.json'), 'utf8'));
 
                     return {
                         name: input,
