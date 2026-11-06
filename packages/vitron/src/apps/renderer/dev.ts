@@ -59,7 +59,15 @@ export function createRenderer(config: Config) : RendererProcess {
 
     const start = (signal?: AbortSignal) : Promise<void> => {
         if (stopping) {
-            return stopping.then(() => start(signal));
+            const version = stopVersion;
+
+            return stopping.then(() => {
+                if (stopVersion !== version) {
+                    throw new DOMException('Renderer startup cancelled.', 'AbortError');
+                }
+
+                return start(signal);
+            });
         }
 
         if (pendingStart) {

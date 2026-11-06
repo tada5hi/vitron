@@ -362,3 +362,74 @@ it('preserves the Vite startup failure when cleanup also fails', async () => {
         });
     }
 });
+
+it.each([false, true])('handles startup queued behind Vite shutdown with later stop=%s', async (stopAgain) => {
+    let releaseClose: (() => void) | undefined;
+    let delayClose = true;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort('127.0.0.1'),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = {
+                host: '127.0.0.1',
+                strictPort: true,
+                watch: null,
+            };
+            config.plugins = [{
+                name: 'delay-first-close',
+                configureServer(server) {
+                    const close = server.close.bind(server);
+
+                    server.close = async () => {
+                        if (delayClose) {
+                            delayClose = false;
+                            await new Promise<void>((resolve) => {
+                                releaseClose = resolve;
+                            });
+                        }
+
+                        await close();
+                    };
+                },
+            }];
+
+            return config;
+        },
+    }));
+
+    try {
+        await renderer.start();
+
+        const firstStop = renderer.stop();
+
+        await vi.waitFor(() => expect(releaseClose).toBeTypeOf('function'));
+
+        let result: unknown;
+        const queuedStart = renderer.start().then(
+            () => {
+                result = 'started';
+            },
+            (error) => {
+                result = error;
+            },
+        );
+        const finalStop = stopAgain ? renderer.stop() : undefined;
+
+        releaseClose?.();
+        await Promise.all([firstStop, queuedStart, finalStop]);
+        expect(renderer.up()).toBe(!stopAgain);
+
+        if (stopAgain) {
+            expect(result).toBeInstanceOf(Error);
+        } else {
+            expect(result).toBe('started');
+        }
+    } finally {
+        releaseClose?.();
+        await renderer.stop();
+    }
+});
