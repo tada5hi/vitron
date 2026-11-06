@@ -34,10 +34,15 @@ export function createRenderer(config: Config) : RendererProcess {
     let stopVersion = 0;
     let cleaning: Promise<void> | undefined;
     const abortCloses = new Set<Promise<void>>();
+    const viteRestarts = new Set<Promise<void>>();
 
     const cleanup = () : Promise<void> => {
         if (!cleaning) {
+            startController?.abort();
             cleaning = (async () => {
+                // Config restarts can acquire and bind a replacement after cancellation.
+                await Promise.allSettled(viteRestarts);
+
                 if (myProcess) {
                     myProcess.removeAllListeners();
                     myProcess.kill();
@@ -160,6 +165,24 @@ export function createRenderer(config: Config) : RendererProcess {
                             handler(server) {
                                 viteServer = server;
 
+                                const restartServer = server.restart.bind(server);
+
+                                server.restart = async (...args) => {
+                                    if (cancellation.aborted) {
+                                        return;
+                                    }
+
+                                    const restarting = restartServer(...args);
+
+                                    viteRestarts.add(restarting);
+
+                                    try {
+                                        await restarting;
+                                    } finally {
+                                        viteRestarts.delete(restarting);
+                                    }
+                                };
+
                                 const closeServer = server.close.bind(server);
                                 const close = () => {
                                     // Close synchronously so Vite releases its own forced-exit signal handler.
@@ -196,7 +219,6 @@ export function createRenderer(config: Config) : RendererProcess {
                 throw error;
             } finally {
                 pendingStart = undefined;
-                startController = undefined;
             }
         })();
 

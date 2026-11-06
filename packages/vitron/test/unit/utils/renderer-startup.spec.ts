@@ -585,3 +585,133 @@ it('retains synchronous cancellation ownership after an ordinary Vite restart', 
         await renderer.stop();
     }
 });
+
+it.each([
+    { stage: 'acquiring', action: 'abort' },
+    { stage: 'binding', action: 'abort' },
+    { stage: 'acquiring', action: 'stop' },
+    { stage: 'binding', action: 'stop' },
+])('waits for a Vite config replacement that is $stage during $action so it cannot reopen the port', async ({ stage, action }) => {
+    const controller = new AbortController();
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const closed = Promise.withResolvers<void>();
+    const port = await getRandomPort('127.0.0.1');
+    let server: ViteDevServer | undefined;
+    let acquisitions = 0;
+    let restarting: Promise<void> | undefined;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port,
+        rendererConfig(config) {
+            config.configFile = false;
+            config.logLevel = 'silent';
+            config.server = {
+                host: '127.0.0.1',
+                port,
+                watch: null,
+                strictPort: true,
+            };
+            config.plugins = [{
+                name: 'gate-config-replacement',
+                async configureServer(value) {
+                    server = value;
+                    acquisitions++;
+
+                    if (acquisitions !== 2) {
+                        return;
+                    }
+
+                    const close = value.close.bind(value);
+
+                    value.close = async () => {
+                        await close();
+                        closed.resolve();
+                    };
+
+                    if (stage === 'acquiring') {
+                        entered.resolve();
+                        await release.promise;
+                    } else {
+                        const http = value.httpServer!;
+                        const listen = http.listen.bind(http);
+
+                        http.listen = ((...args: Parameters<typeof listen>) => {
+                            entered.resolve();
+                            void release.promise.then(() => listen(...args));
+
+                            return http;
+                        }) as typeof http.listen;
+                    }
+                },
+            }];
+
+            return {};
+        },
+    }));
+
+    try {
+        await renderer.start(controller.signal);
+        // Vite's config watcher invokes this same public restart method.
+        restarting = server!.restart();
+        await entered.promise;
+
+        if (action === 'abort') {
+            controller.abort();
+        }
+
+        let stopped = false;
+        const stopping = renderer.stop().then(() => {
+            stopped = true;
+        });
+
+        await closed.promise;
+        await new Promise(setImmediate);
+
+        const stoppedBeforeRelease = stopped;
+
+        release.resolve();
+        await restarting;
+        await stopping;
+
+        const probe = createServer();
+        const portReleased = await new Promise<boolean>((resolve) => {
+            probe.once('error', () => resolve(false));
+            probe.listen(port, '127.0.0.1', () => resolve(true));
+        });
+
+        if (probe.listening) {
+            await new Promise<void>((resolve) => {
+                probe.close(() => resolve());
+            });
+        }
+
+        expect({
+            stoppedBeforeRelease,
+            up: renderer.up(),
+            listening: server!.httpServer!.listening,
+            portReleased,
+        }).toEqual({
+            stoppedBeforeRelease: false,
+            up: false,
+            listening: false,
+            portReleased: true,
+        });
+        await server!.restart();
+        expect(acquisitions).toBe(2);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        release.resolve();
+        await restarting?.catch(() => {});
+        await renderer.stop();
+
+        if (server?.httpServer?.listening) {
+            await new Promise<void>((resolve, reject) => {
+                server!.httpServer!.close((error) => (error ? reject(error) : resolve()));
+            });
+        }
+    }
+});
