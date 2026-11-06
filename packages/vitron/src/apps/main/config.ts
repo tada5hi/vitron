@@ -7,7 +7,6 @@
 
 import path from 'node:path';
 import replace from '@rollup/plugin-replace';
-import { load } from 'locter';
 import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
 import type { Config } from '../../config';
@@ -23,7 +22,8 @@ import { getAppDestinationDirectoryPath, getAppDirectoryPath } from '../utils';
 export async function buildMainConfig(
     config: Config,
 ) : Promise<InlineConfig> {
-    const packageJson = await load(path.join(config.get('rootPath'), 'package.json'));
+    const { read } = await import('locter');
+    const packageJson = await read(path.join(config.get('rootPath'), 'package.json'));
 
     const dependencies : string[] = Object.keys(packageJson.dependencies || {});
     const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});

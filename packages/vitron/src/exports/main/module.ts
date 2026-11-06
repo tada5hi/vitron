@@ -10,8 +10,6 @@ import { once } from 'node:events';
 import process from 'node:process';
 import path from 'node:path';
 import { app } from 'electron';
-import { createHandler } from '@routup/static';
-import { Router, createNodeDispatcher } from 'routup';
 import type { BrowserWindow } from 'electron';
 import type { ServeOptions } from './types';
 
@@ -25,7 +23,9 @@ export async function serve(
         return;
     }
 
-    const router = new Router();
+    const { App, toNodeHandler } = await import('routup/node');
+    const { assets } = await import('@routup/assets');
+    const router = new App();
 
     let defaultDirectory: string;
 
@@ -35,9 +35,9 @@ export async function serve(
         defaultDirectory = '.vitron/renderer';
     }
 
-    router.use('/', createHandler(options.directory || defaultDirectory));
+    router.use(assets(options.directory || defaultDirectory));
 
-    const server = createServer(createNodeDispatcher(router));
+    const server = createServer(toNodeHandler(router));
 
     const stop = async () => new Promise<void>((resolve, reject) => {
         if (!server.listening) {
