@@ -5,6 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-module.exports = {
-    extends: ['@tada5hi/commitlint-config'],
-};
+module.exports = { extends: ['@tada5hi/commitlint-config'] };

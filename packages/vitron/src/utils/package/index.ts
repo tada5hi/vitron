@@ -7,5 +7,5 @@
 
 export * from './check';
 export * from './parse';
-export * from './type';
+export * from './types';
 export * from './utils';

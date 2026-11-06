@@ -6,6 +6,7 @@
  */
 
 import type { ChildProcess } from 'node:child_process';
+import { setTimeout } from 'node:timers/promises';
 import { createServer } from 'vite';
 import type { UserConfig, ViteDevServer } from 'vite';
 import type { Config } from '../../config';
@@ -27,16 +28,39 @@ export function createRenderer(config: Config) : RendererProcess {
     let viteServer: ViteDevServer | undefined;
 
     const start = async () : Promise<void> => {
-        if (myProcess || viteServer) return;
+        if (myProcess || viteServer) {
+            return;
+        }
 
         myProcess = spawnRendererProcess(config);
+
         if (myProcess) {
-            return;
+            const url = `http://localhost:${config.get('port')}`;
+            const signal = AbortSignal.timeout(60_000);
+
+            try {
+                for (;;) {
+                    const response = await fetch(url, { signal }).catch(() => undefined);
+
+                    await response?.body?.cancel();
+
+                    if (response?.ok) {
+                        return;
+                    }
+
+                    await setTimeout(100, undefined, { signal });
+                }
+            } catch (error) {
+                await stop();
+
+                throw new Error(`Timed out waiting for the renderer at ${url}.`, { cause: error });
+            }
         }
 
         if (!viteConfig) {
             viteConfig = await buildRendererConfig(config, EnvironmentName.DEVELOPMENT);
         }
+
         viteServer = await createServer(viteConfig);
 
         await viteServer.listen(config.get('port'));
@@ -52,10 +76,12 @@ export function createRenderer(config: Config) : RendererProcess {
             return;
         }
 
-        if (viteServer) {
-            await viteServer.close();
-            viteServer = undefined;
+        if (!viteServer) {
+            return;
         }
+
+        await viteServer.close();
+        viteServer = undefined;
     };
 
     const restart = async () : Promise<void> => {

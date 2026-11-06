@@ -22,11 +22,13 @@ export function spawnRendererProcess(
     };
 
     const command = config.get('rendererDevCommand');
+
     if (command) {
         return spawn(command(config.get()));
     }
 
     const framework = config.get('framework') as PackageInfo;
+
     if (isPackageInfo(framework)) {
         switch (framework.name) {
             case Framework.NUXT: {

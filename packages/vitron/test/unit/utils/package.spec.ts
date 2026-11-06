@@ -15,6 +15,7 @@ import {
 describe('src/utils/package', () => {
     it('should verify package version', () => {
         let version = '0.0.0';
+
         expect(isValidPackageVersion(version)).toBeTruthy();
 
         version = 'foo';
@@ -26,6 +27,7 @@ describe('src/utils/package', () => {
 
     it('should verify if is valid package name with version', () => {
         let name = 'nuxt@3.0.0';
+
         expect(isPackageNameWithVersion(name)).toBeTruthy();
 
         name = 'nuxt@foo';
@@ -40,23 +42,23 @@ describe('src/utils/package', () => {
             name: 'nuxt',
             version: '3.0.0',
         };
+
         expect(isPackageInfo(info)).toBeTruthy();
 
-        info = {
-            name: 'nuxt',
-        };
+        info = { name: 'nuxt' };
         expect(isPackageInfo(info)).toBeFalsy();
     });
 
     it('should parse package name with version', () => {
         const parsed = parsePackageNameWithVersion('nuxt@3.0.0');
+
         expect(parsed).toEqual({ name: 'nuxt', version: '3.0.0' });
 
         try {
             parsePackageNameWithVersion('nuxt');
 
             expect(true).toBeFalsy();
-        } catch (e) {
+        } catch {
             expect(true).toBeTruthy();
         }
     });

@@ -24,13 +24,16 @@ export async function buildRendererApp(config: Config): Promise<void> {
     };
 
     const command = config.get('rendererBuildCommand');
+
     if (command) {
         spawn.sync(command(config.get()));
         await moveAppRendererDirectory(config);
+
         return;
     }
 
     const framework = config.get('framework');
+
     if (isPackageInfo(framework)) {
         switch (framework.name) {
             case Framework.NUXT: {
@@ -41,19 +44,23 @@ export async function buildRendererApp(config: Config): Promise<void> {
                     spawn.sync('nuxt', ['build', config.get('rendererDirectory')], execOptions);
                     spawn.sync('nuxt', ['generate', config.get('rendererDirectory')], execOptions);
                 }
+
                 break;
             }
             case Framework.NEXT: {
                 spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions);
                 spawn.sync('next', ['export', '-o', path.join(config.get('rendererDirectory'), 'dist')], execOptions);
+
                 break;
             }
         }
 
         await moveAppRendererDirectory(config);
+
         return;
     }
 
     const viteConfig = await buildRendererConfig(config, EnvironmentName.PRODUCTION);
+
     await build(viteConfig);
 }

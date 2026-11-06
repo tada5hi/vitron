@@ -16,14 +16,17 @@ export function getAppDirectoryPath(config: Config, app: `${AppName}`) {
     switch (app) {
         case AppName.MAIN: {
             directoryPath = path.resolve(config.get('rootPath'), config.get('mainDirectory'));
+
             break;
         }
         case AppName.PRELOAD: {
             directoryPath = path.resolve(config.get('rootPath'), config.get('preloadDirectory'));
+
             break;
         }
         default: {
             directoryPath = path.resolve(config.get('rootPath'), config.get('rendererDirectory'));
+
             break;
         }
     }
@@ -41,10 +44,12 @@ export function getBuildDirectoryPath(config: Config) {
 
 export async function clearBuildDirectory(config: Config) {
     const entrypointDistDirectory = path.join(config.get('rootPath'), config.get('buildDirectory'));
+
     await ensureDirectoryNotExists(entrypointDistDirectory);
 }
 
 export async function createBuildDirectory(config: Config) {
     const buildDirectory = path.join(config.get('rootPath'), config.get('buildDirectory'));
+
     await ensureDirectoryExists(buildDirectory);
 }

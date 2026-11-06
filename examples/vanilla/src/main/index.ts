@@ -6,15 +6,13 @@ import { BrowserWindow, app, ipcMain } from 'electron';
 app.on('window-all-closed', () => {
     // On mac-os it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
-let mainWindow : BrowserWindow;
-
-(async () => {
-    await app.whenReady();
-
-    mainWindow = new BrowserWindow({
+async function createWindow() {
+    const mainWindow = new BrowserWindow({
         height: 768,
         width: 1024,
         autoHideMenuBar: true,
@@ -26,14 +24,28 @@ let mainWindow : BrowserWindow;
         },
     });
 
-    await serve(mainWindow, {
-        directory: path.join(`${__dirname}/../renderer/`),
-        port: process.env.PORT,
+    try {
+        await serve(mainWindow, {
+            directory: path.join(`${__dirname}/../renderer/`),
+            port: process.env.PORT,
+        });
+    } catch (error) {
+        if (!mainWindow.isDestroyed()) {
+            mainWindow.destroy();
+        }
+
+        throw error;
+    }
+}
+
+app.whenReady().then(() => {
+    ipcMain.handle('ping', () => 'pong');
+
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            void createWindow().catch(console.error);
+        }
     });
 
-    ipcMain.handle('ping', () => 'pong');
-})();
-
-app.on('window-all-closed', () => {
-    app.quit();
-});
+    return createWindow();
+}).catch(console.error);

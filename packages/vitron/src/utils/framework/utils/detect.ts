@@ -18,7 +18,11 @@ function parsePackageJSONOutput(input: unknown) {
         return undefined;
     }
 
-    const { dependencies, devDependencies, peerDependencies } = input;
+    const {
+        dependencies,
+        devDependencies,
+        peerDependencies,
+    } = input;
 
     const dependencyMap : Record<string, string> = {
         ...(dependencies || {}),

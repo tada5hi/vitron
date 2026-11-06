@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="vitron-a-title vitron-a-desc">
+<title id="vitron-a-title">Vitron — Live desktop</title>
+<desc id="vitron-a-desc">A desktop window holds a lightning-shaped handoff between its renderer and host panes.</desc>
+<style>
+:root{--accent:#825bd4;--second:#20a4b2;--ink:#253447;--paper:#f7fafc;--line:#8394a7;--wash:#825bd418}
+@media(prefers-color-scheme:dark){:root{--ink:#e4ebf3;--paper:#182332;--line:#8495aa;--wash:#825bd422}}
+.a{stroke:var(--accent)}.b{stroke:var(--second)}.af{fill:var(--accent)}.bf{fill:var(--second)}.ink{fill:var(--ink)}.paper{stroke:var(--line)}.line{stroke:var(--line)}.wash{fill:var(--wash)}.white{fill:#fff}.neutral{fill:var(--paper)}
+</style>
+<path d="M30 50 H226 V191 H30 Z" class="a" stroke-width="6" fill="var(--paper)" stroke-linecap="round" stroke-linejoin="round" /><path d="M30 79 H226 M144 80 V190" class="line" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" /><circle cx="46" cy="64" r="4" class="af" /><circle cx="60" cy="64" r="4" class="bf" /><circle cx="74" cy="64" r="4" class="af" /><path d="M93 93 L62 140 H91 L79 176 L126 123 H99 L113 93 Z" class="a" stroke-width="1" fill="var(--accent)" stroke-linecap="round" stroke-linejoin="round" /><path d="M165 108 H204 M165 128 H191 M165 148 H207 M165 168 H185" class="b" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" /><path d="M107 191 V217 M149 191 V217 M85 218 H171" class="a" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

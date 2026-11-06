@@ -1,8 +1,16 @@
-import type { IpcRenderer } from 'electron';
 import { inject } from 'vitron/renderer';
 
-const ipcRenderer = inject<IpcRenderer>('foo');
-setTimeout(async () => {
-    const output = await ipcRenderer.invoke('ping');
-    console.log(output);
-}, 0);
+const api = inject<{ ping: () => Promise<string> }>('vitron');
+const output = document.querySelector<HTMLDivElement>('#app');
+
+api.ping().then((response) => {
+    if (output) {
+        output.textContent = `Vitron is running. IPC response: ${response}`;
+    }
+}, (error: unknown) => {
+    console.error(error);
+
+    if (output) {
+        output.textContent = 'Vitron IPC check failed. See the developer console.';
+    }
+});

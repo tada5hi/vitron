@@ -6,15 +6,13 @@ import { BrowserWindow, app } from 'electron';
 app.on('window-all-closed', () => {
     // On mac-os it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
-let mainWindow : BrowserWindow;
-
-(async () => {
-    await app.whenReady();
-
-    mainWindow = new BrowserWindow({
+async function createWindow() {
+    const mainWindow = new BrowserWindow({
         height: 768,
         width: 1024,
         autoHideMenuBar: true,
@@ -25,13 +23,26 @@ let mainWindow : BrowserWindow;
         },
     });
 
-    await serve(mainWindow, {
-        directory: path.join(`${__dirname}/../renderer/`),
-        env: process.env.NODE_ENV || 'production',
-        port: process.env.PORT,
-    });
-})();
+    try {
+        await serve(mainWindow, {
+            directory: path.join(`${__dirname}/../renderer/`),
+            port: process.env.PORT,
+        });
+    } catch (error) {
+        if (!mainWindow.isDestroyed()) {
+            mainWindow.destroy();
+        }
 
-app.on('window-all-closed', () => {
-    app.quit();
-});
+        throw error;
+    }
+}
+
+app.whenReady().then(() => {
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            void createWindow().catch(console.error);
+        }
+    });
+
+    return createWindow();
+}).catch(console.error);

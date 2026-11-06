@@ -6,7 +6,7 @@
  */
 
 import { getPort } from 'get-port-please';
-import type { Config } from './type';
+import type { Config } from './types';
 import { buildConfig, loadOptions } from './utils';
 
 let instance : Config | undefined;
@@ -17,11 +17,13 @@ export async function createConfig(directoryPath: string) : Promise<Config> {
     }
 
     const input = await loadOptions(directoryPath);
+
     instance = buildConfig(input);
 
     // find open port
     if (!instance.has('port')) {
         const port = await getPort();
+
         instance.set('port', port);
     }
 

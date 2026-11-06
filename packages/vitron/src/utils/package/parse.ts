@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PackageInfo } from './type';
+import type { PackageInfo } from './types';
 import { removePackageVersionCaret } from './utils';
 
 export function parsePackageNameWithVersion(input: string) : PackageInfo {

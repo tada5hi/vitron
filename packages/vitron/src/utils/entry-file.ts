@@ -23,14 +23,16 @@ export async function findEntryFile(root?: string, fileNames?: string[]) : Promi
         'index',
         ...(fileNames || []),
     ];
-    for (let i = 0; i < extensions.length; i++) {
-        for (let j = 0; j < names.length; j++) {
-            const checkPath = path.resolve(root || process.cwd(), `${names[j]}${extensions[i]}`);
+
+    for (const extension of extensions) {
+        for (const name of names) {
+            const checkPath = path.resolve(root || process.cwd(), `${name}${extension}`);
 
             try {
                 await fs.promises.access(checkPath, fs.constants.F_OK | fs.constants.R_OK);
+
                 return checkPath;
-            } catch (e) {
+            } catch {
                 // continue ^^
             }
         }
