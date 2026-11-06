@@ -8,9 +8,12 @@ on:
         branches: [develop, master, next, beta, alpha]
     pull_request:
         types:
-            - edited
             - opened
             - synchronize
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
     packages: write

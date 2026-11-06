@@ -2,7 +2,7 @@
 
 `npm test` runs the library's Vitest suite through Nx. The package pretest builds the CLI, so a clean checkout needs no separate manual build to run tests. Unit tests live in `packages/vitron/test/unit/`; their config is `packages/vitron/test/vitest.config.mts`.
 
-The suite covers framework/package detection, Node builtin externalization, the built CLI, packaging error propagation, actual local HTTP serving, preload API shape and example window activation. HTTP tests require permission to bind loopback sockets. They exercise success, missing-file and startup/load failure paths without publishing or contacting an application backend.
+The suite covers framework/package detection, Node builtin externalization, the built CLI, Electron shutdown and port reuse, packaging error propagation, actual local HTTP serving, preload API shape and example window activation. HTTP tests require permission to bind loopback sockets. They exercise success, missing-file and startup/load failure paths without publishing or contacting an application backend.
 
 ```sh
 npm test --workspace=vitron

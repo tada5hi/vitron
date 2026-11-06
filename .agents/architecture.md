@@ -16,6 +16,8 @@ README visuals live in `.github/assets/`. Published package README images use im
 
 The package publishes the root CLI/library and `vitron/main`, `vitron/preload`, `vitron/renderer` subpaths. Preserve their CJS, ESM and declaration export targets. Build and release caches must retain all four output directories: `dist`, `main`, `preload` and `renderer`.
 
+Development rebuilds wait for Electron shutdown before starting a replacement. Shutdown cancels pending restarts.
+
 The Nuxt example's Electron main process has a TypeScript config independent of Nuxt-generated renderer state. Main/preload builds externalize Electron and Node builtins, including `node:` names. Renderer builds have their own framework configuration. Changes to shared configuration must work with both examples.
 
 `serve()` uses the supplied port in development. In a packaged app it binds a loopback-only HTTP server to an OS-assigned port, loads its actual address, rejects startup/load failures and closes the server with its window. Do not expose this local file server on external interfaces.

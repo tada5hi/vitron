@@ -70,18 +70,17 @@ export class DevCommand implements CommandModule {
 
             const electronProcess = createElectron(config, logger);
             const rendererProcess = createRenderer(config);
+            let shuttingDown = false;
 
             /**
              * Entrypoint
              */
             await startMainApp(config, async () => {
-                if (!electronProcess.up()) {
+                if (shuttingDown || !electronProcess.up()) {
                     return;
                 }
 
-                electronProcess.stop();
-
-                electronProcess.start();
+                await electronProcess.restart();
             });
 
             /**
@@ -98,7 +97,12 @@ export class DevCommand implements CommandModule {
             // ----------------------------------------
 
             const killAllProcesses = async () => {
-                electronProcess.stop();
+                if (shuttingDown) {
+                    return;
+                }
+
+                shuttingDown = true;
+                await electronProcess.stop();
 
                 await rendererProcess.stop();
 

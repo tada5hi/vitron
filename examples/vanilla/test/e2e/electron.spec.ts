@@ -12,12 +12,10 @@ test('develops a real Electron renderer and applies source updates', async ({ ex
     await replaceSource(example.root, 'src/preload/index.ts', "ipcRenderer.invoke('ping')", "ipcRenderer.invoke('ping').then((value) => `preload: ${value}`)");
     await expect(page.locator('#app')).toHaveText('Renderer updated. IPC response: preload: pong');
 
-    const disconnected = new Promise<void>((resolve) => {
-        page.context().browser()!.once('disconnected', () => resolve());
-    });
+    const browser = page.context().browser()!;
 
     await replaceSource(example.root, 'src/main/index.ts', "() => 'pong'", "() => 'main updated'");
-    await disconnected;
+    await expect.poll(() => browser.isConnected()).toBe(false);
     page = await example.connect();
     await expect(page.locator('#app')).toHaveText('Renderer updated. IPC response: preload: main updated');
 });
