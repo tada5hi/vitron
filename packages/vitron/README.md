@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/tada5hi/vitron/17b72af565aae421d607d54cedcb533c4222ff6b/.github/assets/logo.svg" width="144" height="144" alt="Vitron: a desktop window connecting its renderer and host panes"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/tada5hi/vitron/85a376f1a861881bc88455a386f7defef5ff7588/.github/assets/logo.svg" width="144" height="144" alt="Vitron: a desktop window connecting its renderer and host panes"></p>
 <h1 align="center">Vitron</h1>
 <p align="center"><strong>This is a library to build beautiful (win, linux, mac) desktop apps for modern web projects with vite and electron.</strong></p>
 <p align="center">One CLI for renderer development, Electron watch builds and desktop packaging.</p>
@@ -22,7 +22,7 @@ Keep the three Electron application processes in one development workflow while 
 | Renderer URLs | Branch between development and packaged loading yourself | `serve()` handles the two loading paths |
 | Desktop output | Coordinate builds and electron-builder | `vitron build` builds all three parts, then invokes the packager |
 
-<p align="center"><img src="https://raw.githubusercontent.com/tada5hi/vitron/17b72af565aae421d607d54cedcb533c4222ff6b/.github/assets/renderer-flow.svg" width="960" alt="The Electron main process calls serve. In development it loads localhost at the supplied port; packaged apps serve renderer files on an OS-assigned loopback port. Both paths load the BrowserWindow, and the packaged server closes with its window."></p>
+<p align="center"><img src="https://raw.githubusercontent.com/tada5hi/vitron/85a376f1a861881bc88455a386f7defef5ff7588/.github/assets/renderer-flow.svg" width="960" alt="The Electron main process calls serve. In development it loads localhost at the supplied port; packaged apps serve renderer files on an OS-assigned loopback port. Both paths load the BrowserWindow, and the packaged server closes with its window."></p>
 
 Development uses the supplied port, defaulting to `9000`. Packaged loading uses a loopback-only HTTP server on an OS-assigned port, serves the renderer directory, and closes the server with its window.
 
