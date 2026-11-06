@@ -106,4 +106,3 @@ export class BuildCommand implements CommandModule {
         }
     }
 }
-export type { IBuildArguments };

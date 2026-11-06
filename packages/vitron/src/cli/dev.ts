@@ -121,4 +121,3 @@ export class DevCommand implements CommandModule {
         }
     }
 }
-export type { IDevArguments };

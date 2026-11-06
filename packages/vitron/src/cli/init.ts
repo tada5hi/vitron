@@ -103,4 +103,3 @@ export class InitCommand implements CommandModule {
         }
     }
 }
-export type { IInitArguments };
