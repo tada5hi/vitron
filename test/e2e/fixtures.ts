@@ -29,7 +29,7 @@ import type {
 import { getRandomPort } from 'get-port-please';
 import kill from 'tree-kill';
 
-const workspace = path.resolve(__dirname, '../../../..');
+const workspace = path.resolve(__dirname, '../..');
 const requireFromFixture = createRequire(__filename);
 
 async function finishWithin(operation: Promise<unknown>) {
@@ -79,6 +79,14 @@ type Example = {
     startDev: () => Promise<Page>,
     startBuilt: () => Promise<{ electron: ElectronApplication, page: Page }>,
 };
+
+export async function replaceSource(root: string, file: string, before: string, after: string) {
+    const filePath = path.join(root, file);
+    const source = await readFile(filePath, 'utf8');
+
+    expect(source).toContain(before);
+    await writeFile(filePath, source.replace(before, after));
+}
 
 export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Example }>({
     exampleName: ['vanilla', { option: true }],

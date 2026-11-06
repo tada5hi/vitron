@@ -2,7 +2,8 @@ import process from 'node:process';
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-    testDir: './packages/vitron/test/e2e',
+    testDir: './examples',
+    testMatch: '**/test/e2e/**/*.spec.ts',
     fullyParallel: false,
     workers: 1,
     forbidOnly: !!process.env.CI,
