@@ -83,3 +83,28 @@ jobs:
             - name: Test
               run: |
                 npm run test
+
+    e2e:
+        name: Electron E2E
+        needs: [install]
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+            - name: Install
+              uses: ./.github/actions/install
+              with:
+                  node-version: ${{ env.PRIMARY_NODE_VERSION }}
+            - name: Install Electron system dependencies
+              run: npx playwright install-deps chromium
+            - name: Test Electron applications
+              run: xvfb-run --auto-servernum npm run test:e2e
+            - name: Upload failure reports
+              if: failure()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: electron-e2e-results
+                  path: |
+                      playwright-report/
+                      test-results/
