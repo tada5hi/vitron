@@ -16,5 +16,9 @@ export async function startMainApp(
 ) {
     const viteConfig = await buildMainConfig(config);
 
-    await buildWithWatchHook(viteConfig, watchHook);
+    const handle = buildWithWatchHook(viteConfig, watchHook);
+
+    await handle.ready;
+
+    return handle;
 }

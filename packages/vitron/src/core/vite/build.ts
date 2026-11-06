@@ -5,41 +5,64 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
 import { build } from 'vite';
-import type { InlineConfig } from 'vite';
-import type { ViteWatchHook } from './types';
+import type { InlineConfig, Rollup } from 'vite';
+import type { ViteWatchBuild, ViteWatchHook } from './types';
 
-export async function buildWithWatchHook(
+export function buildWithWatchHook(
     config: InlineConfig,
     watchHook: ViteWatchHook,
-) {
-    return new Promise<void>((resolve) => {
-        if (config.build?.watch) {
-            let firstBundle = true;
-            const closeBundle = (): void => {
-                if (firstBundle) {
-                    firstBundle = false;
-                    resolve();
-                } else {
-                    watchHook();
-                }
-            };
+): ViteWatchBuild {
+    let resolveReady!: () => void;
+    let rejectReady!: (error: unknown) => void;
+    let watcher: Rollup.RollupWatcher | undefined;
+    let closing: Promise<void> | undefined;
+    let firstBundle = true;
+    const ready = new Promise<void>((resolve, reject) => {
+        resolveReady = resolve;
+        rejectReady = reject;
+    });
 
-            config = merge(config, {
-                plugins: [
-                    {
-                        name: 'vite:watcher',
-                        closeBundle,
-                    },
-                ],
-            } satisfies InlineConfig);
+    // Ownership can be closed without the caller awaiting readiness first.
+    void ready.catch(() => {});
+
+    const initializing = build(config).then((result) => {
+        if (!('close' in result)) {
+            resolveReady();
+
+            return;
         }
 
-        build(config).then(() => {
-            if (!config.build?.watch) {
-                resolve();
+        watcher = result;
+        watcher.on('event', async (event) => {
+            if (closing) {
+                return;
+            }
+
+            if (event.code === 'ERROR') {
+                rejectReady(event.error);
+            } else if (event.code === 'BUNDLE_END') {
+                if (firstBundle) {
+                    firstBundle = false;
+                    resolveReady();
+                } else {
+                    await watchHook();
+                }
             }
         });
-    });
+    }, rejectReady);
+
+    return {
+        ready,
+        close() {
+            if (!closing) {
+                resolveReady();
+                closing = initializing.then(async () => {
+                    await watcher?.close();
+                });
+            }
+
+            return closing;
+        },
+    };
 }

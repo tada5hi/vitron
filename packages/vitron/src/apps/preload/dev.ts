@@ -17,8 +17,12 @@ export async function startPreloadApp(
     const viteConfig = await buildPreloadConfig(config);
 
     if (!viteConfig) {
-        return;
+        return undefined;
     }
 
-    await buildWithWatchHook(viteConfig, watchHook);
+    const handle = buildWithWatchHook(viteConfig, watchHook);
+
+    await handle.ready;
+
+    return handle;
 }
