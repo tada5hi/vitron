@@ -8,7 +8,8 @@ README visuals live in `.github/assets/`. Published package README images use im
 | --- | --- |
 | `src/cli/` | `init`, `dev` and `build` command orchestration |
 | `src/config/` | Project configuration and framework detection |
-| `src/apps/{main,preload,renderer}/` | Per-process Vite configuration and build/development lifecycle |
+| `src/apps/dev.ts` | Own development startup, rebuild reactions and resource cleanup |
+| `src/apps/{main,preload,renderer}/` | Per-process Vite configuration, builds and renderer development adapter |
 | `src/core/` | Electron child-process handling and Vite watch hooks |
 | `src/exports/main/` | Load a development URL or serve packaged renderer files |
 | `src/exports/preload/` | Expose an explicit value through Electron's context bridge |
@@ -16,7 +17,9 @@ README visuals live in `.github/assets/`. Published package README images use im
 
 The package publishes the root CLI/library and `vitron/main`, `vitron/preload`, `vitron/renderer` subpaths. Preserve their CJS, ESM and declaration export targets. Build and release caches must retain all four output directories: `dist`, `main`, `preload` and `renderer`.
 
-Development rebuilds wait for Electron shutdown before starting a replacement. Shutdown cancels pending restarts.
+Development starts the main build, optional preload build, renderer readiness and Electron in order. One session owns both watchers and adapters; SIGINT/SIGTERM cancel pending startup, await rebuild reactions and attempt every cleanup. Main rebuilds restart running Electron after its previous process closes; preload rebuilds reload a ready renderer. Shutdown suppresses both reactions and cancels pending restarts. Initial startup or lifecycle-operation failure rejects after cleanup, while later compilation errors keep watching. Closing Electron alone leaves development running.
+
+The embedded Vite renderer closes synchronously on session cancellation through its server hook, before Vite can force process exit. Renderer startup cleanup waits for pending acquisition/listen work and releases any HTTP listener that bound after cancellation.
 
 The Nuxt example's Electron main process has a TypeScript config independent of Nuxt-generated renderer state. Main/preload builds externalize Electron and Node builtins, including `node:` names. Renderer builds have their own framework configuration. Changes to shared configuration must work with both examples.
 

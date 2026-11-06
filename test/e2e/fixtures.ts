@@ -12,6 +12,7 @@ import {
     writeFile,
 } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -65,6 +66,7 @@ type Example = {
     root: string,
     connect: () => Promise<Page>,
     startDev: () => Promise<Page>,
+    stopDev: () => Promise<void>,
     startBuilt: () => Promise<{ electron: ElectronApplication, page: Page }>,
 };
 
@@ -94,6 +96,8 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
         let currentPage: Page | undefined;
         let output = '';
         let debugPort: number;
+        let rendererPort: number;
+        let dev: ChildProcess | undefined;
         const env: NodeJS.ProcessEnv = {
             ...process.env,
             PATH: `${path.join(workspace, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH}`,
@@ -190,15 +194,44 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
 
                     await writeFile(mainFile, `app.commandLine.appendSwitch('remote-debugging-port', '${debugPort}');\n${main}`);
 
-                    let rendererPort = await getRandomPort('127.0.0.1');
+                    rendererPort = await getRandomPort('127.0.0.1');
 
                     while (rendererPort === debugPort) {
                         rendererPort = await getRandomPort('127.0.0.1');
                     }
 
-                    run(['dev', '--port', `${rendererPort}`]);
+                    dev = run(['dev', '--port', `${rendererPort}`]);
 
                     return connect();
+                },
+                stopDev: async () => {
+                    expect(dev, 'development must have started').toBeDefined();
+
+                    const child = dev!;
+                    const exited = once(child, 'exit');
+
+                    // Signal only the CLI so descendants must be released by the session.
+                    expect(child.kill('SIGTERM')).toBe(true);
+                    expect(await finishWithin(exited), `CLI must exit naturally after SIGTERM.\n${output}`).toBe(true);
+                    expect(child.exitCode, output).toBe(0);
+                    expect(child.signalCode).toBeNull();
+
+                    for (const host of ['127.0.0.1', '::1']) {
+                        const server = createServer();
+
+                        try {
+                            await new Promise<void>((resolve, reject) => {
+                                server.once('error', reject);
+                                server.listen(rendererPort, host, () => resolve());
+                            });
+                        } finally {
+                            if (server.listening) {
+                                await new Promise<void>((resolve, reject) => {
+                                    server.close((error) => (error ? reject(error) : resolve()));
+                                });
+                            }
+                        }
+                    }
                 },
                 startBuilt: async () => {
                     const electronDist = path.join(path.dirname(requireFromFixture.resolve('electron/package.json')), 'dist');

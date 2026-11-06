@@ -433,3 +433,155 @@ it.each([false, true])('handles startup queued behind Vite shutdown with later s
         await renderer.stop();
     }
 });
+
+it('closes an HTTP listener that binds after cancellation already closed Vite', async () => {
+    const controller = new AbortController();
+    const binding = Promise.withResolvers<void>();
+    const port = await getRandomPort('127.0.0.1');
+    let waiting = false;
+    let server: ViteDevServer | undefined;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port,
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = {
+                host: '127.0.0.1',
+                watch: null,
+                strictPort: true,
+            };
+            config.plugins = [{
+                name: 'delay-os-listen',
+                configureServer(value) {
+                    server = value;
+
+                    const http = value.httpServer!;
+                    const listen = http.listen.bind(http);
+
+                    http.listen = ((...args: Parameters<typeof listen>) => {
+                        waiting = true;
+                        void binding.promise.then(() => listen(...args));
+
+                        return http;
+                    }) as typeof http.listen;
+                    // Reproduce Vite's signal-close before the pending OS bind completes.
+                    controller.signal.addEventListener('abort', () => {
+                        void value.close();
+                    }, { once: true });
+                },
+            }];
+
+            return {};
+        },
+    }));
+    const startup = renderer.start(controller.signal).catch((error) => error);
+
+    try {
+        await vi.waitFor(() => expect(waiting).toBe(true));
+        controller.abort();
+        await server!.close();
+        binding.resolve();
+        expect(await startup).toMatchObject({ name: 'AbortError' });
+        await renderer.stop();
+        expect(server!.httpServer!.listening).toBe(false);
+        await expect(fetch(`http://127.0.0.1:${port}`)).rejects.toThrow();
+    } finally {
+        binding.resolve();
+        await startup;
+        await renderer.stop();
+
+        if (server?.httpServer?.listening) {
+            await new Promise<void>((resolve, reject) => {
+                server!.httpServer!.close((error) => (error ? reject(error) : resolve()));
+            });
+        }
+    }
+});
+
+it('preserves an eager Vite close rejection when a subsequent close would succeed', async () => {
+    const controller = new AbortController();
+    const failure = new Error('eager close failed');
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort(),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = { watch: null };
+            config.plugins = [{
+                name: 'fail-first-close',
+                configureServer(server) {
+                    const close = server.close.bind(server);
+                    let first = true;
+
+                    server.close = async () => {
+                        await close();
+
+                        if (!first) {
+                            return;
+                        }
+
+                        first = false;
+
+                        throw failure;
+                    };
+                },
+            }];
+
+            return {};
+        },
+    }));
+
+    try {
+        await renderer.start(controller.signal);
+        controller.abort();
+        await expect(renderer.stop()).rejects.toBe(failure);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        await renderer.stop().catch(() => {});
+    }
+});
+
+it('retains synchronous cancellation ownership after an ordinary Vite restart', async () => {
+    const controller = new AbortController();
+    let server: ViteDevServer | undefined;
+    let acquisitions = 0;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort(),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = { watch: null };
+            config.plugins = [{
+                name: 'observe-restart',
+                configureServer(value) {
+                    server = value;
+                    acquisitions++;
+                },
+            }];
+
+            return {};
+        },
+    }));
+
+    try {
+        await renderer.start(controller.signal);
+        await server!.restart();
+        expect(acquisitions).toBe(2);
+        expect(server!.httpServer!.listening).toBe(true);
+        controller.abort();
+        expect(server!.httpServer!.listening).toBe(false);
+        await renderer.stop();
+        expect(renderer.up()).toBe(false);
+    } finally {
+        await renderer.stop();
+    }
+});

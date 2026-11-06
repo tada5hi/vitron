@@ -33,6 +33,7 @@ export function createRenderer(config: Config) : RendererProcess {
     let sessionSignal: AbortSignal | undefined;
     let stopVersion = 0;
     let cleaning: Promise<void> | undefined;
+    const abortCloses = new Set<Promise<void>>();
 
     const cleanup = () : Promise<void> => {
         if (!cleaning) {
@@ -50,7 +51,26 @@ export function createRenderer(config: Config) : RendererProcess {
                 const server = viteServer;
 
                 viteServer = undefined;
-                await server.close();
+
+                const closed = await Promise.allSettled(new Set([...abortCloses, server.close()]));
+                const http = server.httpServer;
+
+                // A pending listen can bind after Vite has cached its close promise.
+                if (http?.listening) {
+                    closed.push(...await Promise.allSettled([new Promise<void>((resolve, reject) => {
+                        http.close((error) => (error ? reject(error) : resolve()));
+                    })]));
+                }
+
+                const errors = [...new Set(closed.flatMap((result) => (result.status === 'rejected' ? [result.reason] : [])))];
+
+                if (errors.length === 1) {
+                    throw errors[0];
+                }
+
+                if (errors.length > 1) {
+                    throw new AggregateError(errors, 'Renderer cleanup failed.');
+                }
             })();
         }
 
@@ -79,6 +99,7 @@ export function createRenderer(config: Config) : RendererProcess {
         }
 
         cleaning = undefined;
+        abortCloses.clear();
         sessionSignal = signal;
 
         const controller = new AbortController();
@@ -129,7 +150,39 @@ export function createRenderer(config: Config) : RendererProcess {
                 }
 
                 cancellation.throwIfAborted();
-                viteServer = await createServer(viteConfig);
+                viteServer = await createServer({
+                    ...viteConfig,
+                    plugins: [{
+                        name: 'vitron-development-lifetime',
+                        enforce: 'pre',
+                        configureServer: {
+                            order: 'pre',
+                            handler(server) {
+                                viteServer = server;
+
+                                const closeServer = server.close.bind(server);
+                                const close = () => {
+                                    // Close synchronously so Vite releases its own forced-exit signal handler.
+                                    const closing = server.close();
+
+                                    abortCloses.add(closing);
+                                    void closing.catch(() => {});
+                                };
+
+                                server.close = () => {
+                                    cancellation.removeEventListener('abort', close);
+
+                                    return closeServer();
+                                };
+                                cancellation.addEventListener('abort', close, { once: true });
+
+                                if (cancellation.aborted) {
+                                    close();
+                                }
+                            },
+                        },
+                    }, ...viteConfig.plugins || []],
+                });
                 cancellation.throwIfAborted();
                 await viteServer.listen(config.get('port'));
                 cancellation.throwIfAborted();
