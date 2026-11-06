@@ -11,10 +11,12 @@ npm run build --workspace=vitron
 npm run lint
 ```
 
-`npm run test:e2e` builds the library and runs the separate Playwright Electron suite in `examples/*/test/e2e/`, configured by root `playwright.config.ts`, with shared lifecycle helpers in `test/e2e/fixtures.ts`. It uses one worker and the Electron binary installed with the examples; no Playwright browser download is needed. Local runs need a desktop session. Linux needs Electron system libraries and a display; CI installs them and supplies Xvfb:
+`npm run test:e2e` builds the library and runs the separate Playwright Electron suite in `examples/*/test/e2e/`, configured by root `playwright.config.ts`, with shared lifecycle helpers in `test/e2e/fixtures.ts`. It uses one worker and the Electron binary installed with the examples; no Playwright browser download is needed. The suite currently supports macOS and Linux and explicitly skips Windows until it has process-tree cleanup coverage. Local runs need a desktop session. Linux needs Electron system libraries and a display; CI installs them and supplies Xvfb:
 
 ```sh
 npx playwright install-deps chromium
+sudo chown root node_modules/electron/dist/chrome-sandbox
+sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
 xvfb-run --auto-servernum npm run test:e2e
 ```
 

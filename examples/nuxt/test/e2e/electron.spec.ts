@@ -3,8 +3,14 @@ import { expect, replaceSource, test } from '../../../../test/e2e/fixtures';
 test.use({ exampleName: 'nuxt' });
 
 test('develops a real Electron renderer and applies source updates', async ({ example }) => {
+    await replaceSource(example.root, 'src/renderer/app.vue', '<template>', `<script setup>
+onNuxtReady(() => document.documentElement.setAttribute('data-e2e-ready', 'true'));
+</script>
+<template>`);
+
     const page = await example.startDev();
 
+    await expect(page.locator('html')).toHaveAttribute('data-e2e-ready', 'true');
     await expect(page.getByRole('heading', { name: /^Nuxt \d/, level: 1 })).toBeVisible();
     await replaceSource(example.root, 'src/renderer/app.vue', '<NuxtWelcome />', '<h1>Nuxt renderer updated</h1>');
     await expect(page.getByRole('heading', { name: 'Nuxt renderer updated' })).toBeVisible();

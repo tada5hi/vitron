@@ -98,6 +98,10 @@ jobs:
                   node-version: ${{ env.PRIMARY_NODE_VERSION }}
             - name: Install Electron system dependencies
               run: npx playwright install-deps chromium
+            - name: Configure Electron sandbox
+              run: |
+                  sudo chown root node_modules/electron/dist/chrome-sandbox
+                  sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
             - name: Test Electron applications
               run: xvfb-run --auto-servernum npm run test:e2e
             - name: Upload failure reports
