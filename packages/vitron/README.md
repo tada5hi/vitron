@@ -7,7 +7,7 @@
   <a href="https://github.com/tada5hi/vitron/actions/workflows/main.yml"><img src="https://github.com/tada5hi/vitron/actions/workflows/main.yml/badge.svg" alt="Continuous integration"></a>
   <a href="https://github.com/tada5hi/vitron/blob/master/LICENSE"><img src="https://img.shields.io/github/license/tada5hi/vitron" alt="MIT license"></a>
 </p>
-<p align="center"><a href="#why-vitron">Why Vitron?</a> · <a href="#installation">Installation</a> · <a href="#usage">Usage</a> · <a href="#runtime-helpers">Runtime helpers</a> · <a href="#configuration">Configuration</a></p>
+<p align="center"><a href="#why-vitron">Why Vitron?</a> · <a href="#installation">Installation</a> · <a href="#usage">Usage</a> · <a href="#utilities">Runtime helpers</a> · <a href="#configuration">Configuration</a></p>
 
 ---
 
@@ -25,6 +25,13 @@ Keep the three Electron application processes in one development workflow while 
 <p align="center"><img src="https://raw.githubusercontent.com/tada5hi/vitron/85a376f1a861881bc88455a386f7defef5ff7588/.github/assets/renderer-flow.svg" width="960" alt="The Electron main process calls serve. In development it loads localhost at the supplied port; packaged apps serve renderer files on an OS-assigned loopback port. Both paths load the BrowserWindow, and the packaged server closes with its window."></p>
 
 Development uses the supplied port, defaulting to `9000`. Packaged loading uses a loopback-only HTTP server on an OS-assigned port, serves the renderer directory, and closes the server with its window.
+
+## Features
+
+- **Renderer hot module replacement.** The Vite renderer development server provides HMR; framework renderers use their own development server.
+- **Main-process watch builds.** Rebuilding the running main process restarts Electron.
+- **Preload watch builds.** Preload changes reload the running renderer.
+- **Desktop packaging.** Production builds feed the renderer, main and optional preload outputs to electron-builder.
 
 ## Installation
 
@@ -48,6 +55,12 @@ npm install
 
 Keep your main, preload and renderer responsibilities separate. The [vanilla example](https://github.com/tada5hi/vitron/tree/master/examples/vanilla) shows a complete lifecycle and a narrow IPC bridge; the [Nuxt example](https://github.com/tada5hi/vitron/tree/master/examples/nuxt) supplies a framework renderer.
 
+### Frameworks
+
+Place framework source under `rendererDirectory` and declare the framework in your project package manifest. Vitron detects `nuxt` and `next` from dependencies, dev dependencies or peer dependencies; Nuxt takes precedence when both are present. You can also configure `framework`, the renderer commands and output directory explicitly.
+
+The built-in Nuxt paths use `nuxi` for Nuxt 3 and newer and `nuxt` for earlier releases. The [Nuxt example](https://github.com/tada5hi/vitron/tree/master/examples/nuxt) shows the renderer layout and configuration. Packaged rendering needs static output; Vitron does not run a framework SSR server inside the desktop app. The built-in Next build path still uses the removed `next export` command, as explained in [Notes](#notes).
+
 ## Usage
 
 The scaffold supplies these scripts:
@@ -70,9 +83,9 @@ Run `npm run dev` during development and `npm run build` for desktop output. The
 | `--config`, `-c` | `build` | `electron-builder.yml` | electron-builder configuration filename |
 | `--flags`, `-f` | `build` | Empty array | Packager flags: `all`, `mac`, `win`, `linux`, `ia32`, `x64`, `armv7l`, `arm64` |
 
-## Runtime helpers
+## Utilities
 
-### Main process
+### Main
 
 Call `serve()` after Electron is ready, using your `BrowserWindow`. Handle its rejection and destroy an unsuccessful window, as in the complete examples.
 
@@ -93,7 +106,15 @@ Vitron builds the main process as CommonJS. The directory above is relative to t
 
 ### Preload
 
-Expose a small application API rather than Electron's entire IPC object:
+`provide()` can expose a plain value under a key:
+
+```ts
+import { provide } from 'vitron/preload';
+
+provide('greeting', 'Hello from preload');
+```
+
+For communication with the main process, expose a small application API rather than Electron's entire IPC object:
 
 ```ts
 import { ipcRenderer } from 'electron';
@@ -107,6 +128,18 @@ provide('desktop', {
 Your main process must register the matching `ipcMain.handle('ping', ...)` handler before loading the renderer. `provide()` uses Electron's context bridge when context isolation is enabled and assigns the value to `window` otherwise.
 
 ### Renderer
+
+Read a plain value exposed by the preload using the same key:
+
+```ts
+import { inject } from 'vitron/renderer';
+
+const greeting = inject<string>('greeting');
+
+document.body.textContent = greeting;
+```
+
+The same helper retrieves your application API:
 
 ```ts
 import { inject } from 'vitron/renderer';
