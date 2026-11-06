@@ -11,10 +11,8 @@ app.on('window-all-closed', () => {
     }
 });
 
-let mainWindow : BrowserWindow;
-
 async function createWindow() {
-    mainWindow = new BrowserWindow({
+    const mainWindow = new BrowserWindow({
         height: 768,
         width: 1024,
         autoHideMenuBar: true,
@@ -25,18 +23,26 @@ async function createWindow() {
         },
     });
 
-    await serve(mainWindow, {
-        directory: path.join(`${__dirname}/../renderer/`),
-        port: process.env.PORT,
-    });
+    try {
+        await serve(mainWindow, {
+            directory: path.join(`${__dirname}/../renderer/`),
+            port: process.env.PORT,
+        });
+    } catch (error) {
+        if (!mainWindow.isDestroyed()) {
+            mainWindow.destroy();
+        }
+
+        throw error;
+    }
 }
 
-app.whenReady().then(async () => {
-    await createWindow();
-
+app.whenReady().then(() => {
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
-            void createWindow();
+            void createWindow().catch(console.error);
         }
     });
-});
+
+    return createWindow();
+}).catch(console.error);

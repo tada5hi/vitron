@@ -1,4 +1,5 @@
 import { 
+    afterEach,
     beforeEach, 
     expect, 
     it, 
@@ -27,6 +28,14 @@ vi.mock('electron', () => ({
         static getAllWindows() {
             return state.windows;
         }
+
+        isDestroyed() {
+            return !state.windows.includes(this);
+        }
+
+        destroy() {
+            state.windows = state.windows.filter((window) => window !== this);
+        }
     },
 }));
 vi.mock('vitron/main', () => ({ serve: state.serve }));
@@ -36,6 +45,12 @@ beforeEach(() => {
     vi.clearAllMocks();
     state.listeners.clear();
     state.windows = [];
+    state.serve.mockReset();
+    state.serve.mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+    vi.restoreAllMocks();
 });
 
 it.each(['vanilla', 'nuxt'])('reopens the %s example on activation without duplicate windows', async (example) => {
@@ -50,4 +65,25 @@ it.each(['vanilla', 'nuxt'])('reopens the %s example on activation without dupli
     state.listeners.get('activate')?.();
     await vi.waitFor(() => expect(state.serve).toHaveBeenCalledTimes(2));
     expect(state.handle).toHaveBeenCalledTimes(example === 'vanilla' ? 1 : 0);
+});
+
+it.each(['vanilla', 'nuxt'])('recovers the %s example after initial and activation failures', async (example) => {
+    const failure = new Error('Renderer unavailable');
+    const report = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    state.serve.mockRejectedValueOnce(failure);
+
+    await import(`../../../../../examples/${example}/src/main/index.ts`);
+    await vi.waitFor(() => expect(report).toHaveBeenCalledWith(failure));
+    expect(state.windows).toHaveLength(0);
+    expect(state.listeners.has('activate')).toBe(true);
+
+    state.serve.mockRejectedValueOnce(failure);
+    state.listeners.get('activate')?.();
+    await vi.waitFor(() => expect(report).toHaveBeenCalledTimes(2));
+    expect(state.windows).toHaveLength(0);
+
+    state.listeners.get('activate')?.();
+    await vi.waitFor(() => expect(state.serve).toHaveBeenCalledTimes(3));
+    expect(state.windows).toHaveLength(1);
 });
