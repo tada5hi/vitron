@@ -53,8 +53,13 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-it.each(['vanilla', 'nuxt'])('reopens the %s example on activation without duplicate windows', async (example) => {
-    await import(`../../../../../examples/${example}/src/main/index.ts`);
+it.each(['vanilla', 'nuxt', 'scaffold'])('reopens the %s example on activation without duplicate windows', async (example) => {
+    if (example === 'scaffold') {
+        await import('../../../assets/templates/src/main/index.ts');
+    } else {
+        await import(`../../../../../examples/${example}/src/main/index.ts`);
+    }
+
     await vi.waitFor(() => expect(state.serve).toHaveBeenCalledOnce());
 
     expect(state.listeners.has('activate')).toBe(true);
@@ -67,13 +72,18 @@ it.each(['vanilla', 'nuxt'])('reopens the %s example on activation without dupli
     expect(state.handle).toHaveBeenCalledTimes(example === 'vanilla' ? 1 : 0);
 });
 
-it.each(['vanilla', 'nuxt'])('recovers the %s example after initial and activation failures', async (example) => {
+it.each(['vanilla', 'nuxt', 'scaffold'])('recovers the %s example after initial and activation failures', async (example) => {
     const failure = new Error('Renderer unavailable');
     const report = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     state.serve.mockRejectedValueOnce(failure);
 
-    await import(`../../../../../examples/${example}/src/main/index.ts`);
+    if (example === 'scaffold') {
+        await import('../../../assets/templates/src/main/index.ts');
+    } else {
+        await import(`../../../../../examples/${example}/src/main/index.ts`);
+    }
+
     await vi.waitFor(() => expect(report).toHaveBeenCalledWith(failure));
     expect(state.windows).toHaveLength(0);
     expect(state.listeners.has('activate')).toBe(true);
