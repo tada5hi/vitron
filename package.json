@@ -42,5 +42,8 @@
         "lint": "eslint .",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky install"
+    },
+    "engines": {
+        "node": "^24.15.0 || >=26.0.0"
     }
 }
