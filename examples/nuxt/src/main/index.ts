@@ -13,9 +13,7 @@ app.on('window-all-closed', () => {
 
 let mainWindow : BrowserWindow;
 
-(async () => {
-    await app.whenReady();
-
+async function createWindow() {
     mainWindow = new BrowserWindow({
         height: 768,
         width: 1024,
@@ -29,11 +27,16 @@ let mainWindow : BrowserWindow;
 
     await serve(mainWindow, {
         directory: path.join(`${__dirname}/../renderer/`),
-        env: process.env.NODE_ENV || 'production',
         port: process.env.PORT,
     });
-})();
+}
 
-app.on('window-all-closed', () => {
-    app.quit();
+app.whenReady().then(async () => {
+    await createWindow();
+
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            void createWindow();
+        }
+    });
 });

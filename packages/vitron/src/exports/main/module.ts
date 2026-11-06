@@ -6,11 +6,11 @@
  */
 
 import { createServer } from 'node:http';
+import { once } from 'node:events';
 import process from 'node:process';
 import path from 'node:path';
 import { app } from 'electron';
 import { createHandler } from '@routup/static';
-import { getPort } from 'get-port-please';
 import { Router, createNodeDispatcher } from 'routup';
 import type { BrowserWindow } from 'electron';
 import type { ServeOptions } from './types';
@@ -40,6 +40,12 @@ export async function serve(
     const server = createServer(createNodeDispatcher(router));
 
     const stop = async () => new Promise<void>((resolve, reject) => {
+        if (!server.listening) {
+            resolve();
+
+            return;
+        }
+
         server.close((err) => {
             if (err) {
                 reject(err);
@@ -53,9 +59,22 @@ export async function serve(
 
     mainWindow.on('closed', () => stop());
 
-    const port = await getPort();
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
 
-    server.listen(port, async () => {
-        await mainWindow.loadURL(`http://localhost:${port}`);
-    });
+    const address = server.address();
+
+    if (!address || typeof address === 'string') {
+        await stop();
+
+        throw new Error('The renderer server did not bind a TCP port.');
+    }
+
+    try {
+        await mainWindow.loadURL(`http://127.0.0.1:${address.port}`);
+    } catch (error) {
+        await stop();
+
+        throw error;
+    }
 }

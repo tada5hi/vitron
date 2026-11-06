@@ -62,7 +62,8 @@
     "scripts": {
         "build": "tsdown",
         "test": "vitest run --config test/vitest.config.mts",
-        "test:coverage": "npm test -- --coverage"
+        "test:coverage": "npm test -- --coverage",
+        "pretest": "npm run build"
     },
     "keywords": [
         "electron",

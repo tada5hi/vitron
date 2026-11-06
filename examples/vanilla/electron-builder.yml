@@ -1,6 +1,6 @@
-appId: com.example.electron
+appId: net.tada5hi.vitron.example.vanilla
+productName: Vitron Vanilla
 copyright: Copyright © 2021 tada5hi
-electronVersion: 25.0.0
 directories:
     output: dist
     buildResources: resources

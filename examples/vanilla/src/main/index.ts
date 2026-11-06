@@ -13,9 +13,7 @@ app.on('window-all-closed', () => {
 
 let mainWindow : BrowserWindow;
 
-(async () => {
-    await app.whenReady();
-
+async function createWindow() {
     mainWindow = new BrowserWindow({
         height: 768,
         width: 1024,
@@ -32,10 +30,16 @@ let mainWindow : BrowserWindow;
         directory: path.join(`${__dirname}/../renderer/`),
         port: process.env.PORT,
     });
+}
 
+app.whenReady().then(async () => {
     ipcMain.handle('ping', () => 'pong');
-})();
 
-app.on('window-all-closed', () => {
-    app.quit();
+    await createWindow();
+
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            void createWindow();
+        }
+    });
 });

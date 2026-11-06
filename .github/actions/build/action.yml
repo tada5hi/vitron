@@ -8,7 +8,11 @@ runs:
             id: 'cache'
             uses: actions/cache@v4
             with:
-                path: '**/dist/**'
+                path: |
+                    **/dist/**
+                    packages/vitron/main/**
+                    packages/vitron/preload/**
+                    packages/vitron/renderer/**
                 key: ${{ runner.os }}-build-${{ github.sha }}
 
         -   name: Build
