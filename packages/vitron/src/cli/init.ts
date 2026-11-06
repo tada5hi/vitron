@@ -65,12 +65,13 @@ export class InitCommand implements CommandModule {
             const tplPath: string = path.join(ASSETS_PATH, 'templates');
 
             const templateFiles = await getFiles(tplPath);
-            for (let i = 0; i < templateFiles.length; i++) {
-                const sourceFilePath = path.join(tplPath, templateFiles[i]);
+            // eslint-disable-next-line no-restricted-syntax
+            for (const templateFile of templateFiles) {
+                const sourceFilePath = path.join(tplPath, templateFile);
 
                 const destinationFilePath = path.join(
                     config.get('rootPath'),
-                    templateFiles[i],
+                    templateFile,
                 );
 
                 const destinationDirectoryPath = path.dirname(destinationFilePath);

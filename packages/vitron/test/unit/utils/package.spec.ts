@@ -48,6 +48,11 @@ describe('src/utils/package', () => {
         expect(isPackageInfo(info)).toBeFalsy();
     });
 
+    it('should reject a missing package name', () => {
+        expect(() => parsePackageNameWithVersion('@3.0.0'))
+            .toThrow(new SyntaxError('The package name is missing in the input string.'));
+    });
+
     it('should parse package name with version', () => {
         const parsed = parsePackageNameWithVersion('nuxt@3.0.0');
         expect(parsed).toEqual({ name: 'nuxt', version: '3.0.0' });

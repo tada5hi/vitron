@@ -18,6 +18,10 @@ export function parsePackageNameWithVersion(input: string) : PackageInfo {
         throw new SyntaxError('The package version is missing in the input string.');
     }
 
+    if (!name) {
+        throw new SyntaxError('The package name is missing in the input string.');
+    }
+
     return {
         name,
         version: removePackageVersionCaret(version),
