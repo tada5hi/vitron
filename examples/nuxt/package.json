@@ -6,7 +6,7 @@
     "description": "This is my first vitron app.",
     "scripts": {
         "dev": "npx vitron dev",
-        "build": "npx vitron build"
+        "build": "npx vitron build --config electron-builder.mjs"
     },
     "license": "ISC",
     "author": {
@@ -15,7 +15,7 @@
         "url": "https://github.com/tada5hi"
     },
     "devDependencies": {
-        "electron": "38.1.2",
+        "electron": "^38.1.2",
         "electron-builder": "^26.0.12",
         "nuxt": "^4.1.2",
         "vitron": "^2.4.0"

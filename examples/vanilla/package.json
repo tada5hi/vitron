@@ -6,7 +6,7 @@
     "description": "This is my first vitron app.",
     "scripts": {
         "dev": "npx vitron dev",
-        "build": "npx vitron build"
+        "build": "npx vitron build --config electron-builder.mjs"
     },
     "author": {
         "name": "Peter Placzek",
@@ -15,7 +15,7 @@
     },
     "license": "ISC",
     "devDependencies": {
-        "electron": "38.1.2",
+        "electron": "^38.1.2",
         "electron-builder": "^26.0.12",
         "vitron": "^2.4.0"
     }

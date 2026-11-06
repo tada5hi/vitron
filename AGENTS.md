@@ -15,7 +15,7 @@ npm run dev --workspace=examples/vanilla
 npm run dev --workspace=examples/nuxt
 ```
 
-The root build packages both examples with electron-builder. Each example pins its Electron dependency; its packaging configuration derives the runtime from that dependency. The library's pretest script builds the CLI so tests work after a clean checkout.
+The root build packages both examples with electron-builder. Each example allows compatible Electron minor and patch updates. Its ES module packaging configuration resolves the installed Electron version, including hoisted npm workspace dependencies. The library's pretest script builds the CLI so tests work after a clean checkout.
 
 ## Guides
 
@@ -24,7 +24,7 @@ The root build packages both examples with electron-builder. Each example pins i
 
 ## Writing agent docs
 
-Update guides when an invariant or cross-cutting rule changes. Describe current behavior and verified commands. Keep task history and defect narratives in commits or PRs; edit existing guidance rather than appending a section per fix. Keep detailed topics on demand and use `npm run lint` to check the guides.
+Keep existing commands, paths and factual descriptions current. Add guide content only for an invariant or cross-cutting rule. Describe current behavior and verified commands. Keep task history and defect narratives in commits or PRs; edit existing guidance rather than appending a section per fix. Keep detailed topics on demand and use `npm run lint` to check the guides.
 
 ## Commits and pull requests
 

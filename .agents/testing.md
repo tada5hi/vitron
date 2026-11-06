@@ -14,4 +14,4 @@ The package build uses tsdown for CJS/ESM JavaScript and declarations. The examp
 
 `@tada5hi/eslint-config` supplies the flat ESLint configuration, including checks on these guides. Vitest uses its V8 coverage provider and the thresholds in its test configuration. Release-please manages releases and monoship publishes packages; do not publish or hand-edit release versions during ordinary development.
 
-Dependency compatibility: `@routup/static` requires the supported routup major declared by its peer range. Upgrade the pair together and retain the real HTTP regression. Electron examples pin an exact runtime so electron-builder can resolve it from the npm workspace.
+Dependency compatibility: `@routup/static` requires the supported routup major declared by its peer range. Upgrade the pair together and retain the real HTTP regression. Electron examples retain a compatible dependency range. Their `electron-builder.mjs` configuration extends the YAML options and reads the installed Electron version so packaging follows npm workspace updates.
