@@ -5,6 +5,7 @@ import {
     rm,
     writeFile,
 } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { InlineConfig, Rollup } from 'vite';
@@ -131,7 +132,31 @@ it.each(['BUNDLE_END', 'ERROR'])('closes a watcher acquired after cancellation o
     }
 });
 
-it('finishes asynchronous options before closing and stops real watching', async () => {
+it('waits for a compilation started while close is awaiting the previous one', async () => {
+    const close = vi.fn(async () => {});
+    const watcher = Object.assign(new EventEmitter(), { close }) as unknown as EventEmitter & Rollup.RollupWatcher;
+
+    vi.mocked(vite.build).mockResolvedValueOnce(watcher);
+
+    const handle = buildWithWatchHook({ build: { watch: {} } }, () => {});
+    const closing = handle.close();
+
+    try {
+        await vi.waitFor(() => expect(watcher.listenerCount('event')).toBe(1));
+        watcher.emit('event', { code: 'BUNDLE_END' });
+        watcher.emit('event', { code: 'BUNDLE_START' });
+        await new Promise(setImmediate);
+        expect(close).not.toHaveBeenCalled();
+        watcher.emit('event', { code: 'BUNDLE_END' });
+        await closing;
+        expect(close).toHaveBeenCalledOnce();
+    } finally {
+        watcher.emit('event', { code: 'ERROR', error: new Error('cancelled compilation') });
+        await closing;
+    }
+});
+
+it.each([1, 2])('finishes asynchronous options in build %s before closing and stops real watching', async (gatedBuild) => {
     const {
         root,
         entry,
@@ -139,28 +164,55 @@ it('finishes asynchronous options before closing and stops real watching', async
     } = await fixture('export const value = "initial";');
     const entered = Promise.withResolvers<void>();
     const release = Promise.withResolvers<void>();
+    const compiled = Promise.withResolvers<void>();
+    const resource = createServer();
     let closed = 0;
     let builds = 0;
+    let optionsCalls = 0;
 
     config.plugins = [{
         name: 'pending-watch-options',
         async options(options) {
-            entered.resolve();
-            await release.promise;
+            optionsCalls++;
+
+            if (optionsCalls === gatedBuild) {
+                entered.resolve();
+                await release.promise;
+            }
 
             return options;
         },
-        buildStart() {
+        async buildStart() {
             builds++;
+
+            if (builds === gatedBuild) {
+                await new Promise<void>((resolve, reject) => {
+                    resource.once('error', reject);
+                    resource.listen(0, '127.0.0.1', resolve);
+                });
+            }
         },
-        closeWatcher() {
+        buildEnd() {
+            if (builds === gatedBuild) {
+                compiled.resolve();
+            }
+        },
+        async closeWatcher() {
             closed++;
+            await new Promise<void>((resolve, reject) => {
+                resource.close((error) => (error ? reject(error) : resolve()));
+            });
         },
     }];
 
     const handle = buildWithWatchHook(config, () => {});
 
     try {
+        if (gatedBuild === 2) {
+            await handle.ready;
+            await writeFile(entry, 'export const value = "rebuilt";');
+        }
+
         await entered.promise;
 
         let settled = false;
@@ -174,8 +226,12 @@ it('finishes asynchronous options before closing and stops real watching', async
         release.resolve();
         await closing;
         expect(closed).toBe(1);
+        expect(resource.listening).toBe(false);
         await expect(handle.ready).resolves.toBeUndefined();
-        expect(await readFile(join(root, 'dist/entry.mjs'), 'utf8')).toContain('initial');
+
+        const expectedOutput = gatedBuild === 1 ? 'initial' : 'rebuilt';
+
+        expect(await readFile(join(root, 'dist/entry.mjs'), 'utf8')).toContain(expectedOutput);
 
         const buildsBeforeClose = builds;
 
@@ -184,10 +240,17 @@ it('finishes asynchronous options before closing and stops real watching', async
             setTimeout(resolve, 150);
         });
         expect(builds).toBe(buildsBeforeClose);
-        expect(await readFile(join(root, 'dist/entry.mjs'), 'utf8')).toContain('initial');
+        expect(await readFile(join(root, 'dist/entry.mjs'), 'utf8')).toContain(expectedOutput);
     } finally {
         release.resolve();
+        await compiled.promise;
         await handle.close();
+
+        if (resource.listening) {
+            await new Promise<void>((resolve) => {
+                resource.close(() => resolve());
+            });
+        }
     }
 });
 

@@ -18,10 +18,7 @@ export function buildWithWatchHook(
     let watcher: Rollup.RollupWatcher | undefined;
     let closing: Promise<void> | undefined;
     let firstBundle = true;
-    let resolveFirstBuild!: () => void;
-    const firstBuild = new Promise<void>((resolve) => {
-        resolveFirstBuild = resolve;
-    });
+    let compilation: PromiseWithResolvers<void> | undefined = Promise.withResolvers<void>();
     const ready = new Promise<void>((resolve, reject) => {
         resolveReady = resolve;
         rejectReady = reject;
@@ -39,8 +36,11 @@ export function buildWithWatchHook(
 
         watcher = result;
         watcher.on('event', async (event) => {
-            if (event.code === 'BUNDLE_END' || event.code === 'ERROR') {
-                resolveFirstBuild();
+            if (event.code === 'START' || event.code === 'BUNDLE_START') {
+                compilation ??= Promise.withResolvers<void>();
+            } else if (event.code === 'BUNDLE_END' || event.code === 'ERROR' || event.code === 'END') {
+                compilation?.resolve();
+                compilation = undefined;
             }
 
             if (closing) {
@@ -70,8 +70,11 @@ export function buildWithWatchHook(
                         return;
                     }
 
-                    // Initial hooks must finish before closing their acquired resources.
-                    await firstBuild;
+                    // Finish active hooks before closing, including any build started while awaiting.
+                    while (compilation) {
+                        await compilation.promise;
+                    }
+
                     await watcher.close();
                 });
             }
