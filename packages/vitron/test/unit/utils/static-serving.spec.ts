@@ -77,6 +77,7 @@ it('serves packaged renderer index, assets, MIME, HEAD and byte ranges', async (
         expect(await script.text()).toBe('window.ready = true;');
         expect(script.headers.get('cache-control')).toBe('public,max-age=0,must-revalidate');
         expect(cached.status).toBe(304);
+        expect(cached.headers.get('etag')).toBe(script.headers.get('etag'));
         expect(await cached.text()).toBe('');
         expect(missing.status).toBe(404);
 
@@ -91,6 +92,36 @@ it('serves packaged renderer index, assets, MIME, HEAD and byte ranges', async (
             });
         } finally {
             rebound.close();
+        }
+    } finally {
+        await close?.();
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+it('ignores unsupported range forms instead of returning incorrect partial bytes', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'vitron-range-'));
+    let close: (() => Promise<void>) | undefined;
+    let url = '';
+    const window = {
+        loadURL: async (value: string) => {
+            url = value;
+        },
+        on: (_event: string, listener: () => Promise<void>) => {
+            close = listener;
+        },
+    };
+
+    try {
+        await writeFile(path.join(directory, 'asset.txt'), '0123456789');
+        await serve(window as unknown as BrowserWindow, { directory });
+
+        for (const range of ['bytes=-3', 'bytes=0-1,8-9']) {
+            const response = await fetch(`${url}/asset.txt`, { headers: { Range: range } });
+
+            expect(response.status, range).toBe(200);
+            expect(response.headers.get('content-range'), range).toBeNull();
+            expect(await response.text(), range).toBe('0123456789');
         }
     } finally {
         await close?.();

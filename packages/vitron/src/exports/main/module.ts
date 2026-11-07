@@ -82,10 +82,20 @@ export async function serve(
                 const stats = await stat(resolved);
 
                 if (stats.isFile()) {
-                    event.response.headers.set('cache-control', 'public,max-age=0,must-revalidate');
+                    const etag = `W/"${stats.size}-${stats.mtime.getTime()}"`;
 
-                    if (event.headers.get('if-none-match') === `W/"${stats.size}-${stats.mtime.getTime()}"`) {
+                    event.response.headers.set('cache-control', 'public,max-age=0,must-revalidate');
+                    event.response.headers.set('etag', etag);
+
+                    if (event.headers.get('if-none-match') === etag) {
                         return new Response(null, { status: 304, headers: event.response.headers });
+                    }
+
+                    const range = event.headers.get('range');
+
+                    // routup only interprets single explicit byte intervals correctly.
+                    if (range && !/^bytes=\d+-\d*$/.test(range)) {
+                        event.headers.delete('range');
                     }
 
                     return sendFile(event, {
