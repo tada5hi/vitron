@@ -9,7 +9,8 @@
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,
         "isolatedModules": true,
-        "module": "CommonJS",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "lib": ["DOM", "ESNext"]
     },
 

@@ -32,6 +32,7 @@ import { getRandomPort } from 'get-port-please';
 
 const workspace = path.resolve(__dirname, '../..');
 const requireFromFixture = createRequire(__filename);
+const cliPath = path.join(path.dirname(requireFromFixture.resolve('vitron/package.json')), requireFromFixture('vitron/package.json').bin.vitron);
 
 async function finishWithin(operation: Promise<unknown>) {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -108,7 +109,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
         delete env.ELECTRON_RUN_AS_NODE;
 
         const run = (args: string[]) => {
-            const child = spawn(process.execPath, [path.join(workspace, 'packages/vitron/dist/index.cjs'), ...args], {
+            const child = spawn(process.execPath, [cliPath, ...args], {
                 cwd: root,
                 env,
                 detached: true,

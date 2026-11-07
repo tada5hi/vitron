@@ -13,4 +13,4 @@ export enum EnvironmentName {
     TEST = 'test',
 }
 
-export const ASSETS_PATH = path.join(__dirname, '..', 'assets');
+export const ASSETS_PATH = path.join(import.meta.dirname, '..', 'assets');

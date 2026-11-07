@@ -40,7 +40,7 @@ npm install vitron
 npm install --save-dev electron electron-builder
 ```
 
-The published Node.js requirement is `^24.15.0 || >=26.0.0`. Peer requirements are Electron `>=35.x` and electron-builder `>=22.x`; your selected versions can impose additional Node requirements. The runtime helpers provide CommonJS and ES module exports with TypeScript declarations.
+The published Node.js requirement is `^24.15.0 || >=26.0.0`. Peer requirements are Electron `>=35.x` and electron-builder `>=22.x`; your selected versions can impose additional Node requirements. Vitron and its runtime helpers publish ES modules with matching TypeScript declarations. CommonJS package exports are no longer provided.
 
 ## Setup
 
