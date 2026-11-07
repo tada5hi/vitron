@@ -382,3 +382,261 @@ it('awaits rebuild reactions, recovers after later compilation errors, and stops
         await handle.close();
     }
 });
+
+it.each([false, true])('finishes asynchronous bundle finalization before initial readiness (failure=%s)', async (fail) => {
+    const { config } = await fixture('export const value = "initial";');
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const failure = new Error('bundle finalization failed');
+    const completed: string[] = [];
+    let contextWatchMode: boolean | undefined;
+    let readiness = 'pending';
+    const plugin: Rollup.Plugin = {
+        name: 'gated-bundle-finalizer',
+        closeBundle: {
+            order: 'pre',
+            sequential: true,
+            async handler() {
+                contextWatchMode = this.meta.watchMode;
+                entered.resolve();
+                await release.promise;
+                completed.push('first');
+
+                if (fail) {
+                    throw failure;
+                }
+            },
+        },
+    };
+    const originalHook = plugin.closeBundle;
+
+    config.plugins = [plugin, {
+        name: 'last-bundle-finalizer',
+        closeBundle: {
+            order: 'post',
+            sequential: true,
+            handler() {
+                completed.push('last');
+            },
+        },
+    }];
+    config.build!.rollupOptions = {
+        plugins: [{
+            name: 'replace-input-plugin-list',
+            options: {
+                order: 'post',
+                handler(options) {
+                    return { ...options, plugins: [Promise.resolve(options.plugins)] };
+                },
+            },
+        }],
+    };
+
+    const handle = buildWithWatchHook(config, () => {});
+    const observedReady = handle.ready.then(() => {
+        readiness = 'resolved';
+    }, () => {
+        readiness = 'rejected';
+    });
+
+    try {
+        await entered.promise;
+        await new Promise(setImmediate);
+        expect(readiness).toBe('pending');
+        expect(completed).toEqual([]);
+        release.resolve();
+
+        if (fail) {
+            await expect(handle.ready).rejects.toThrow('bundle finalization failed');
+        } else {
+            await expect(handle.ready).resolves.toBeUndefined();
+        }
+
+        expect(completed).toEqual(['first', 'last']);
+        expect(contextWatchMode).toBe(true);
+        expect(plugin.closeBundle).toBe(originalHook);
+    } finally {
+        release.resolve();
+        await observedReady;
+        await handle.close();
+    }
+});
+
+it.each(['success', 'finalizer-failure', 'compilation-failure'])('waits for pending bundle finalization during close and retains its failure (result=%s)', async (result) => {
+    const fail = result !== 'success';
+    const { config } = await fixture(result === 'compilation-failure' ? 'export const value = ;' : 'export const value = "initial";');
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const failure = new Error('cancelled bundle finalization failed');
+    let watcherClosed = false;
+
+    config.plugins = [{
+        name: 'cancelled-bundle-finalizer',
+        async closeBundle() {
+            entered.resolve();
+            await release.promise;
+
+            if (fail) {
+                throw failure;
+            }
+        },
+        closeWatcher() {
+            watcherClosed = true;
+        },
+    }];
+
+    const handle = buildWithWatchHook(config, () => {});
+    let closing: Promise<void> | undefined;
+
+    try {
+        await entered.promise;
+
+        let settled = false;
+
+        closing = handle.close();
+        void closing.then(() => {
+            settled = true;
+        }, () => {
+            settled = true;
+        });
+        await new Promise(setImmediate);
+        expect(settled).toBe(false);
+        expect(watcherClosed).toBe(false);
+        release.resolve();
+
+        if (fail) {
+            await expect(closing).rejects.toThrow('cancelled bundle finalization failed');
+            expect(handle.close()).toBe(closing);
+        } else {
+            await expect(closing).resolves.toBeUndefined();
+        }
+
+        expect(watcherClosed).toBe(true);
+    } finally {
+        release.resolve();
+        await (closing || handle.close()).catch(() => {});
+    }
+});
+
+it('finishes rebuild finalization before reacting and recovers from a later finalizer failure', async () => {
+    const { entry, config } = await fixture('export const value = "initial";');
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const failed = Promise.withResolvers<void>();
+    let builds = 0;
+    let reactions = 0;
+
+    config.plugins = [{
+        name: 'repeated-bundle-finalizer',
+        buildStart() {
+            builds++;
+        },
+        async closeBundle() {
+            if (builds === 2) {
+                entered.resolve();
+                await release.promise;
+            }
+
+            if (builds !== 4) {
+                return;
+            }
+
+            failed.resolve();
+
+            throw new Error('later bundle finalization failed');
+        },
+    }];
+
+    const handle = buildWithWatchHook(config, () => {
+        reactions++;
+    });
+
+    try {
+        await handle.ready;
+        await writeFile(entry, 'export const value = "gated";');
+        await entered.promise;
+        await new Promise(setImmediate);
+        expect(reactions).toBe(0);
+        release.resolve();
+        await vi.waitFor(() => expect(reactions).toBe(1));
+        await writeFile(entry, 'export const value = "next";');
+        await vi.waitFor(() => expect(reactions).toBe(2));
+
+        const errors: Error[] = [];
+
+        [...watchers][0].on('event', (event) => {
+            if (event.code === 'ERROR') {
+                errors.push(event.error);
+            }
+        });
+        await writeFile(entry, 'export const value = "failed";');
+        await failed.promise;
+        await vi.waitFor(() => expect(errors).toHaveLength(1));
+        expect(errors[0].message).toContain('later bundle finalization failed');
+        expect(reactions).toBe(2);
+        await writeFile(entry, 'export const value = "recovered";');
+        await vi.waitFor(() => expect(reactions).toBe(3));
+        await handle.close();
+    } finally {
+        release.resolve();
+        await handle.close();
+    }
+});
+
+it.each([false, true])('finalizes a bundle when writing fails before BUNDLE_END (finalizer failure=%s)', async (fail) => {
+    const { config } = await fixture('export const value = "initial";');
+    const writeFailure = new Error('bundle write failed');
+    const finalizationFailure = new Error('failed write finalization failed');
+    let finalized = false;
+
+    config.plugins = [{
+        name: 'failed-bundle-write',
+        writeBundle() {
+            throw writeFailure;
+        },
+        async closeBundle() {
+            await new Promise(setImmediate);
+            finalized = true;
+
+            if (fail) {
+                throw finalizationFailure;
+            }
+        },
+    }];
+
+    const handle = buildWithWatchHook(config, () => {});
+
+    try {
+        if (fail) {
+            await expect(handle.ready).rejects.toMatchObject({ errors: [writeFailure, finalizationFailure] });
+        } else {
+            await expect(handle.ready).rejects.toBe(writeFailure);
+        }
+
+        expect(finalized).toBe(true);
+    } finally {
+        await handle.close();
+    }
+});
+
+it('rejects invalid input options without waiting for unstarted bundle finalizers', async () => {
+    const { config } = await fixture('export const value = "initial";');
+    let finalized = false;
+
+    config.build!.rollupOptions = JSON.parse('{"treeshake":{"preset":"invalid"}}');
+    config.plugins = [{
+        name: 'unstarted-bundle-finalizer',
+        closeBundle() {
+            finalized = true;
+        },
+    }];
+
+    const handle = buildWithWatchHook(config, () => {});
+
+    try {
+        await expect(handle.ready).rejects.toThrow('treeshake.preset');
+        expect(finalized).toBe(false);
+    } finally {
+        await handle.close();
+    }
+});
