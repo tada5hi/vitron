@@ -7,7 +7,7 @@
 
 import * as process from 'node:process';
 import path from 'node:path';
-import { createRequire } from 'node:module';
+import { findPackageJSON } from 'node:module';
 import { Continu } from 'continu';
 import { readSync } from 'locter';
 import { merge } from 'smob';
@@ -57,7 +57,14 @@ export function buildConfig(input: OptionsInput) : Config {
                         return parsePackageNameWithVersion(input);
                     }
 
-                    const packageJson = readSync(createRequire(import.meta.url).resolve(`${input}/package.json`));
+                    const rootPath = typeof raw.rootPath === 'string' ? raw.rootPath : process.cwd();
+                    const packageJsonPath = findPackageJSON(input, path.resolve(rootPath, 'package.json'));
+
+                    if (!packageJsonPath) {
+                        throw new Error(`Could not locate the framework manifest for ${input}.`);
+                    }
+
+                    const packageJson = readSync(packageJsonPath);
 
                     return {
                         name: input,
