@@ -10,7 +10,7 @@
 
 **Spec:** [Embedded design](#design)
 
-**Status:** Implementation and independent audit complete through `48cee82` on `refactor/development-session`. Final verification passed 98 tests on Node 24.15 and Node 26, lint with five existing warnings, and four real macOS Electron E2E tests. PR publication and CI/review triage remain pending.
+**Status:** Implemented and independently audited on `refactor/development-session`; published as [PR #1145](https://github.com/tada5hi/vitron/pull/1145). Final local verification passes 122 tests on Node 24.15 and Node 26, the library source typecheck, lint with five existing warnings, and four real macOS Electron E2E tests. PR checks and review state are tracked on GitHub.
 
 ## Global Constraints
 
@@ -139,7 +139,7 @@ A future change should end development when Electron exits, because a renderer a
 
 **Additional user request:** Upgrade locter from 2.x to latest stable `4.1.2` (official npm verified), whose Node minimum is 22 and package exports are import-only. Include this upgrade here so no intermediate CJS CLI tries to require an import-only package. Inspect every locter load/loadSync/locateMany consumer and pin actual config-loading behavior with tests.
 
-**Design:** Publish only ESM JavaScript and matching declarations for the root CLI and `vitron/main`, `vitron/preload`, `vitron/renderer`. Keep subpath names and four output directories. Keep `.mjs` filenames to avoid unrelated filename churn. Update package metadata/exports/bin/copied subpath metadata and tsdown configuration coherently; remove obsolete CJS artifact references. Use native `import.meta` paths and `createRequire(import.meta.url)` only where existing resolution truly needs require semantics. Do not add compatibility wrappers or dual output. Let supported Node/Electron loading semantics handle consumers; change app output only if a concrete Electron regression proves it necessary.
+**Design:** Publish only ESM JavaScript and matching declarations for the root CLI and `vitron/main`, `vitron/preload`, `vitron/renderer`. Keep subpath names and four output directories. Keep `.mjs` filenames to avoid unrelated filename churn. Update package metadata/exports/bin/copied subpath metadata and tsdown configuration coherently; remove obsolete CJS artifact references. Use native `import.meta` paths and Node package-manifest resolution from the effective project root. Do not require a framework to export its manifest subpath. Do not add compatibility wrappers or dual output. Let supported Node/Electron loading semantics handle consumers; change app output only if a concrete Electron regression proves it necessary.
 
 **Files:** `packages/vitron/package.json`, `package-lock.json`, `packages/vitron/tsdown.config.mts`, `packages/vitron/tsconfig.build.json`, `packages/vitron/assets/package.json`, `packages/vitron/src/constants.ts`, `packages/vitron/src/config/utils/build.ts`; other current locter consumers in config discovery/framework detection and app config builders as necessary; built CLI/export regression tests, `test/e2e/fixtures.ts`, current README/architecture/testing guides and affected example/config paths only when actually required.
 
@@ -152,10 +152,17 @@ A future change should end development when Electron exits, because a renderer a
 
 ## Final audit resolution
 
-Retain Vite `^7.3.7`: Vite 8 fails the required options-initialization and plugin-cleanup error channels. Both failures have real SDK regressions. Watcher closure also waits for every active compilation, including later asynchronous options hooks, before closing acquired resources. The current-cycle barrier settles before rebuild reactions and rechecks work started while awaiting. The final scoped review found no remaining Critical or Important issue.
+Retain Vite `^7.3.7`: Vite 8 fails the required options-initialization and plugin-cleanup error channels. Both failures have real SDK regressions. Watcher closure also waits for every active compilation, including later asynchronous options hooks, before closing acquired resources. The current-cycle barrier settles before rebuild reactions and rechecks work started while awaiting. Readiness and rebuild reactions also await asynchronous bundle finalization; failed output results and finalizer errors remain owned. Renderer plugin cleanup waits for configuration and all started post-hooks, including after a sibling fails, while synchronous native close still removes Vite signal handlers. Restart and cleanup failures remain observable. The final scoped review found no remaining Critical or Important regression.
 
 Routup 6, locter 4, the Node/Electron floors and ESM-only Vitron exports remain. Full Environment API adoption, the other two architecture candidates and shutdown-on-Electron-exit remain separate work. The older deferred plans must reconcile the current runtime/export contracts before execution.
 
 ## Completion
 
 Run an independent whole-branch stability/correctness review, concentrating on pending acquisition, duplicate cancellation, callback rejection and cleanup ordering. Fix confirmed issues with regression checks, then review the fixes. Check the final diff and test evidence before creating a Conventional Commits PR. Include the two deferred plans and the shutdown-on-Electron-exit follow-up; implement neither deferred architecture candidate in this worktree.
+
+
+## Inherited review follow-ups
+
+- [External renderer termination](https://github.com/tada5hi/vitron/pull/1145#discussion_r4499441159): the approved refactor preserves direct child termination. Waiting for exit, handling unsuccessful termination and escalation require a separate process-lifetime decision.
+- [HTTP conditional requests](https://github.com/tada5hi/vitron/pull/1145#discussion_r4499441178): wildcard/list/weak ETag comparison and matching non-GET/HEAD status handling retain the old static plugin's behavior. A separate HTTP correctness change should add those semantics and regressions.
+- `createConfig(directoryPath)` still does not forward that directory as `rootPath` when no option supplies it. This predates this PR; reconcile CLI root selection separately from package-manifest lookup.
