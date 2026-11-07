@@ -1,9 +1,12 @@
-import { ChildProcess } from 'node:child_process';
+import { ChildProcess, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:http';
+import type { Plugin, ViteDevServer } from 'vite';
+import type * as vite from 'vite';
 import { getRandomPort } from 'get-port-please';
 import {
     afterEach,
+    beforeEach,
     expect,
     it,
     vi,
@@ -11,6 +14,27 @@ import {
 import { createRenderer } from '../../../src/apps/renderer/dev';
 import * as processes from '../../../src/apps/renderer/ps';
 import { buildConfig } from '../../../src/config/utils/build';
+
+const adapters = vi.hoisted(() => ({ createServer: vi.fn() }));
+
+vi.mock('vite', async (importOriginal) => ({
+    ...await importOriginal<typeof vite>(),
+    createServer: adapters.createServer,
+}));
+
+function rendererChild() {
+    const child = new ChildProcess();
+
+    vi.spyOn(child, 'kill').mockReturnValue(false);
+
+    return child;
+}
+
+beforeEach(async () => {
+    const actual = await vi.importActual<typeof vite>('vite');
+
+    adapters.createServer.mockImplementation(actual.createServer);
+});
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -27,7 +51,7 @@ it.each(['127.0.0.1', '::1'])('waits for an external renderer on %s to return a 
         response.end(ready ? 'renderer ready' : 'renderer starting');
     });
 
-    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(new ChildProcess());
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(rendererChild());
 
     let started = false;
     const startup = renderer.start().then(() => {
@@ -62,13 +86,13 @@ it.each(['127.0.0.1', '::1'])('waits for an external renderer on %s to return a 
 it('cleans up an external renderer when readiness fails so startup can retry', async () => {
     const failure = new Error('Renderer startup timed out');
     const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port: 9000 }));
-    const child = new ChildProcess();
+    const child = rendererChild();
     const kill = vi.spyOn(child, 'kill');
     const controller = new AbortController();
 
     controller.abort(failure);
 
-    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValueOnce(child).mockImplementation(() => new ChildProcess());
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValueOnce(child).mockImplementation(() => rendererChild());
     vi.spyOn(AbortSignal, 'timeout').mockReturnValueOnce(controller.signal).mockReturnValue(new AbortController().signal);
 
     try {
@@ -81,5 +105,1092 @@ it('cleans up an external renderer when readiness fails so startup can retry', a
         expect(renderer.up()).toBe(true);
     } finally {
         await renderer.stop();
+    }
+});
+
+// Real HTTP readiness and a real owned child keep cancellation assertions observable.
+async function externalRenderer() {
+    const port = await getRandomPort('127.0.0.1');
+    let ready = false;
+    let requests = 0;
+    const server = createServer((_request, response) => {
+        requests++;
+        response.statusCode = ready ? 200 : 503;
+        response.end('renderer');
+    });
+
+    server.listen(port, '127.0.0.1');
+    await once(server, 'listening');
+
+    const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)']);
+
+    await once(child, 'spawn');
+
+    const exited = () => vi.waitFor(() => {
+        expect(child.exitCode !== null || child.signalCode !== null).toBe(true);
+    });
+    const timeout = new AbortController();
+
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(timeout.signal);
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(child);
+
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+
+    return {
+        renderer,
+        child,
+        exited,
+        ready: () => {
+            ready = true;
+        },
+        requested: () => requests > 0,
+        async close() {
+            timeout.abort();
+            await renderer.stop();
+            child.kill();
+            await exited();
+            server.closeAllConnections();
+            await new Promise<void>((resolve, reject) => {
+                server.close((error) => (error ? reject(error) : resolve()));
+            });
+        },
+    };
+}
+
+it.each(['abort', 'stop'])('cancels external readiness on %s and permits a successful retry', async (action) => {
+    const fixture = await externalRenderer();
+    const controller = new AbortController();
+    let result: unknown;
+    const startup = fixture.renderer.start(controller.signal).then(
+        () => {
+            result = 'started';
+        },
+        (error) => {
+            result = error;
+        },
+    );
+
+    try {
+        await vi.waitFor(() => expect(fixture.requested()).toBe(true));
+
+        if (action === 'abort') {
+            controller.abort();
+        } else {
+            await fixture.renderer.stop();
+        }
+
+        await vi.waitFor(() => expect(result).toBeInstanceOf(Error), { timeout: 500 });
+        await fixture.exited();
+        expect(fixture.renderer.up()).toBe(false);
+
+        fixture.ready();
+
+        const replacement = rendererChild();
+
+        vi.mocked(processes.spawnRendererProcess).mockReturnValue(replacement);
+        await fixture.renderer.start(new AbortController().signal);
+        expect(fixture.renderer.up()).toBe(true);
+    } finally {
+        await fixture.close();
+        await startup;
+    }
+});
+
+it('waits for a late Vite acquisition to close before stop resolves', async () => {
+    const actual = await vi.importActual<typeof vite>('vite');
+    let closed = false;
+    const server = await actual.createServer({
+        configFile: false,
+        server: { port: await getRandomPort(), watch: null },
+        plugins: [{
+            name: 'observe-close',
+            closeBundle() {
+                closed = true;
+            },
+        }],
+    });
+    let acquire!: (server: ViteDevServer) => void;
+
+    adapters.createServer.mockImplementationOnce(() => new Promise<ViteDevServer>((resolve) => {
+        acquire = resolve;
+    }));
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port: await getRandomPort() }));
+    let result: unknown;
+    const startup = renderer.start().catch((error) => {
+        result = error;
+    });
+
+    try {
+        await vi.waitFor(() => expect(acquire).toBeTypeOf('function'));
+
+        let stopped = false;
+        const stopping = renderer.stop().then(() => {
+            stopped = true;
+        });
+
+        await new Promise(setImmediate);
+        expect(stopped).toBe(false);
+        acquire(server);
+        await stopping;
+        await startup;
+        expect(result).toBeInstanceOf(Error);
+        expect(closed).toBe(true);
+        expect(server.httpServer?.listening).toBe(false);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        acquire?.(server);
+        await startup;
+        await renderer.stop();
+        await server.close();
+    }
+});
+
+it('rejects an external child launch error and permits a retry', async () => {
+    const fixture = await externalRenderer();
+    const child = spawn(`/vitron-missing-renderer-${process.pid}`);
+
+    vi.mocked(processes.spawnRendererProcess).mockReturnValueOnce(child);
+
+    const timeout = new AbortController();
+
+    vi.mocked(AbortSignal.timeout).mockReturnValueOnce(timeout.signal);
+    // Observe the fixture error too so the old implementation fails an assertion, not an unhandled event.
+    child.on('error', () => {});
+
+    let result: unknown;
+    const startup = fixture.renderer.start().catch((error) => {
+        result = error;
+    });
+
+    try {
+        await vi.waitFor(() => expect(result).toMatchObject({ code: 'ENOENT' }), { timeout: 500 });
+        expect(fixture.renderer.up()).toBe(false);
+        fixture.ready();
+        await fixture.renderer.start();
+        expect(fixture.renderer.up()).toBe(true);
+    } finally {
+        timeout.abort();
+        await startup;
+        await fixture.close();
+    }
+});
+
+it('repeated stop cancels the same pending external startup', async () => {
+    const fixture = await externalRenderer();
+    let result: unknown;
+    const startup = fixture.renderer.start().catch((error) => {
+        result = error;
+    });
+
+    try {
+        await vi.waitFor(() => expect(fixture.requested()).toBe(true));
+        await Promise.all([fixture.renderer.stop(), fixture.renderer.stop(), fixture.renderer.stop()]);
+        expect(result).toBeInstanceOf(Error);
+        await fixture.exited();
+        expect(fixture.renderer.up()).toBe(false);
+    } finally {
+        await fixture.close();
+        await startup;
+    }
+});
+
+it.each(['abort', 'stop'])('does not restart an external renderer when %s lands in the reload gap', async (action) => {
+    const fixture = await externalRenderer();
+    const controller = new AbortController();
+
+    fixture.ready();
+
+    try {
+        await fixture.renderer.start(controller.signal);
+
+        const reload = fixture.renderer.reload();
+
+        if (action === 'abort') {
+            controller.abort();
+        } else {
+            await fixture.renderer.stop();
+        }
+
+        await reload.catch(() => {});
+        await fixture.exited();
+        expect(fixture.renderer.up()).toBe(false);
+    } finally {
+        await fixture.close();
+    }
+});
+
+it('preserves the Vite startup failure when cleanup also fails', async () => {
+    const port = await getRandomPort('127.0.0.1');
+    const occupied = createServer();
+
+    occupied.listen(port, '127.0.0.1');
+    await once(occupied, 'listening');
+
+    const cleanupFailure = new Error('renderer cleanup failed');
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port,
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = {
+                host: '127.0.0.1',
+                strictPort: true,
+                watch: null,
+            };
+            config.plugins = [{
+                name: 'fail-cleanup',
+                configureServer(server) {
+                    const close = server.close.bind(server);
+
+                    server.close = async () => {
+                        await close();
+
+                        throw cleanupFailure;
+                    };
+                },
+            }];
+
+            return config;
+        },
+    }));
+
+    try {
+        await expect(renderer.start()).rejects.toMatchObject({ errors: [expect.objectContaining({ message: expect.stringContaining('already in use') }), cleanupFailure] });
+        await expect(renderer.stop()).rejects.toBe(cleanupFailure);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        await renderer.stop().catch(() => {});
+        await new Promise<void>((resolve, reject) => {
+            occupied.close((error) => (error ? reject(error) : resolve()));
+        });
+    }
+});
+
+it.each([false, true])('handles startup queued behind Vite shutdown with later stop=%s', async (stopAgain) => {
+    let releaseClose: (() => void) | undefined;
+    let delayClose = true;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort('127.0.0.1'),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = {
+                host: '127.0.0.1',
+                strictPort: true,
+                watch: null,
+            };
+            config.plugins = [{
+                name: 'delay-first-close',
+                configureServer(server) {
+                    const close = server.close.bind(server);
+
+                    server.close = async () => {
+                        if (delayClose) {
+                            delayClose = false;
+                            await new Promise<void>((resolve) => {
+                                releaseClose = resolve;
+                            });
+                        }
+
+                        await close();
+                    };
+                },
+            }];
+
+            return config;
+        },
+    }));
+
+    try {
+        await renderer.start();
+
+        const firstStop = renderer.stop();
+
+        await vi.waitFor(() => expect(releaseClose).toBeTypeOf('function'));
+
+        let result: unknown;
+        const queuedStart = renderer.start().then(
+            () => {
+                result = 'started';
+            },
+            (error) => {
+                result = error;
+            },
+        );
+        const finalStop = stopAgain ? renderer.stop() : undefined;
+
+        releaseClose?.();
+        await Promise.all([firstStop, queuedStart, finalStop]);
+        expect(renderer.up()).toBe(!stopAgain);
+
+        if (stopAgain) {
+            expect(result).toBeInstanceOf(Error);
+        } else {
+            expect(result).toBe('started');
+        }
+    } finally {
+        releaseClose?.();
+        await renderer.stop();
+    }
+});
+
+it('closes an HTTP listener that binds after cancellation already closed Vite', async () => {
+    const controller = new AbortController();
+    const binding = Promise.withResolvers<void>();
+    const port = await getRandomPort('127.0.0.1');
+    let waiting = false;
+    let server: ViteDevServer | undefined;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port,
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = {
+                host: '127.0.0.1',
+                watch: null,
+                strictPort: true,
+            };
+            config.plugins = [{
+                name: 'delay-os-listen',
+                configureServer(value) {
+                    server = value;
+
+                    const http = value.httpServer!;
+                    const listen = http.listen.bind(http);
+
+                    http.listen = ((...args: Parameters<typeof listen>) => {
+                        waiting = true;
+                        void binding.promise.then(() => listen(...args));
+
+                        return http;
+                    }) as typeof http.listen;
+                    // Reproduce Vite's signal-close before the pending OS bind completes.
+                    controller.signal.addEventListener('abort', () => {
+                        void value.close();
+                    }, { once: true });
+                },
+            }];
+
+            return {};
+        },
+    }));
+    const startup = renderer.start(controller.signal).catch((error) => error);
+
+    try {
+        await vi.waitFor(() => expect(waiting).toBe(true));
+        controller.abort();
+        await server!.close();
+        binding.resolve();
+        expect(await startup).toMatchObject({ name: 'AbortError' });
+        await renderer.stop();
+        expect(server!.httpServer!.listening).toBe(false);
+        await expect(fetch(`http://127.0.0.1:${port}`)).rejects.toThrow();
+    } finally {
+        binding.resolve();
+        await startup;
+        await renderer.stop();
+
+        if (server?.httpServer?.listening) {
+            await new Promise<void>((resolve, reject) => {
+                server!.httpServer!.close((error) => (error ? reject(error) : resolve()));
+            });
+        }
+    }
+});
+
+it('preserves an eager Vite close rejection when a subsequent close would succeed', async () => {
+    const controller = new AbortController();
+    const failure = new Error('eager close failed');
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort(),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = { watch: null };
+            config.plugins = [{
+                name: 'fail-first-close',
+                configureServer(server) {
+                    const close = server.close.bind(server);
+                    let first = true;
+
+                    server.close = async () => {
+                        await close();
+
+                        if (!first) {
+                            return;
+                        }
+
+                        first = false;
+
+                        throw failure;
+                    };
+                },
+            }];
+
+            return {};
+        },
+    }));
+
+    try {
+        await renderer.start(controller.signal);
+        controller.abort();
+        await expect(renderer.stop()).rejects.toBe(failure);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        await renderer.stop().catch(() => {});
+    }
+});
+
+it('retains synchronous cancellation ownership after an ordinary Vite restart', async () => {
+    const controller = new AbortController();
+    let server: ViteDevServer | undefined;
+    let acquisitions = 0;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort(),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.server = { watch: null };
+            config.plugins = [{
+                name: 'observe-restart',
+                configureServer(value) {
+                    server = value;
+                    acquisitions++;
+                },
+            }];
+
+            return {};
+        },
+    }));
+
+    try {
+        await renderer.start(controller.signal);
+        await server!.restart();
+        expect(acquisitions).toBe(2);
+        expect(server!.httpServer!.listening).toBe(true);
+        controller.abort();
+        expect(server!.httpServer!.listening).toBe(false);
+        await renderer.stop();
+        expect(renderer.up()).toBe(false);
+    } finally {
+        await renderer.stop();
+    }
+});
+
+it.each([
+    { stage: 'acquiring', action: 'abort' },
+    { stage: 'binding', action: 'abort' },
+    { stage: 'acquiring', action: 'stop' },
+    { stage: 'binding', action: 'stop' },
+])('waits for a Vite config replacement that is $stage during $action so it cannot reopen the port', async ({ stage, action }) => {
+    const controller = new AbortController();
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const closed = Promise.withResolvers<void>();
+    const port = await getRandomPort('127.0.0.1');
+    let server: ViteDevServer | undefined;
+    let acquisitions = 0;
+    let restarting: Promise<void> | undefined;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port,
+        rendererConfig(config) {
+            config.configFile = false;
+            config.logLevel = 'silent';
+            config.server = {
+                host: '127.0.0.1',
+                port,
+                watch: null,
+                strictPort: true,
+            };
+            config.plugins = [{
+                name: 'gate-config-replacement',
+                async configureServer(value) {
+                    server = value;
+                    acquisitions++;
+
+                    if (acquisitions !== 2) {
+                        return;
+                    }
+
+                    const close = value.close.bind(value);
+
+                    value.close = async () => {
+                        const closing = close();
+
+                        closed.resolve();
+                        await closing;
+                    };
+
+                    if (stage === 'acquiring') {
+                        entered.resolve();
+                        await release.promise;
+                    } else {
+                        const http = value.httpServer!;
+                        const listen = http.listen.bind(http);
+
+                        http.listen = ((...args: Parameters<typeof listen>) => {
+                            entered.resolve();
+                            void release.promise.then(() => listen(...args));
+
+                            return http;
+                        }) as typeof http.listen;
+                    }
+                },
+            }];
+
+            return {};
+        },
+    }));
+
+    try {
+        await renderer.start(controller.signal);
+        // Vite's config watcher invokes this same public restart method.
+        restarting = server!.restart();
+        await entered.promise;
+
+        if (action === 'abort') {
+            controller.abort();
+        }
+
+        let stopped = false;
+        const stopping = renderer.stop().then(() => {
+            stopped = true;
+        });
+
+        await closed.promise;
+        await new Promise(setImmediate);
+
+        const stoppedBeforeRelease = stopped;
+
+        release.resolve();
+        await restarting;
+        await stopping;
+
+        const probe = createServer();
+        const portReleased = await new Promise<boolean>((resolve) => {
+            probe.once('error', () => resolve(false));
+            probe.listen(port, '127.0.0.1', () => resolve(true));
+        });
+
+        if (probe.listening) {
+            await new Promise<void>((resolve) => {
+                probe.close(() => resolve());
+            });
+        }
+
+        expect({
+            stoppedBeforeRelease,
+            up: renderer.up(),
+            listening: server!.httpServer!.listening,
+            portReleased,
+        }).toEqual({
+            stoppedBeforeRelease: false,
+            up: false,
+            listening: false,
+            portReleased: true,
+        });
+        await server!.restart();
+        expect(acquisitions).toBe(2);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        release.resolve();
+        await restarting?.catch(() => {});
+        await renderer.stop();
+
+        if (server?.httpServer?.listening) {
+            await new Promise<void>((resolve, reject) => {
+                server!.httpServer!.close((error) => (error ? reject(error) : resolve()));
+            });
+        }
+    }
+});
+
+it.each(['pending', 'completed'])('preserves a %s Vite config-restart failure through renderer cleanup', async (stage) => {
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const port = await getRandomPort('127.0.0.1');
+    const occupied = createServer();
+    let server: ViteDevServer | undefined;
+    let acquisitions = 0;
+    let restarting: Promise<unknown> | undefined;
+    let stopping: Promise<unknown> | undefined;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port,
+        rendererConfig(config) {
+            config.configFile = false;
+            config.logLevel = 'silent';
+            config.server = {
+                host: '127.0.0.1',
+                port,
+                watch: null,
+                strictPort: true,
+            };
+            config.plugins = [{
+                name: 'gate-failing-config-replacement',
+                configureServer(value) {
+                    server = value;
+                    acquisitions++;
+
+                    if (acquisitions !== 2) {
+                        return;
+                    }
+
+                    const listen = value.listen.bind(value);
+
+                    value.listen = async (...args) => {
+                        entered.resolve();
+                        await release.promise;
+
+                        return listen(...args);
+                    };
+                },
+            }];
+
+            return {};
+        },
+    }));
+
+    try {
+        await renderer.start();
+        restarting = server!.restart().catch((error: unknown) => error);
+        await entered.promise;
+
+        if (stage === 'pending') {
+            stopping = renderer.stop().catch((error: unknown) => error);
+        }
+
+        occupied.listen(port, '127.0.0.1');
+        await once(occupied, 'listening');
+        release.resolve();
+
+        const failure = await restarting;
+
+        expect(failure).toBeInstanceOf(Error);
+        expect((failure as Error).message).toContain('already in use');
+        stopping ??= renderer.stop().catch((error: unknown) => error);
+        expect(await stopping).toBe(failure);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        release.resolve();
+        await restarting;
+        await stopping;
+        await renderer.stop().catch(() => {});
+
+        if (occupied.listening) {
+            await new Promise<void>((resolve, reject) => {
+                occupied.close((error) => (error ? reject(error) : resolve()));
+            });
+        }
+    }
+});
+
+it.each(['configure', 'post', 'before-configure'])('closes plugin resources acquired in %s after renderer cancellation', async (stage) => {
+    const controller = new AbortController();
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const resource = createServer();
+    const acquired = Promise.withResolvers<void>();
+    const events: string[] = [];
+    let closing: Promise<void> | undefined;
+    let cleanupBeforeAcquisition = false;
+    let resourceCloses = 0;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const acquire = async () => {
+        entered.resolve();
+        await release.promise;
+        resource.listen(0, '127.0.0.1');
+        await once(resource, 'listening');
+        acquired.resolve();
+    };
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort('127.0.0.1'),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.logLevel = 'silent';
+            config.server = {
+                host: '127.0.0.1',
+                strictPort: true,
+                watch: null,
+            };
+            config.plugins = [{
+                name: 'observe-normal-hook-order',
+                configureServer() {
+                    events.push('normal');
+                },
+            }, {
+                name: 'acquire-plugin-resource',
+                configureServer: {
+                    order: 'post',
+                    async handler() {
+                        events.push('post');
+                        expect(this.meta.viteVersion).toBeTypeOf('string');
+
+                        if (stage === 'post') {
+                            return acquire;
+                        }
+
+                        await acquire();
+
+                        return undefined;
+                    },
+                },
+                closeBundle() {
+                    if (!resource.listening && !closing) {
+                        cleanupBeforeAcquisition = true;
+
+                        return undefined;
+                    }
+
+                    if (!closing) {
+                        resourceCloses++;
+                        closing = new Promise<void>((resolve, reject) => {
+                            resource.close((error) => (error ? reject(error) : resolve()));
+                        });
+                    }
+
+                    return closing;
+                },
+            }, {
+                name: 'cancel-before-later-hooks',
+                configureServer: {
+                    order: 'pre',
+                    handler() {
+                        events.push('pre');
+
+                        if (stage === 'before-configure') {
+                            controller.abort();
+                        }
+                    },
+                },
+            }];
+
+            return {};
+        },
+    }));
+    const startup = renderer.start(controller.signal).catch((error: unknown) => error);
+
+    try {
+        await entered.promise;
+        controller.abort();
+
+        let stopped = false;
+        const stopping = renderer.stop().then(() => {
+            stopped = true;
+        });
+
+        await new Promise(setImmediate);
+
+        const stoppedBeforeAcquisition = stopped;
+
+        release.resolve();
+        await acquired.promise;
+        await startup;
+        await stopping;
+        expect({
+            events,
+            cleanupBeforeAcquisition,
+            stoppedBeforeAcquisition,
+            resourceCloses,
+            listening: resource.listening,
+            up: renderer.up(),
+        }).toEqual({
+            events: ['pre', 'normal', 'post'],
+            cleanupBeforeAcquisition: false,
+            stoppedBeforeAcquisition: false,
+            resourceCloses: 1,
+            listening: false,
+            up: false,
+        });
+    } finally {
+        release.resolve();
+        await acquired.promise;
+        await startup;
+        await renderer.stop().catch(() => {});
+
+        if (resource.listening) {
+            await new Promise<void>((resolve) => {
+                resource.close(() => resolve());
+            });
+        }
+    }
+});
+
+it.each(['configure', 'post', 'post-async'])('preserves a %s hook failure after cancellation without blocking plugin cleanup', async (stage) => {
+    const controller = new AbortController();
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const failure = new Error('plugin configuration failed');
+    const resource = createServer();
+    let closing: Promise<void> | undefined;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort('127.0.0.1'),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.logLevel = 'silent';
+            config.server = {
+                host: '127.0.0.1',
+                strictPort: true,
+                watch: null,
+            };
+            config.plugins = [{
+                name: 'fail-after-resource-acquisition',
+                async configureServer() {
+                    entered.resolve();
+                    await release.promise;
+                    resource.listen(0, '127.0.0.1');
+                    await once(resource, 'listening');
+
+                    if (stage === 'post') {
+                        return () => {
+                            throw failure;
+                        };
+                    }
+
+                    if (stage === 'post-async') {
+                        return async () => {
+                            await new Promise(setImmediate);
+
+                            throw failure;
+                        };
+                    }
+
+                    throw failure;
+                },
+                closeBundle() {
+                    if (resource.listening || closing) {
+                        closing ??= new Promise<void>((resolve, reject) => {
+                            resource.close((error) => (error ? reject(error) : resolve()));
+                        });
+                    }
+
+                    return closing;
+                },
+            }, {
+                name: 'remaining-configuration-hook',
+                configureServer() {},
+            }];
+
+            return {};
+        },
+    }));
+    const startup = renderer.start(controller.signal).catch((error: unknown) => error);
+
+    try {
+        await entered.promise;
+        controller.abort();
+        release.resolve();
+        expect(await startup).toBe(failure);
+        await renderer.stop();
+        expect(resource.listening).toBe(false);
+        expect(renderer.up()).toBe(false);
+    } finally {
+        release.resolve();
+        await startup;
+        await renderer.stop().catch(() => {});
+
+        if (resource.listening) {
+            await new Promise<void>((resolve) => {
+                resource.close(() => resolve());
+            });
+        }
+    }
+});
+
+it.each(['renderer', 'raw-vite'])('permits a frozen plugin to be reused by another %s instance', async (consumer) => {
+    let configured = 0;
+    let postConfigured = 0;
+    const plugin: Plugin = Object.freeze({
+        name: 'reused-configuration-plugin',
+        configureServer() {
+            configured++;
+
+            return () => {
+                postConfigured++;
+            };
+        },
+    });
+    const config = buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort('127.0.0.1'),
+        rendererConfig(value) {
+            value.configFile = false;
+            value.logLevel = 'silent';
+            value.server = { watch: null };
+            value.plugins = [plugin];
+
+            return {};
+        },
+    });
+    const first = createRenderer(config);
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    try {
+        await first.start();
+    } finally {
+        await first.stop();
+    }
+
+    if (consumer === 'renderer') {
+        const second = createRenderer(config);
+
+        try {
+            await second.start();
+        } finally {
+            await second.stop();
+        }
+    } else {
+        const actual = await vi.importActual<typeof vite>('vite');
+        const server = await actual.createServer({
+            root: process.cwd(),
+            configFile: false,
+            logLevel: 'silent',
+            plugins: [plugin],
+            server: { middlewareMode: true, watch: null },
+        });
+
+        await server.close();
+    }
+
+    expect({ configured, postConfigured }).toEqual({ configured: 2, postConfigured: 2 });
+});
+
+it.each(['sync', 'async'])('waits for a pending post-hook acquisition after another post hook has a %s failure', async (stage) => {
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const failed = Promise.withResolvers<void>();
+    const acquired = Promise.withResolvers<void>();
+    const failure = new Error('another post hook failed');
+    const resource = createServer();
+    let closing: Promise<void> | undefined;
+    let cleanupBeforeAcquisition = false;
+    let laterPostCalls = 0;
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(undefined);
+
+    const renderer = createRenderer(buildConfig({
+        rootPath: process.cwd(),
+        port: await getRandomPort('127.0.0.1'),
+        rendererConfig(config) {
+            config.configFile = false;
+            config.logLevel = 'silent';
+            config.server = { watch: null };
+            config.plugins = [{
+                name: 'acquire-after-another-post-fails',
+                configureServer() {
+                    return async () => {
+                        entered.resolve();
+                        await release.promise;
+                        resource.listen(0, '127.0.0.1');
+                        await once(resource, 'listening');
+                        acquired.resolve();
+                    };
+                },
+                closeBundle() {
+                    if (!resource.listening && !closing) {
+                        cleanupBeforeAcquisition = true;
+
+                        return undefined;
+                    }
+
+                    closing ??= new Promise<void>((resolve, reject) => {
+                        resource.close((error) => (error ? reject(error) : resolve()));
+                    });
+
+                    return closing;
+                },
+            }, {
+                name: 'fail-one-post-hook',
+                configureServer() {
+                    const fail = () => {
+                        failed.resolve();
+
+                        throw failure;
+                    };
+
+                    return stage === 'sync' ? fail : async () => fail();
+                },
+            }, {
+                name: 'observe-skipped-post-hook',
+                configureServer() {
+                    return () => {
+                        laterPostCalls++;
+                    };
+                },
+            }];
+
+            return {};
+        },
+    }));
+    let startupSettled = false;
+    const startup = renderer.start().catch((error: unknown) => error).finally(() => {
+        startupSettled = true;
+    });
+
+    try {
+        await entered.promise;
+        await failed.promise;
+        await new Promise(setImmediate);
+
+        const startupSettledBeforeAcquisition = startupSettled;
+
+        release.resolve();
+        await acquired.promise;
+        expect(await startup).toBe(failure);
+        await renderer.stop();
+        expect({
+            startupSettledBeforeAcquisition,
+            cleanupBeforeAcquisition,
+            listening: resource.listening,
+            laterPostCalls,
+        }).toEqual({
+            startupSettledBeforeAcquisition: false,
+            cleanupBeforeAcquisition: false,
+            listening: false,
+            laterPostCalls: stage === 'sync' ? 0 : 1,
+        });
+    } finally {
+        release.resolve();
+        await acquired.promise;
+        await startup;
+        await renderer.stop().catch(() => {});
+
+        if (resource.listening) {
+            await new Promise<void>((resolve) => {
+                resource.close(() => resolve());
+            });
+        }
     }
 });

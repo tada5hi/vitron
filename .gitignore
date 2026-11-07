@@ -18,3 +18,5 @@ reports
 playwright-report
 test-results
 docs/superpowers/
+
+/.agents/plans/

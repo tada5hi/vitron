@@ -1,4 +1,5 @@
 {
-    "main": "index.cjs",
-    "module": "index.mjs"
+    "type": "module",
+    "main": "index.mjs",
+    "types": "index.d.mts"
 }

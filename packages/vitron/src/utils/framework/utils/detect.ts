@@ -7,7 +7,7 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import { loadSync } from 'locter';
+import { readSync } from 'locter';
 import { hasOwnProperty, isObject } from 'smob';
 import { removePackageVersionCaret } from '../../package';
 import type { PackageInfo } from '../../package';
@@ -66,7 +66,7 @@ export function detectFrameworkSync(rootPath?: string) : PackageInfo | undefined
         return undefined;
     }
 
-    const packageJson = loadSync(packageJsonFilePath);
+    const packageJson = readSync(packageJsonFilePath);
 
     return parsePackageJSONOutput(packageJson);
 }
