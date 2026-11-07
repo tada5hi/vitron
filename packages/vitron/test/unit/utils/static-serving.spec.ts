@@ -1,7 +1,6 @@
 import { createReadStream } from 'node:fs';
 import type { ReadStream } from 'node:fs';
 import type * as nodeFs from 'node:fs';
-import { once } from 'node:events';
 import {
     mkdir,
     mkdtemp,
@@ -197,7 +196,7 @@ it('confines packaged file requests to visible files inside the renderer directo
     }
 });
 
-it('keeps large file reads bounded when the HTTP client stops consuming', async () => {
+it('bounds file reads and releases a stalled transfer when the window closes', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'vitron-stream-'));
     let close: (() => Promise<void>) | undefined;
     let url = '';
@@ -231,15 +230,20 @@ it('keeps large file reads bounded when the HTTP client stops consuming', async 
 
         const stream = await opened.promise;
 
-        await Promise.race([
-            once(stream, 'end'),
-            new Promise((resolve) => {
+        for (let sample = 0; sample < 2; sample++) {
+            await new Promise((resolve) => {
                 setTimeout(resolve, 200);
-            }),
-        ]);
+            });
+            expect(stream.bytesRead).toBeGreaterThan(0);
+            expect(stream.bytesRead).toBeLessThan(8 * 1024 * 1024);
+        }
+
         expect(response.statusCode).toBe(200);
-        expect(stream.bytesRead).toBeGreaterThan(0);
-        expect(stream.bytesRead).toBeLessThan(32 * 1024 * 1024);
+
+        const stopped = close?.();
+
+        await vi.waitFor(() => expect(stream.closed).toBe(true));
+        await stopped;
     } finally {
         response?.destroy();
         await close?.();

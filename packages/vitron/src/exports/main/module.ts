@@ -6,6 +6,7 @@
  */
 
 import { createServer } from 'node:http';
+import type { RequestListener } from 'node:http';
 import { createReadStream } from 'node:fs';
 import { realpath, stat } from 'node:fs/promises';
 import { Readable } from 'node:stream';
@@ -103,7 +104,8 @@ export async function serve(
                         stats,
                         content: (range) => (event.method === 'HEAD' ?
                             new Uint8Array() :
-                            Readable.toWeb(createReadStream(resolved, { ...range, signal: event.signal }))),
+                            // Node and DOM declarations describe the same native Web stream differently.
+                            Readable.toWeb(createReadStream(resolved, { ...range, signal: event.signal })) as ReadableStream<Uint8Array>),
                     });
                 }
             } catch (error) {
@@ -116,7 +118,8 @@ export async function serve(
         return event.next();
     }));
 
-    const server = createServer(toNodeHandler(router));
+    // The adapter's HTTP/1-or-HTTP/2 union is narrowed by this HTTP/1 server.
+    const server = createServer(toNodeHandler(router) as RequestListener);
 
     const stop = async () => new Promise<void>((resolve, reject) => {
         if (!server.listening) {
@@ -134,6 +137,7 @@ export async function serve(
 
             resolve();
         });
+        server.closeAllConnections();
     });
 
     mainWindow.on('closed', () => stop());
