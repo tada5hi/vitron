@@ -89,6 +89,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
 
         const directory = await mkdtemp(path.join(tmpdir(), 'vitron-e2e-'));
         const root = path.join(directory, 'examples', exampleName);
+        const electronPids = path.join(directory, 'electron-pids');
         const children: ChildProcess[] = [];
         const browsers: Browser[] = [];
         const contexts: BrowserContext[] = [];
@@ -185,7 +186,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
             const mainFile = path.join(root, 'src/main/index.ts');
             const source = await readFile(mainFile, 'utf8');
 
-            await writeFile(mainFile, source.replace("app.on('window-all-closed'", `app.setPath('userData', ${JSON.stringify(path.join(directory, 'user-data'))});\napp.on('window-all-closed'`));
+            await writeFile(mainFile, `import { appendFileSync } from 'node:fs';\n${source.replace("app.on('window-all-closed'", `app.setPath('userData', ${JSON.stringify(path.join(directory, 'user-data'))});\nappendFileSync(${JSON.stringify(electronPids)}, process.pid + '\\n');\napp.on('window-all-closed'`)}`);
 
             await use({
                 root,
@@ -216,6 +217,26 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
                     expect(await finishWithin(exited), `CLI must exit naturally after SIGTERM.\n${output}`).toBe(true);
                     expect(child.exitCode, output).toBe(0);
                     expect(child.signalCode).toBeNull();
+
+                    const pids = (await readFile(electronPids, 'utf8')).trim().split('\n').map(Number);
+
+                    expect(pids.length, 'Electron must have started').toBeGreaterThan(0);
+
+                    for (const pid of pids) {
+                        await expect.poll(() => {
+                            try {
+                                process.kill(pid, 0);
+
+                                return false;
+                            } catch (error) {
+                                if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+                                    throw error;
+                                }
+
+                                return true;
+                            }
+                        }, { timeout: 5000, message: `Electron process ${pid} must exit before fallback teardown.` }).toBe(true);
+                    }
 
                     for (const host of ['127.0.0.1', '::1']) {
                         const server = createServer();
