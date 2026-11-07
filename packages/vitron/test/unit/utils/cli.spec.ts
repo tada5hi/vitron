@@ -53,6 +53,46 @@ it('exits nonzero after initial main compilation fails without launching Electro
 });
 
 
+it.each(['throw', 'warn'])('cleans up after rejecting watch options under the %s rejection policy', { timeout: 15_000 }, async (policy) => {
+    const root = await mkdtemp(path.join(tmpdir(), 'vitron-options-failure-'));
+
+    try {
+        await mkdir(path.join(root, 'src/main'), { recursive: true });
+        await mkdir(path.join(root, 'src/preload'), { recursive: true });
+        await writeFile(path.join(root, 'package.json'), '{"name":"options-failure"}');
+        await writeFile(path.join(root, 'src/main/index.ts'), 'export const value = "main";');
+        await writeFile(path.join(root, 'src/preload/index.ts'), 'export const value = "preload";');
+        await writeFile(path.join(root, 'vitron.config.cjs'), `module.exports = {
+            mainConfig() {
+                return { plugins: [{ name: 'owned-main', closeWatcher() {
+                    require('node:fs').writeFileSync('main-closed', 'closed');
+                } }] };
+            },
+            preloadConfig() {
+                return { plugins: [{ name: 'reject-options', async options() {
+                    await Promise.resolve();
+                    throw new Error('controlled options failure');
+                } }] };
+            }
+        };`);
+
+        const result = spawnSync(process.execPath, [`--unhandled-rejections=${policy}`, cliPath, 'dev'], {
+            cwd: root,
+            encoding: 'utf8',
+            timeout: 10_000,
+        });
+
+        expect(result.error, `${result.stdout}${result.stderr}`).toBeUndefined();
+        expect(result.signal).toBeNull();
+        expect(result.status).toBe(1);
+        expect(`${result.stdout}${result.stderr}`).toContain('controlled options failure');
+        expect(await readFile(path.join(root, 'main-closed'), 'utf8')).toBe('closed');
+        expect(result.stderr).not.toContain('UnhandledPromiseRejection');
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
 it.skipIf(process.platform === 'win32').each(['running', 'acquiring'])('owns SIGTERM while the Vite renderer is %s', { timeout: 15_000 }, async (stage) => {
     const root = await mkdtemp(path.join(tmpdir(), 'vitron-cli-signal-'));
     let child: ReturnType<typeof spawn> | undefined;

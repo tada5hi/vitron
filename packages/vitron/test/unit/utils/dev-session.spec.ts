@@ -437,27 +437,23 @@ it('ends the session and releases both watchers when renderer reload rejects', a
     expect(app.server()?.httpServer?.listening).toBe(false);
 });
 
-it('continues other cleanup and preserves the operational error when watcher close rejects', async () => {
+it('continues other cleanup and preserves the operational error when a closeWatcher hook rejects', async () => {
     const app = await fixture();
     const operational = new Error('reload failed');
     const cleanup = new Error('main close failed');
-    const { build } = await vi.importActual<typeof vite>('vite');
 
-    vi.mocked(vite.build).mockImplementationOnce(async (config) => {
-        const watcher = await build(config);
+    app.config.set('mainConfig', () => ({
+        configFile: false,
+        logLevel: 'silent',
+        plugins: [{
+            name: 'reject-main-cleanup',
+            closeWatcher() {
+                events.push('main:closed');
 
-        if ('close' in watcher) {
-            return Object.assign(Object.create(watcher) as typeof watcher, {
-                close: async () => {
-                    await watcher.close();
-
-                    throw cleanup;
-                },
-            });
-        }
-
-        return watcher;
-    });
+                throw cleanup;
+            },
+        }],
+    }));
 
     const result = app.start();
 
@@ -466,6 +462,7 @@ it('continues other cleanup and preserves the operational error when watcher clo
     await app.edit('preload', 'failed-reload');
     await result;
     expect(app.outcome()).toMatchObject({ errors: [operational, cleanup] });
+    expect(events).toContain('main:closed');
     expect(events).toContain('preload:closed');
     expect(events).toContain('renderer:closed');
     expect(events).toContain('electron:stop');

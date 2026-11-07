@@ -7,7 +7,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { InlineConfig, Rolldown } from 'vite';
+import type { InlineConfig, Rollup } from 'vite';
 import * as vite from 'vite';
 import {
     afterEach,
@@ -25,7 +25,7 @@ vi.mock('vite', async (importOriginal) => {
 });
 
 const realBuild = (await vi.importActual<typeof vite>('vite')).build;
-const watchers = new Set<Rolldown.RolldownWatcher>();
+const watchers = new Set<Rollup.RollupWatcher>();
 const directories: string[] = [];
 
 beforeEach(() => {
@@ -92,11 +92,11 @@ it.each([true, false])('rejects readiness when Vite initialization fails (watch=
     }
 });
 
-it.each(['START', 'ERROR'])('closes a watcher acquired after cancellation on %s and settles readiness', async (code) => {
-    const acquisition = Promise.withResolvers<Rolldown.RolldownWatcher>();
+it.each(['BUNDLE_END', 'ERROR'])('closes a watcher acquired after cancellation on %s and settles readiness', async (code) => {
+    const acquisition = Promise.withResolvers<Rollup.RollupWatcher>();
     const cleanup = Promise.withResolvers<void>();
     const close = vi.fn(() => cleanup.promise);
-    const watcher = Object.assign(new EventEmitter(), { close }) as unknown as EventEmitter & Rolldown.RolldownWatcher;
+    const watcher = Object.assign(new EventEmitter(), { close }) as unknown as EventEmitter & Rollup.RollupWatcher;
 
     vi.mocked(vite.build).mockReturnValueOnce(acquisition.promise);
 
@@ -131,12 +131,16 @@ it.each(['START', 'ERROR'])('closes a watcher acquired after cancellation on %s 
     }
 });
 
-it('waits for native watcher acquisition before closing during asynchronous options', async () => {
-    const { config } = await fixture('export const value = "initial";');
+it('finishes asynchronous options before closing and stops real watching', async () => {
+    const {
+        root,
+        entry,
+        config,
+    } = await fixture('export const value = "initial";');
     const entered = Promise.withResolvers<void>();
     const release = Promise.withResolvers<void>();
-    const activated = Promise.withResolvers<void>();
     let closed = 0;
+    let builds = 0;
 
     config.plugins = [{
         name: 'pending-watch-options',
@@ -146,37 +150,43 @@ it('waits for native watcher acquisition before closing during asynchronous opti
 
             return options;
         },
+        buildStart() {
+            builds++;
+        },
+        closeWatcher() {
+            closed++;
+        },
     }];
 
     const handle = buildWithWatchHook(config, () => {});
-    let closing: Promise<void> | undefined;
 
     try {
         await entered.promise;
-        await vi.waitFor(() => expect(watchers.size).toBe(1));
-        [...watchers][0].on('event', () => {
-            activated.resolve();
-        });
-        [...watchers][0].on('close', () => {
-            closed++;
-        });
 
         let settled = false;
 
-        closing = handle.close().then(() => {
+        const closing = handle.close().then(() => {
             settled = true;
         });
+
         await new Promise(setImmediate);
         expect(settled).toBe(false);
         release.resolve();
         await closing;
         expect(closed).toBe(1);
         await expect(handle.ready).resolves.toBeUndefined();
+        expect(await readFile(join(root, 'dist/entry.mjs'), 'utf8')).toContain('initial');
+
+        const buildsBeforeClose = builds;
+
+        await writeFile(entry, 'export const value = "closed";');
+        await new Promise((resolve) => {
+            setTimeout(resolve, 150);
+        });
+        expect(builds).toBe(buildsBeforeClose);
+        expect(await readFile(join(root, 'dist/entry.mjs'), 'utf8')).toContain('initial');
     } finally {
         release.resolve();
-        await activated.promise;
-        await [...watchers][0].close();
-        await closing;
         await handle.close();
     }
 });
@@ -186,7 +196,7 @@ it('preserves the same cleanup failure for repeated close calls', async () => {
     const close = vi.fn(async () => {
         throw failure;
     });
-    const watcher = Object.assign(new EventEmitter(), { close }) as unknown as EventEmitter & Rolldown.RolldownWatcher;
+    const watcher = Object.assign(new EventEmitter(), { close }) as unknown as EventEmitter & Rollup.RollupWatcher;
 
     vi.mocked(vite.build).mockResolvedValueOnce(watcher);
 
@@ -195,7 +205,7 @@ it('preserves the same cleanup failure for repeated close calls', async () => {
     try {
         const firstClose = handle.close();
 
-        queueMicrotask(() => watcher.emit('event', { code: 'START' }));
+        queueMicrotask(() => watcher.emit('event', { code: 'BUNDLE_END' }));
         await expect(firstClose).rejects.toBe(failure);
         expect(handle.close()).toBe(firstClose);
         await expect(handle.close()).rejects.toBe(failure);
