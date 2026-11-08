@@ -14,6 +14,7 @@ onNuxtReady(() => document.documentElement.setAttribute('data-e2e-ready', 'true'
     await expect(page.getByRole('heading', { name: /^Nuxt \d/, level: 1 })).toBeVisible();
     await replaceSource(example.root, 'src/renderer/app.vue', '<NuxtWelcome />', '<h1>Nuxt renderer updated</h1>');
     await expect(page.getByRole('heading', { name: 'Nuxt renderer updated' })).toBeVisible();
+    await example.stopDev();
 });
 
 test('runs an unpacked production app without a development server', async ({ example }) => {

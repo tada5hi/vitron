@@ -2,7 +2,7 @@
 
 `npm test` runs the library's Vitest suite through Nx. The package pretest builds the CLI, so a clean checkout needs no separate manual build to run tests. Unit tests live in `packages/vitron/test/unit/`; their config is `packages/vitron/test/vitest.config.mts`.
 
-The suite covers framework/package detection, Node builtin externalization, the built CLI, Electron shutdown and port reuse, packaging error propagation, actual local HTTP serving, preload API shape and example window activation. HTTP tests require permission to bind loopback sockets. They exercise success, missing-file and startup/load failure paths without publishing or contacting an application backend.
+The suite covers framework/package detection, Node builtin externalization, the built CLI, development-session startup order, rollback and cancellation, Electron launch failure, shutdown and port reuse, packaging error propagation, actual local HTTP serving, preload API shape and example window activation. Session tests retain real Rollup watchers and Vite servers, with doubles only for spawned processes; a built-CLI check covers the nonzero exit on an invalid main entry. HTTP tests require permission to bind loopback sockets. They exercise success, missing-file and startup/load failure paths without publishing or contacting an application backend.
 
 ```sh
 npm test --workspace=vitron
@@ -20,7 +20,7 @@ sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
 xvfb-run --auto-servernum npm run test:e2e
 ```
 
-The E2E suite exercises vanilla and Nuxt in development and as real unpacked applications. Development checks cover renderer updates in both examples, plus vanilla preload IPC updates and main-process restart. Built checks confirm packaged state, loopback production serving and renderer content, including vanilla IPC. Fixtures copy the examples so source edits, generated output and application data stay isolated; teardown bounds tracing and graceful shutdown, then stops process trees before removing the copies. Packaging reuses installed Electron, creates unpacked output and disables signing and publishing.
+The E2E suite exercises vanilla and Nuxt in development and as real unpacked applications. Development checks cover renderer updates in both examples, plus vanilla preload IPC updates and main-process restart. Both examples then receive SIGTERM on the CLI alone and must exit naturally with code zero, all recorded native Electron processes must be gone and the renderer port must rebind on IPv4 and IPv6; fallback process-tree teardown runs afterward. Built checks confirm packaged state, loopback production serving and renderer content, including vanilla IPC. Fixtures copy the examples so source edits, generated output and application data stay isolated; teardown bounds tracing and graceful shutdown, then stops process trees before removing the copies. Packaging reuses installed Electron, creates unpacked output and disables signing and publishing.
 
 Playwright writes its HTML report to `playwright-report/` and failure diagnostics to `test-results/`. Inspect the report with `npx playwright show-report`; the Ubuntu E2E job uploads both directories when it fails. Keep `npm test` as the fast unit suite and run E2E separately when changing CLI startup, rebuild/reload behavior, preload integration, renderer serving or example packaging.
 
