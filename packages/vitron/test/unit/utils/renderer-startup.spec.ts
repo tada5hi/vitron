@@ -1,4 +1,4 @@
-import { ChildProcess } from 'node:child_process';
+import { ChildProcess, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import fs from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -21,9 +21,14 @@ import { buildConfig } from '../../../src/config/utils/build';
 const HOST = '127.0.0.1';
 
 let projects: string[] = [];
+const externalRenderers: ChildProcess[] = [];
 
 afterEach(async () => {
     vi.restoreAllMocks();
+
+    for (const child of externalRenderers.splice(0)) {
+        child.kill('SIGKILL');
+    }
 
     await Promise.all(projects.map((project) => fs.rm(project, { recursive: true, force: true })));
     projects = [];
@@ -47,6 +52,19 @@ async function createViteRenderer(plugins: Plugin[] = []) {
     const port = await getRandomPort(HOST);
 
     return { renderer: createRenderer(buildConfig({ rootPath: root, port })), port };
+}
+
+function spawnExternalRenderer(port: number, body: string, onTerminate = 'process.exit(0)') {
+    const child = spawn(process.execPath, ['-e', `
+        process.on('SIGTERM', () => { ${onTerminate} });
+        require('node:http')
+            .createServer((_request, response) => response.end(${JSON.stringify(body)}))
+            .listen(${port}, ${JSON.stringify(HOST)});
+    `], { stdio: 'ignore' });
+
+    externalRenderers.push(child);
+
+    return child;
 }
 
 async function bindPort(port: number) {
@@ -185,6 +203,80 @@ it('rejects on an external child launch error and permits a retry', async () => 
     } finally {
         await renderer.stop();
     }
+});
+
+it('reports an external renderer that exits before readiness', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockImplementation(() => spawn(process.execPath, ['-e', 'process.exit(3)'], { stdio: 'ignore' }));
+
+    await expect(renderer.start()).rejects.toThrow('exit code 3');
+    expect(renderer.up()).toBe(false);
+});
+
+it('starts a replacement external renderer only after the old one has closed', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+    const previous = spawnExternalRenderer(port, 'previous', 'setTimeout(() => process.exit(0), 300)');
+    let closed = false;
+    let closedAtReplacement: boolean | undefined;
+
+    previous.once('close', () => {
+        closed = true;
+    });
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValueOnce(previous).mockImplementationOnce(() => {
+        closedAtReplacement = closed;
+
+        return spawnExternalRenderer(port, 'replacement');
+    });
+
+    try {
+        await renderer.start();
+        await renderer.restart();
+
+        expect(closedAtReplacement).toBe(true);
+        expect(renderer.up()).toBe(true);
+        expect(await (await fetch(`http://localhost:${port}`)).text()).toBe('replacement');
+    } finally {
+        await renderer.stop();
+    }
+});
+
+it('kills an external renderer that ignores SIGTERM and stops once', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+    const child = spawnExternalRenderer(port, 'stubborn', 'undefined');
+    const kill = vi.spyOn(child, 'kill');
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(child);
+
+    await renderer.start();
+    await Promise.all([renderer.stop(), renderer.stop()]);
+
+    expect(child.signalCode).toBe('SIGKILL');
+    expect(kill).toHaveBeenCalledOnce();
+    expect(renderer.up()).toBe(false);
+    await expect(bindPort(port)).resolves.toBeUndefined();
+
+    await renderer.stop();
+    expect(kill).toHaveBeenCalledOnce();
+});
+
+it('stop resolves for an external renderer that already exited', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+    const child = spawnExternalRenderer(port, 'short-lived');
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(child);
+
+    await renderer.start();
+    child.kill('SIGKILL');
+    await once(child, 'close');
+
+    await renderer.stop();
+    expect(renderer.up()).toBe(false);
 });
 
 it('up is false until external readiness completes', async () => {

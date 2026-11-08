@@ -6,7 +6,9 @@
  */
 
 import type { ChildProcess } from 'node:child_process';
-import { setTimeout } from 'node:timers/promises';
+import process from 'node:process';
+import { setTimeout as delay } from 'node:timers/promises';
+import kill from 'tree-kill';
 import { createServer } from 'vite';
 import type { UserConfig, ViteDevServer } from 'vite';
 import type { Config } from '../../config';
@@ -27,8 +29,41 @@ function killProcess(child: ChildProcess) {
     child.kill();
 }
 
+function terminateProcess(child: ChildProcess) : Promise<void> {
+    const { pid } = child;
+
+    // Without a pid or with an exit status there is no process to wait for, and `close` may have fired already.
+    if (!pid || child.exitCode !== null || child.signalCode !== null) {
+        killProcess(child);
+
+        return Promise.resolve();
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    return new Promise<void>((resolve, reject) => {
+        const forceKill = () => {
+            kill(pid, 'SIGKILL', (error) => {
+                if (error) {
+                    reject(error);
+                }
+            });
+        };
+
+        child.once('close', () => resolve());
+        timer = setTimeout(forceKill, 5000);
+
+        if (process.platform === 'win32') {
+            forceKill();
+        } else {
+            child.kill('SIGTERM');
+        }
+    }).finally(() => clearTimeout(timer));
+}
+
 export function createRenderer(config: Config) : RendererProcess {
     let myProcess : ChildProcess | undefined;
+    let closing : Promise<void> | undefined;
 
     let viteConfig : UserConfig | undefined;
     let viteServer: ViteDevServer | undefined;
@@ -43,8 +78,15 @@ export function createRenderer(config: Config) : RendererProcess {
             ...(signal ? [signal] : []),
         ]);
         const onError = (error: Error) => launch.abort(error);
+        const onExit = (code: number | null, exitSignal: NodeJS.Signals | null) => {
+            const status = code === null ? `signal ${exitSignal}` : `exit code ${code}`;
+
+            launch.abort(new Error(`The renderer process ended before it was ready (${status}).`));
+        };
 
         child.once('error', onError);
+        child.once('exit', onExit);
+        child.once('close', onExit);
 
         try {
             for (;;) {
@@ -56,11 +98,13 @@ export function createRenderer(config: Config) : RendererProcess {
 
                 if (response?.ok) {
                     child.off('error', onError);
+                    child.off('exit', onExit);
+                    child.off('close', onExit);
 
                     return;
                 }
 
-                await setTimeout(100, undefined, { signal: waiting });
+                await delay(100, undefined, { signal: waiting });
             }
         } catch (error) {
             killProcess(child);
@@ -119,7 +163,7 @@ export function createRenderer(config: Config) : RendererProcess {
     };
 
     const start = async (signal?: AbortSignal) : Promise<void> => {
-        if (myProcess || viteServer) {
+        if (myProcess || viteServer || closing) {
             return;
         }
 
@@ -139,9 +183,14 @@ export function createRenderer(config: Config) : RendererProcess {
 
     const stop = async () : Promise<void> => {
         if (myProcess) {
-            killProcess(myProcess);
-
+            closing = terminateProcess(myProcess).finally(() => {
+                closing = undefined;
+            });
             myProcess = undefined;
+        }
+
+        if (closing) {
+            await closing;
 
             return;
         }
