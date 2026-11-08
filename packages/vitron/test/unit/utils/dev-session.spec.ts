@@ -456,6 +456,33 @@ it('runs every cleanup when one rejects', async () => {
     expect(events).toContain('electron:stop');
 });
 
+it('rejects a cancelled session whose cleanup fails', async () => {
+    const app = await fixture();
+    const cleanup = new Error('main close failed');
+
+    app.config.set('mainConfig', () => ({
+        configFile: false,
+        logLevel: 'silent',
+        plugins: [{
+            name: 'reject-main-cleanup',
+            closeWatcher() {
+                events.push('main:closed');
+
+                throw cleanup;
+            },
+        }],
+    }));
+
+    const result = app.start();
+
+    await app.electronLive();
+    app.controller.abort();
+    await result;
+
+    expect(app.outcome()).toBe(cleanup);
+    expectEverythingReleased(app);
+});
+
 it('repeated aborts shut down once', async () => {
     const app = await fixture();
     const result = app.start();
