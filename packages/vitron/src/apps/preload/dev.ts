@@ -20,5 +20,5 @@ export async function startPreloadApp(
         return;
     }
 
-    await buildWithWatchHook(viteConfig, watchHook);
+    await buildWithWatchHook(viteConfig, watchHook).ready;
 }

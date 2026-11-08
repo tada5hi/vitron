@@ -5,4 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type ViteWatchHook = () => void;
+export type ViteWatchHook = () => void | Promise<void>;
+
+export type ViteWatchBuild = {
+    ready: Promise<void>,
+    close: () => Promise<void>,
+};
