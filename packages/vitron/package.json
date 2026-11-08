@@ -2,45 +2,26 @@
     "name": "vitron",
     "version": "2.4.0",
     "description": "This is a library to build beautiful (win, linux, mac) desktop apps for modern web projects with vite and electron.",
-    "main": "./dist/index.cjs",
+    "main": "./dist/index.mjs",
     "module": "./dist/index.mjs",
-    "types": "./dist/index.d.ts",
+    "types": "./dist/index.d.mts",
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs"
+            "types": "./dist/index.d.mts",
+            "import": "./dist/index.mjs"
         },
         "./main": {
-            "require": {
-                "types": "./main/index.d.cts",
-                "default": "./main/index.cjs"
-            },
-            "import": {
-                "types": "./main/index.d.mts",
-                "default": "./main/index.mjs"
-            }
+            "types": "./main/index.d.mts",
+            "import": "./main/index.mjs"
         },
         "./preload": {
-            "require": {
-                "types": "./preload/index.d.cts",
-                "default": "./preload/index.cjs"
-            },
-            "import": {
-                "types": "./preload/index.d.mts",
-                "default": "./preload/index.mjs"
-            }
+            "types": "./preload/index.d.mts",
+            "import": "./preload/index.mjs"
         },
         "./renderer": {
-            "require": {
-                "types": "./renderer/index.d.cts",
-                "default": "./renderer/index.cjs"
-            },
-            "import": {
-                "types": "./renderer/index.d.mts",
-                "default": "./renderer/index.mjs"
-            }
+            "types": "./renderer/index.d.mts",
+            "import": "./renderer/index.mjs"
         }
     },
     "files": [
@@ -81,10 +62,10 @@
         "next"
     ],
     "bin": {
-        "vitron": "dist/index.cjs"
+        "vitron": "dist/index.mjs"
     },
     "engines": {
-        "node": "^20.19.0 || >=22.12.0"
+        "node": ">=24.15.0"
     },
     "license": "MIT",
     "dependencies": {
@@ -93,7 +74,7 @@
         "continu": "^1.3.2",
         "cross-spawn": "^7.0.3",
         "get-port-please": "^3.1.1",
-        "locter": "^2.1.6",
+        "locter": "^4.1.2",
         "picocolors": "^1.1.0",
         "routup": "^2.0.0",
         "semver": "^7.7.1",
@@ -116,5 +97,6 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "type": "module"
 }

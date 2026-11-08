@@ -14,7 +14,7 @@ README visuals live in `.github/assets/`. Published package README images use im
 | `src/exports/preload/` | Expose an explicit value through Electron's context bridge |
 | `src/exports/renderer/` | Retrieve a value exposed by the preload |
 
-The package publishes the root CLI/library and `vitron/main`, `vitron/preload`, `vitron/renderer` subpaths. Preserve their CJS, ESM and declaration export targets. Build and release caches must retain all four output directories: `dist`, `main`, `preload` and `renderer`.
+The package publishes the root CLI/library and `vitron/main`, `vitron/preload`, `vitron/renderer` subpaths. Preserve their ESM JavaScript and declaration export targets. Build and release caches must retain all four output directories: `dist`, `main`, `preload` and `renderer`.
 
 Development rebuilds wait for Electron shutdown before starting a replacement. Shutdown cancels pending restarts.
 

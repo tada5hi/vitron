@@ -24,7 +24,7 @@ The E2E suite exercises vanilla and Nuxt in development and as real unpacked app
 
 Playwright writes its HTML report to `playwright-report/` and failure diagnostics to `test-results/`. Inspect the report with `npx playwright show-report`; the Ubuntu E2E job uploads both directories when it fails. Keep `npm test` as the fast unit suite and run E2E separately when changing CLI startup, rebuild/reload behavior, preload integration, renderer serving or example packaging.
 
-The package build uses tsdown for CJS/ESM JavaScript and declarations. The example `vitron build` commands also invoke electron-builder; an unsuccessful packager must cause a nonzero build exit. Root builds validate both examples, while CI's shared build action prepares the library's export artifacts.
+The package build uses tsdown for ESM JavaScript and matching declarations; each build cleans all four output directories. The example `vitron build` commands also invoke electron-builder; an unsuccessful packager must cause a nonzero build exit. Root builds validate both examples, while CI's shared build action prepares the library's export artifacts.
 
 `@tada5hi/eslint-config` supplies the flat ESLint configuration, including checks on these guides. Vitest uses its V8 coverage provider and the thresholds in its test configuration. Release-please manages releases and monoship publishes packages; do not publish or hand-edit release versions during ordinary development.
 
