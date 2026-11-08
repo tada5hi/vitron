@@ -6,8 +6,7 @@
  */
 
 import { build } from 'vite';
-import type { InlineConfig } from 'vite';
-import type { RollupWatcher } from 'rollup';
+import type { InlineConfig, Rollup } from 'vite';
 import type { ViteWatchBuild, ViteWatchHook } from './types';
 
 export function buildWithWatchHook(
@@ -26,7 +25,7 @@ export function buildWithWatchHook(
 
     let closed = false;
     let first = true;
-    let watcher: RollupWatcher | undefined;
+    let watcher: Rollup.RollupWatcher | undefined;
 
     const building = build(config).then((result) => {
         if (!config.build?.watch) {
@@ -35,7 +34,7 @@ export function buildWithWatchHook(
             return;
         }
 
-        watcher = result as RollupWatcher;
+        watcher = result as Rollup.RollupWatcher;
         watcher.on('event', async (event) => {
             if (closed) {
                 return;
