@@ -15,61 +15,131 @@ import { spawnRendererProcess } from './ps';
 import { buildRendererConfig } from './config';
 
 type RendererProcess = {
-    start: () => Promise<void>,
+    start: (signal?: AbortSignal) => Promise<void>,
     stop: () => Promise<void>,
-    restart: () => Promise<void>
+    restart: (signal?: AbortSignal) => Promise<void>
     up: () => boolean,
-    reload: () => Promise<void>
+    reload: (signal?: AbortSignal) => Promise<void>
 };
+
+function killProcess(child: ChildProcess) {
+    child.removeAllListeners();
+    child.kill();
+}
+
 export function createRenderer(config: Config) : RendererProcess {
     let myProcess : ChildProcess | undefined;
 
     let viteConfig : UserConfig | undefined;
     let viteServer: ViteDevServer | undefined;
+    let removeAbortListener: (() => void) | undefined;
 
-    const start = async () : Promise<void> => {
-        if (myProcess || viteServer) {
-            return;
-        }
+    const waitForProcess = async (child: ChildProcess, signal?: AbortSignal) : Promise<void> => {
+        const url = `http://localhost:${config.get('port')}`;
+        const launch = new AbortController();
+        const waiting = AbortSignal.any([
+            launch.signal,
+            AbortSignal.timeout(60_000),
+            ...(signal ? [signal] : []),
+        ]);
+        const onError = (error: Error) => launch.abort(error);
 
-        myProcess = spawnRendererProcess(config);
+        child.once('error', onError);
 
-        if (myProcess) {
-            const url = `http://localhost:${config.get('port')}`;
-            const signal = AbortSignal.timeout(60_000);
+        try {
+            for (;;) {
+                const response = await fetch(url, { signal: waiting }).catch(() => undefined);
 
-            try {
-                for (;;) {
-                    const response = await fetch(url, { signal }).catch(() => undefined);
+                await response?.body?.cancel();
 
-                    await response?.body?.cancel();
+                waiting.throwIfAborted();
 
-                    if (response?.ok) {
-                        return;
-                    }
+                if (response?.ok) {
+                    child.off('error', onError);
 
-                    await setTimeout(100, undefined, { signal });
+                    return;
                 }
-            } catch (error) {
-                await stop();
 
-                throw new Error(`Timed out waiting for the renderer at ${url}.`, { cause: error });
+                await setTimeout(100, undefined, { signal: waiting });
             }
-        }
+        } catch (error) {
+            killProcess(child);
 
+            if (signal?.aborted) {
+                throw signal.reason;
+            }
+
+            if (launch.signal.aborted) {
+                throw launch.signal.reason;
+            }
+
+            throw new Error(`Timed out waiting for the renderer at ${url}.`, { cause: error });
+        }
+    };
+
+    const startServer = async (signal?: AbortSignal) : Promise<void> => {
         if (!viteConfig) {
             viteConfig = await buildRendererConfig(config, EnvironmentName.DEVELOPMENT);
         }
 
-        viteServer = await createServer(viteConfig);
+        signal?.throwIfAborted();
 
-        await viteServer.listen(config.get('port'));
+        const server = await createServer(viteConfig);
+
+        // Closing synchronously on abort releases Vite's SIGTERM callback,
+        // which would otherwise call process.exit() mid-cleanup. stop() awaits the same close.
+        const closeOnAbort = () => {
+            server.close().catch(() => undefined);
+        };
+
+        signal?.addEventListener('abort', closeOnAbort, { once: true });
+
+        try {
+            signal?.throwIfAborted();
+            await server.listen(config.get('port'));
+            signal?.throwIfAborted();
+        } catch (error) {
+            signal?.removeEventListener('abort', closeOnAbort);
+            await server.close();
+
+            // Vite skips its HTTP server when closed before binding, and listen() may bind afterwards.
+            const { httpServer } = server;
+
+            if (httpServer?.listening) {
+                await new Promise((resolve) => {
+                    httpServer.close(resolve);
+                });
+            }
+
+            throw error;
+        }
+
+        viteServer = server;
+        removeAbortListener = () => signal?.removeEventListener('abort', closeOnAbort);
+    };
+
+    const start = async (signal?: AbortSignal) : Promise<void> => {
+        if (myProcess || viteServer) {
+            return;
+        }
+
+        signal?.throwIfAborted();
+
+        const child = spawnRendererProcess(config);
+
+        if (child) {
+            await waitForProcess(child, signal);
+            myProcess = child;
+
+            return;
+        }
+
+        await startServer(signal);
     };
 
     const stop = async () : Promise<void> => {
         if (myProcess) {
-            myProcess.removeAllListeners();
-            myProcess.kill();
+            killProcess(myProcess);
 
             myProcess = undefined;
 
@@ -80,14 +150,16 @@ export function createRenderer(config: Config) : RendererProcess {
             return;
         }
 
+        removeAbortListener?.();
+
         await viteServer.close();
         viteServer = undefined;
     };
 
-    const restart = async () : Promise<void> => {
+    const restart = async (signal?: AbortSignal) : Promise<void> => {
         if (myProcess) {
             await stop();
-            await start();
+            await start(signal);
         }
 
         if (viteServer) {
@@ -97,11 +169,11 @@ export function createRenderer(config: Config) : RendererProcess {
 
     const up = () => typeof myProcess !== 'undefined' || typeof viteServer !== 'undefined';
 
-    const reload = async () : Promise<void> => {
+    const reload = async (signal?: AbortSignal) : Promise<void> => {
         if (viteServer) {
             viteServer.ws.send({ type: 'full-reload' });
         } else {
-            await restart();
+            await restart(signal);
         }
     };
 
