@@ -62,7 +62,8 @@ async function fixture(source: string) {
         configFile: false,
         logLevel: 'silent',
         build: {
-            watch: {},
+            // Keep edits from rebuild hooks outside Chokidar's 50 ms change throttle.
+            watch: { buildDelay: 100 },
             minify: false,
             lib: {
                 entry,
