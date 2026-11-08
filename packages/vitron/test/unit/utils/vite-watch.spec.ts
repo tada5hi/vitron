@@ -77,6 +77,18 @@ it('rejects ready on the first compilation error', async () => {
     }
 });
 
+it('resolves ready when a watch build returns no watcher', async () => {
+    vi.mocked(vite.build).mockResolvedValueOnce({ output: [] } as never);
+
+    const handle = buildWithWatchHook(createConfig(true), vi.fn());
+
+    try {
+        await expect(handle.ready).resolves.toBeUndefined();
+    } finally {
+        await handle.close();
+    }
+});
+
 it('resolves ready for a non-watch build', async () => {
     const handle = buildWithWatchHook(createConfig(false), vi.fn());
 

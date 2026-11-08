@@ -83,6 +83,10 @@ export function createRenderer(config: Config) : RendererProcess {
 
             launch.abort(new Error(`The renderer process ended before it was ready (${status}).`));
         };
+        const ignoreExit = () => {
+            child.off('exit', onExit);
+            child.off('close', onExit);
+        };
 
         child.once('error', onError);
         child.once('exit', onExit);
@@ -98,8 +102,7 @@ export function createRenderer(config: Config) : RendererProcess {
 
                 if (response?.ok) {
                     child.off('error', onError);
-                    child.off('exit', onExit);
-                    child.off('close', onExit);
+                    ignoreExit();
 
                     return;
                 }
@@ -107,7 +110,9 @@ export function createRenderer(config: Config) : RendererProcess {
                 await delay(100, undefined, { signal: waiting });
             }
         } catch (error) {
-            killProcess(child);
+            // The termination's own close must not be reported as an early exit, and a failed kill must not hide the startup error.
+            ignoreExit();
+            await terminateProcess(child).catch(() => undefined);
 
             if (signal?.aborted) {
                 throw signal.reason;

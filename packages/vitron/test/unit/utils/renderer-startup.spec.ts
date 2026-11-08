@@ -264,6 +264,28 @@ it('kills an external renderer that ignores SIGTERM and stops once', async () =>
     expect(kill).toHaveBeenCalledOnce();
 });
 
+it('kills an external renderer that ignores SIGTERM when startup is cancelled', async () => {
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port: await getRandomPort(HOST) }));
+    const child = spawn(process.execPath, [
+        '-e',
+        'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000); console.log("ready");',
+    ], { stdio: ['ignore', 'pipe', 'ignore'] });
+
+    externalRenderers.push(child);
+    await once(child.stdout!, 'data');
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(child);
+
+    const controller = new AbortController();
+    const startup = renderer.start(controller.signal);
+
+    controller.abort();
+
+    await expect(startup).rejects.toBe(controller.signal.reason);
+    expect(child.signalCode).toBe('SIGKILL');
+    expect(renderer.up()).toBe(false);
+});
+
 it('stop resolves for an external renderer that already exited', async () => {
     const port = await getRandomPort(HOST);
     const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));

@@ -28,13 +28,13 @@ export function buildWithWatchHook(
     let watcher: Rollup.RollupWatcher | undefined;
 
     const building = build(config).then((result) => {
-        if (!config.build?.watch) {
+        if (!('close' in result)) {
             resolveReady();
 
             return;
         }
 
-        watcher = result as Rollup.RollupWatcher;
+        watcher = result;
         watcher.on('event', async (event) => {
             if (closed) {
                 return;
