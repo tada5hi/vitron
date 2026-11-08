@@ -101,8 +101,9 @@ jobs:
                   node-version: ${{ env.PRIMARY_NODE_VERSION }}
             - name: Install Electron system dependencies
               run: npx playwright install-deps chromium
-            - name: Configure Electron sandbox
+            - name: Install Electron and configure sandbox
               run: |
+                  node node_modules/electron/install.js
                   sudo chown root node_modules/electron/dist/chrome-sandbox
                   sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
             - name: Test Electron applications
