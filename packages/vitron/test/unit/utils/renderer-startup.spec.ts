@@ -375,6 +375,42 @@ it('kills a worker that ignores SIGTERM after the launcher exits', async () => {
     await expect(bindPort(port)).resolves.toBeUndefined();
 }, 15_000);
 
+async function startFakeGroup() {
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port: 9000 }));
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(Object.assign(new ChildProcess(), { pid: 999_999 }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('renderer ready'));
+    await renderer.start();
+
+    return renderer;
+}
+
+it('stop resolves when a process group stays visible after SIGKILL', async () => {
+    const renderer = await startFakeGroup();
+    const kill = vi.spyOn(process, 'kill').mockReturnValue(true);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    await renderer.stop();
+
+    expect(kill).toHaveBeenCalledWith(-999_999, 'SIGKILL');
+    expect(warn).toHaveBeenCalledOnce();
+    expect(renderer.up()).toBe(false);
+}, 15_000);
+
+it('stop warns when a process group cannot be signalled', async () => {
+    const renderer = await startFakeGroup();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    vi.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('denied'), { code: 'EPERM' });
+    });
+
+    await renderer.stop();
+
+    expect(warn).toHaveBeenCalledOnce();
+    expect(renderer.up()).toBe(false);
+}, 15_000);
+
 it('cancelled startup terminates the launcher\'s worker', async () => {
     const port = await getRandomPort(HOST);
     const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));

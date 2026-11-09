@@ -43,7 +43,7 @@ function signalGroup(pid: number, signal: NodeJS.Signals | 0) : GroupState {
             return 'gone';
         }
 
-        // A group kill fails with EPERM only if no member can be signalled, e.g. a group left with an unreaped zombie.
+        // A group kill fails with EPERM only if no member can be signalled: an unreaped zombie, or a process of another user.
         if (code === 'EPERM') {
             return 'zombie';
         }
@@ -60,7 +60,7 @@ async function terminateGroup(pid: number) : Promise<void> {
 
     const deadline = Date.now() + 5000;
     let killed = false;
-    let zombies = 0;
+    let unconfirmed = 0;
 
     for (;;) {
         await delay(100);
@@ -76,10 +76,13 @@ async function terminateGroup(pid: number) : Promise<void> {
             return;
         }
 
-        // A zombie is reaped shortly; give up on one that is not.
-        zombies = state === 'zombie' ? zombies + 1 : 0;
+        // Only an unreaped zombie outlasts SIGKILL, and Linux still counts one as signallable; stop must not wait on its reaper.
+        unconfirmed = killed || state === 'zombie' ? unconfirmed + 1 : 0;
 
-        if (zombies >= 20) {
+        if (unconfirmed >= 20) {
+            // eslint-disable-next-line no-console
+            console.warn(`Could not confirm that renderer process group ${pid} ended.`);
+
             return;
         }
     }
