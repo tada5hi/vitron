@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { spawn as spawnShell } from 'node:child_process';
 import type { ChildProcess, SpawnOptions } from 'node:child_process';
 import process from 'node:process';
 import spawn from 'cross-spawn';
@@ -25,7 +26,8 @@ export function spawnRendererProcess(
     const command = config.get('rendererDevCommand');
 
     if (command) {
-        return spawn(command(config.get()), {
+        // cross-spawn reads a shell run without a resolved file as a missing command and turns exit status 1 into ENOENT on Windows.
+        return spawnShell(command(config.get()), {
             shell: true,
             cwd: config.get('rootPath'),
             stdio: 'inherit',

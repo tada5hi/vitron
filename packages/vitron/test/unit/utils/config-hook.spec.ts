@@ -55,6 +55,12 @@ it('still concatenates distinct arrays', () => {
     expect(result.plugins).toEqual([{ name: 'custom' }, { name: 'base' }]);
 });
 
+it('returns the input when there is no hook', () => {
+    const input: InlineConfig = { mode: 'production' };
+
+    expect(applyConfigHook(input, undefined)).toBe(input);
+});
+
 it('keeps mutations when the hook returns nothing', () => {
     const input: InlineConfig = { mode: 'production' };
     const result = applyConfigHook(input, (config) => {

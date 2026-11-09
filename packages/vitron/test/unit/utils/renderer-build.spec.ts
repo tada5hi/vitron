@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import type * as childProcess from 'node:child_process';
 import {
     beforeEach, 
     describe, 
@@ -12,9 +13,18 @@ import { buildRendererApp } from '../../../src/apps/renderer/build';
 import type * as rendererMove from '../../../src/apps/renderer/move';
 import { Framework } from '../../../src/utils';
 
-const { sync, move } = vi.hoisted(() => ({ sync: vi.fn(), move: vi.fn() }));
+const {
+    sync, 
+    shellSync, 
+    move, 
+} = vi.hoisted(() => ({
+    sync: vi.fn(),
+    shellSync: vi.fn(),
+    move: vi.fn(),
+}));
 
 vi.mock('cross-spawn', () => ({ default: { sync } }));
+vi.mock('node:child_process', () => ({ spawnSync: shellSync }));
 vi.mock('vite', () => ({ build: vi.fn() }));
 vi.mock('../../../src/apps/renderer/move', () => ({ moveAppRendererDirectory: move }));
 vi.mock('../../../src/apps/renderer/config', () => ({ buildRendererConfig: vi.fn() }));
@@ -35,17 +45,18 @@ const custom = () => createConfig({ rendererBuildCommand: () => 'custom tool --f
 
 beforeEach(() => {
     sync.mockReset();
+    shellSync.mockReset();
     move.mockReset();
 });
 
 describe('renderer build', () => {
     it('runs a custom command through a shell from the project root', async () => {
-        sync.mockReturnValueOnce({ status: 0 });
+        shellSync.mockReturnValueOnce({ status: 0 });
 
         await buildRendererApp(custom());
 
-        expect(sync).toHaveBeenCalledTimes(1);
-        expect(sync).toHaveBeenCalledWith('custom tool --flag', {
+        expect(shellSync).toHaveBeenCalledTimes(1);
+        expect(shellSync).toHaveBeenCalledWith('custom tool --flag', {
             shell: true, 
             cwd: rootPath, 
             stdio: 'inherit', 
@@ -56,21 +67,21 @@ describe('renderer build', () => {
     it('rejects a custom launch error before moving output', async () => {
         const error = new Error('spawn failed');
 
-        sync.mockReturnValueOnce({ error, status: null });
+        shellSync.mockReturnValueOnce({ error, status: null });
 
         await expect(buildRendererApp(custom())).rejects.toBe(error);
         expect(move).not.toHaveBeenCalled();
     });
 
     it('rejects a custom command exit status', async () => {
-        sync.mockReturnValueOnce({ status: 1 });
+        shellSync.mockReturnValueOnce({ status: 1 });
 
         await expect(buildRendererApp(custom())).rejects.toThrow('custom tool --flag exited with status 1.');
         expect(move).not.toHaveBeenCalled();
     });
 
     it('names the signal when a command is terminated', async () => {
-        sync.mockReturnValueOnce({ status: null, signal: 'SIGTERM' });
+        shellSync.mockReturnValueOnce({ status: null, signal: 'SIGTERM' });
 
         await expect(buildRendererApp(custom()))
             .rejects.toThrow('custom tool --flag exited with status null (SIGTERM).');
@@ -186,6 +197,7 @@ describe('next build', () => {
 
         fs.mkdirSync(path.join(external, 'dist'), { recursive: true });
         fs.writeFileSync(path.join(external, 'dist/index.html'), 'stale');
+        fs.mkdirSync(path.join(external, 'dist/_next'));
         fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
         fs.symlinkSync(external, path.join(root, 'renderer/generated'), 'dir');
 
@@ -202,6 +214,27 @@ describe('next build', () => {
             .rejects.toThrow('distDir');
         expect(fs.existsSync(path.join(root, 'renderer/app/page.tsx'))).toBe(true);
     }, false));
+
+    it('keeps an authored directory with an index.html and no _next', () => withOutput(async (root) => {
+        fs.mkdirSync(path.join(root, 'renderer/public'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'renderer/public/index.html'), 'authored');
+        fs.writeFileSync(path.join(root, 'renderer/public/logo.svg'), 'asset');
+
+        await expect(buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'public' })))
+            .rejects.toThrow('distDir');
+        expect(fs.readFileSync(path.join(root, 'renderer/public/index.html'), 'utf8')).toBe('authored');
+        expect(fs.existsSync(path.join(root, 'renderer/public/logo.svg'))).toBe(true);
+    }, false));
+
+    it('clears an earlier export that holds _next', () => withOutput(async (root) => {
+        fs.mkdirSync(path.join(root, 'renderer/dist/_next'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'renderer/dist/index.html'), 'old');
+        fs.writeFileSync(path.join(root, 'renderer/dist/old.txt'), 'old');
+
+        await buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'dist' }));
+
+        expect(fs.existsSync(path.join(root, 'renderer/dist/old.txt'))).toBe(false);
+    }));
 
     it('rejects an index.html outside the renderer that the build did not rewrite', () => withOutput(async (root) => {
         fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
@@ -239,14 +272,14 @@ describe('next build', () => {
     });
 
     it('custom build commands skip the Next version check', async () => {
-        sync.mockReturnValueOnce({ status: 0 });
+        shellSync.mockReturnValueOnce({ status: 0 });
 
         await buildRendererApp(createConfig({
             framework: { name: Framework.NEXT, version: '13.5.0' },
             rendererBuildCommand: () => 'custom tool',
         }));
 
-        expect(sync).toHaveBeenCalledTimes(1);
+        expect(shellSync).toHaveBeenCalledTimes(1);
         expect(move).toHaveBeenCalledTimes(1);
     });
 });
@@ -273,11 +306,33 @@ describe('renderer output move', () => {
     });
 });
 
+describe('renderer output already in place', () => {
+    it('keeps output that is already in the packaging directory', async () => {
+        const { moveAppRendererDirectory } = await vi.importActual<typeof rendererMove>('../../../src/apps/renderer/move');
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitron-renderer-same-'));
+
+        try {
+            fs.mkdirSync(path.join(root, '.vitron/renderer'), { recursive: true });
+            fs.writeFileSync(path.join(root, '.vitron/renderer/index.html'), 'export');
+
+            await moveAppRendererDirectory(createConfig({
+                rootPath: root,
+                buildDirectory: '.vitron',
+                rendererBuildDirectory: path.join(root, '.vitron/renderer'),
+            }));
+
+            expect(fs.readFileSync(path.join(root, '.vitron/renderer/index.html'), 'utf8')).toBe('export');
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
+
 describe('renderer build without mocks', () => {
     it('reports failure in a compound shell command', async () => {
-        const actual = await vi.importActual<{ default: { sync: (...args: any[]) => any } }>('cross-spawn');
+        const actual = await vi.importActual<typeof childProcess>('node:child_process');
 
-        sync.mockImplementation((...args: any[]) => actual.default.sync(...args));
+        shellSync.mockImplementation((...args: Parameters<typeof actual.spawnSync>) => actual.spawnSync(...args));
 
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitron-renderer-'));
 
