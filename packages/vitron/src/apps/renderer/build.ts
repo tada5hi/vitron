@@ -68,14 +68,18 @@ export async function buildRendererApp(config: Config): Promise<void> {
                 break;
             }
             case Framework.NEXT: {
-                const outputPath = path.resolve(
-                    config.get('rootPath'),
-                    config.get('rendererDirectory'),
-                    config.get('rendererBuildDirectory'),
-                );
+                const rendererPath = path.resolve(config.get('rootPath'), config.get('rendererDirectory'));
+                const outputPath = path.resolve(rendererPath, config.get('rendererBuildDirectory'));
+                const relativeOutput = path.relative(rendererPath, outputPath);
+                const insideRenderer = relativeOutput !== '' &&
+                    relativeOutput !== '..' &&
+                    !relativeOutput.startsWith(`..${path.sep}`) &&
+                    !path.isAbsolute(relativeOutput);
 
                 // A leftover index.html would otherwise pass the output check below and get packaged.
-                fs.rmSync(outputPath, { recursive: true, force: true });
+                if (insideRenderer) {
+                    fs.rmSync(outputPath, { recursive: true, force: true });
+                }
 
                 assertRendererBuildResult(spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions), 'next build');
 

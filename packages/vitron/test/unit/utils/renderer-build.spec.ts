@@ -160,6 +160,26 @@ describe('next build', () => {
         expect(move).not.toHaveBeenCalled();
     }, false));
 
+    it.each([
+        ['.', () => '.', 'renderer/page.tsx'],
+        ['an empty string', () => '', 'renderer/page.tsx'],
+        ['..', () => '..', 'keep.txt'],
+        ['an absolute path outside the renderer', (root: string) => path.join(root, 'outside'), 'outside/keep.txt'],
+    ])('keeps files on disk when rendererBuildDirectory is %s', (_label, directory, kept) => withOutput(async (root) => {
+        const keptPath = path.join(root, kept);
+
+        fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
+        fs.mkdirSync(path.dirname(keptPath), { recursive: true });
+        fs.writeFileSync(path.join(root, 'renderer/page.tsx'), 'source');
+        fs.writeFileSync(keptPath, 'keep');
+
+        await expect(buildRendererApp(next({ rootPath: root, rendererBuildDirectory: directory(root) })))
+            .rejects.toThrow('distDir');
+        expect(fs.existsSync(keptPath)).toBe(true);
+        expect(fs.existsSync(path.join(root, 'renderer/page.tsx'))).toBe(true);
+        expect(sync).toHaveBeenCalledTimes(1);
+    }, false));
+
     it('rejects an unsupported Next before spawning', async () => {
         await expect(buildRendererApp(next({ framework: { name: Framework.NEXT, version: '13.5.0' } })))
             .rejects.toThrow('Next.js 14');
