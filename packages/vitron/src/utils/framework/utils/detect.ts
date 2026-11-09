@@ -7,13 +7,14 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
+import { findPackageJSON } from 'node:module';
 import { readSync } from 'locter';
 import { hasOwnProperty, isObject } from 'smob';
 import { removePackageVersionCaret } from '../../package';
 import type { PackageInfo } from '../../package';
 import { Framework } from '../constants';
 
-function parsePackageJSONOutput(input: unknown) {
+function parsePackageJSONOutput(input: unknown, packageJsonFilePath: string) {
     if (!isObject(input)) {
         return undefined;
     }
@@ -42,11 +43,29 @@ function parsePackageJSONOutput(input: unknown) {
     if (hasOwnProperty(dependencyMap, Framework.NEXT)) {
         return {
             name: Framework.NEXT,
-            version: removePackageVersionCaret(`${dependencyMap[Framework.NEXT]}`),
+            version: installedNextVersion(packageJsonFilePath) ??
+                removePackageVersionCaret(`${dependencyMap[Framework.NEXT]}`),
         };
     }
 
     return undefined;
+}
+
+// The declared range (`latest`, `~16.0.0`) says little; the installed manifest holds the real version.
+function installedNextVersion(packageJsonFilePath: string) : string | undefined {
+    try {
+        const manifestPath = findPackageJSON(Framework.NEXT, packageJsonFilePath);
+
+        if (!manifestPath) {
+            return undefined;
+        }
+
+        const { version } = readSync(manifestPath);
+
+        return typeof version === 'string' ? version : undefined;
+    } catch {
+        return undefined;
+    }
 }
 
 function buildPackageJSONPath(rootPath?: string) {
@@ -68,5 +87,5 @@ export function detectFrameworkSync(rootPath?: string) : PackageInfo | undefined
 
     const packageJson = readSync(packageJsonFilePath);
 
-    return parsePackageJSONOutput(packageJson);
+    return parsePackageJSONOutput(packageJson, packageJsonFilePath);
 }

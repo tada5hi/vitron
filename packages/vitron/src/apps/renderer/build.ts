@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import fs from 'node:fs';
 import path from 'node:path';
 import type { SpawnOptions, SpawnSyncReturns } from 'node:child_process';
 import spawn from 'cross-spawn';
@@ -15,6 +16,7 @@ import { EnvironmentName } from '../../constants';
 import { Framework, isPackageInfo } from '../../utils';
 import { moveAppRendererDirectory } from './move';
 import { buildRendererConfig } from './config';
+import { assertSupportedNext } from './next';
 
 function assertRendererBuildResult(result: SpawnSyncReturns<Buffer>, command: string): void {
     if (result.error) {
@@ -48,6 +50,8 @@ export async function buildRendererApp(config: Config): Promise<void> {
         return;
     }
 
+    assertSupportedNext(config);
+
     const framework = config.get('framework');
 
     if (isPackageInfo(framework)) {
@@ -64,8 +68,18 @@ export async function buildRendererApp(config: Config): Promise<void> {
                 break;
             }
             case Framework.NEXT: {
-                spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions);
-                spawn.sync('next', ['export', '-o', path.join(config.get('rendererDirectory'), 'dist')], execOptions);
+                assertRendererBuildResult(spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions), 'next build');
+
+                const indexPath = path.resolve(
+                    config.get('rootPath'),
+                    config.get('rendererDirectory'),
+                    config.get('rendererBuildDirectory'),
+                    'index.html',
+                );
+
+                if (!fs.existsSync(indexPath)) {
+                    throw new Error(`next build produced no ${indexPath}. Set output: 'export' and distDir to match rendererBuildDirectory in the Next config.`);
+                }
 
                 break;
             }

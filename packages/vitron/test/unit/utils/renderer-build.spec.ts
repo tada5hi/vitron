@@ -109,6 +109,65 @@ describe('renderer build', () => {
     });
 });
 
+describe('next build', () => {
+    const next = (values: Record<string, any> = {}) => createConfig({
+        framework: { name: Framework.NEXT, version: '14.0.0' },
+        ...values,
+    });
+
+    function withOutput(callback: (root: string) => Promise<void>, emit = true) {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitron-next-build-'));
+
+        if (emit) {
+            fs.mkdirSync(path.join(root, 'renderer/dist'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'renderer/dist/index.html'), '');
+        }
+
+        return callback(root).finally(() => fs.rmSync(root, { recursive: true, force: true }));
+    }
+
+    it('runs only next build', () => withOutput(async (root) => {
+        sync.mockReturnValue({ status: 0 });
+
+        await buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'dist' }));
+
+        expect(sync.mock.calls).toEqual([['next', ['build', 'renderer'], {
+            cwd: root,
+            stdio: 'inherit',
+            detached: false,
+        }]]);
+        expect(move).toHaveBeenCalledTimes(1);
+    }));
+
+    it('fails when the Next output has no index.html', () => withOutput(async (root) => {
+        sync.mockReturnValue({ status: 0 });
+
+        const run = buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'dist' }));
+
+        await expect(run).rejects.toThrow("output: 'export'");
+        await expect(run).rejects.toThrow('distDir');
+        expect(move).not.toHaveBeenCalled();
+    }, false));
+
+    it('rejects an unsupported Next before spawning', async () => {
+        await expect(buildRendererApp(next({ framework: { name: Framework.NEXT, version: '13.5.0' } })))
+            .rejects.toThrow('Next.js 14');
+        expect(sync).not.toHaveBeenCalled();
+    });
+
+    it('custom build commands skip the Next version check', async () => {
+        sync.mockReturnValueOnce({ status: 0 });
+
+        await buildRendererApp(createConfig({
+            framework: { name: Framework.NEXT, version: '13.5.0' },
+            rendererBuildCommand: () => 'custom tool',
+        }));
+
+        expect(sync).toHaveBeenCalledTimes(1);
+        expect(move).toHaveBeenCalledTimes(1);
+    });
+});
+
 describe('renderer build without mocks', () => {
     it('reports failure in a compound shell command', async () => {
         const actual = await vi.importActual<{ default: { sync: (...args: any[]) => any } }>('cross-spawn');

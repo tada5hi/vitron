@@ -12,6 +12,7 @@ import type { ViteWatchHook } from '../core';
 import { buildMainConfig } from './main';
 import { buildPreloadConfig } from './preload';
 import { createRenderer } from './renderer';
+import { assertSupportedNext } from './renderer/next';
 import { clearBuildDirectory, createBuildDirectory } from './utils';
 
 export async function runDevelopmentSession(
@@ -60,6 +61,10 @@ export async function runDevelopmentSession(
     };
 
     const start = async () => {
+        if (!config.get('rendererDevCommand')) {
+            assertSupportedNext(config);
+        }
+
         await clearBuildDirectory(config);
         await createBuildDirectory(config);
 

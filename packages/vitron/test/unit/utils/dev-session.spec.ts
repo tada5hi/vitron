@@ -219,6 +219,37 @@ it('starts main, preload, renderer, then Electron in order', async () => {
     expectEverythingReleased(app);
 });
 
+it('rejects an unsupported Next before starting anything', async () => {
+    const app = await fixture();
+
+    app.config.set('framework', { name: 'next', version: '13.5.0' });
+    await app.start();
+
+    expect(app.outcome()).toBeInstanceOf(Error);
+    expect((app.outcome() as Error).message).toContain('Next.js 14');
+    expect(events).not.toContain('main:built');
+    expect(children).toHaveLength(0);
+});
+
+it('a custom dev command skips the Next version check', async () => {
+    const app = await fixture();
+    const child = new ChildProcess();
+
+    vi.spyOn(child, 'kill').mockReturnValue(true);
+    app.config.set('framework', { name: 'next', version: '13.5.0' });
+    app.config.set('rendererDevCommand', () => 'custom dev');
+
+    const spawnRenderer = vi.spyOn(rendererProcesses, 'spawnRendererProcess').mockReturnValue(child);
+    const result = app.start();
+
+    await vi.waitFor(() => expect(spawnRenderer).toHaveBeenCalled(), { timeout: 5000 });
+    app.controller.abort();
+    await result;
+
+    expect(app.outcome()).toBe('stopped');
+    expect(events).toContain('main:built');
+});
+
 it('skips a missing preload', async () => {
     const app = await fixture(false);
     const result = app.start();
