@@ -36,7 +36,7 @@ it('does not duplicate arrays when the hook returns its input', () => {
 
 it('does not duplicate arrays the returned object shares with the input', () => {
     const plugin = { name: 'a' };
-    const input: InlineConfig = { plugins: [plugin], build: { rollupOptions: { external: ['x'] } } };
+    const input: InlineConfig = { plugins: [plugin], build: { rolldownOptions: { external: ['x'] } } };
     const result = applyConfigHook(input, (config) => ({
         ...config,
         root: '/custom',
@@ -44,7 +44,7 @@ it('does not duplicate arrays the returned object shares with the input', () => 
     }));
 
     expect(result.plugins).toEqual([plugin]);
-    expect(result.build!.rollupOptions!.external).toEqual(['x']);
+    expect(result.build!.rolldownOptions!.external).toEqual(['x']);
     expect(result.root).toBe('/custom');
 });
 

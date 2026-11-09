@@ -43,7 +43,7 @@ export async function buildElectronConfig(
     return {
         mode: config.get('env'),
         root: getAppDirectoryPath(config, app),
-        optimizeDeps: { esbuildOptions: { target: 'es2020' } },
+        optimizeDeps: { rolldownOptions: { transform: { target: 'es2020' } } },
         build: {
             watch: {},
             manifest: true,
@@ -54,8 +54,12 @@ export async function buildElectronConfig(
                 fileName: 'index',
                 formats: ['cjs'],
             },
-            rollupOptions: {
+            rolldownOptions: {
                 input: entryFile,
+                // Vite targets client builds at the browser, which leaves import.meta.url undefined in CommonJS output.
+                platform: 'node',
+                // Rolldown's default omits the directive, which would run CommonJS output in sloppy mode.
+                output: { strict: true },
                 external: [
                     ...dependencies,
                     ...peerDependencies,

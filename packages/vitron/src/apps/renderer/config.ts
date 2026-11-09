@@ -30,7 +30,7 @@ export async function buildRendererConfig(
         build: {
             emptyOutDir: false,
             outDir: getAppDestinationDirectoryPath(config, AppName.RENDERER),
-            rollupOptions: {
+            rolldownOptions: {
                 external: [
                     ...dependencies,
                     ...peerDependencies,

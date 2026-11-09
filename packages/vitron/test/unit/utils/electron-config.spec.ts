@@ -1,11 +1,14 @@
+import { execFileSync } from 'node:child_process';
 import {
     mkdir,
     mkdtemp,
+    readFile,
     rm,
     writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { build } from 'vite';
 import {
     afterEach,
     describe,
@@ -64,7 +67,7 @@ describe.each([AppName.MAIN, AppName.PRELOAD] as const)('buildElectronConfig for
         expect(result).toBeDefined();
         expect(result!.mode).toBe(config.get('env'));
         expect(result!.root).toBe(path.resolve(root, 'src', app));
-        expect(result!.optimizeDeps).toEqual({ esbuildOptions: { target: 'es2020' } });
+        expect(result!.optimizeDeps).toEqual({ rolldownOptions: { transform: { target: 'es2020' } } });
         expect(result!.build).toMatchObject({
             watch: {},
             manifest: true,
@@ -76,13 +79,13 @@ describe.each([AppName.MAIN, AppName.PRELOAD] as const)('buildElectronConfig for
                 formats: ['cjs'],
             },
         });
-        expect(result!.build!.rollupOptions!.input).toBe(entry);
+        expect(result!.build!.rolldownOptions!.input).toBe(entry);
     });
 
     it('externalizes dependencies, peers, electron and node built-ins', async () => {
         const root = await createProject();
         const result = await buildElectronConfig(createConfig(root), app);
-        const external = result!.build!.rollupOptions!.external as string[];
+        const external = result!.build!.rolldownOptions!.external as string[];
 
         expect(external).toEqual(expect.arrayContaining([
             'dep-a',
@@ -93,11 +96,66 @@ describe.each([AppName.MAIN, AppName.PRELOAD] as const)('buildElectronConfig for
         ]));
     });
 
+    it('emits strict CommonJS named index with externals left as requires', async () => {
+        const root = await createProject();
+
+        await writeFile(path.join(root, 'src', app, 'index.ts'), [
+            "import dep from 'dep-a';",
+            "import peer from 'peer-a';",
+            "import { app as electron } from 'electron';",
+            "import { readFileSync } from 'fs';",
+            "import { join } from 'node:path';",
+            'console.log(dep, peer, electron, readFileSync, join);',
+        ].join('\n'));
+
+        const config = await buildElectronConfig(createConfig(root), app);
+
+        await build({
+            ...config,
+            configFile: false,
+            logLevel: 'silent',
+            build: { ...config!.build, watch: null },
+        });
+
+        const output = await readFile(path.join(root, '.vitron', app, 'index.js'), 'utf8');
+
+        expect(output.startsWith('"use strict";')).toBe(true);
+        expect(output).not.toMatch(/^\s*(import|export)\s/m);
+
+        for (const name of ['dep-a', 'peer-a', 'electron', 'fs', 'node:path']) {
+            expect(output).toContain(`require("${name}")`);
+        }
+    });
+
+    it('gives built code a working import.meta.url', async () => {
+        const root = await createProject();
+
+        await writeFile(
+            path.join(root, 'src', app, 'index.ts'),
+            "console.log(JSON.stringify({ url: import.meta.url, sibling: new URL('./x', import.meta.url).href }));",
+        );
+
+        const config = await buildElectronConfig(createConfig(root), app);
+
+        await build({
+            ...config,
+            configFile: false,
+            logLevel: 'silent',
+            build: { ...config!.build, watch: null },
+        });
+
+        const stdout = execFileSync(process.execPath, [path.join(root, '.vitron', app, 'index.js')], { encoding: 'utf8' });
+        const { url, sibling } = JSON.parse(stdout);
+
+        expect(url).toMatch(new RegExp(`^file://.*/\\.vitron/${app}/index\\.js$`));
+        expect(sibling).toMatch(new RegExp(`^file://.*/\\.vitron/${app}/x$`));
+    });
+
     it('builds when the manifest has no dependency maps', async () => {
         const root = await createProject({ manifest: '{}' });
         const result = await buildElectronConfig(createConfig(root), app);
 
-        expect(result!.build!.rollupOptions!.external).toContain('electron');
+        expect(result!.build!.rolldownOptions!.external).toContain('electron');
     });
 
     it('returns undefined when the entry is missing', async () => {
@@ -121,7 +179,7 @@ describe.each([AppName.MAIN, AppName.PRELOAD] as const)('buildElectronConfig for
         const second = await buildElectronConfig(config, app);
 
         expect(first!.build).not.toBe(second!.build);
-        expect(first!.build!.rollupOptions!.external).not.toBe(second!.build!.rollupOptions!.external);
+        expect(first!.build!.rolldownOptions!.external).not.toBe(second!.build!.rolldownOptions!.external);
     });
 });
 
@@ -175,8 +233,8 @@ describe.each(wrappers)('build $app config', ({
         }));
 
         expect(result!.plugins).toHaveLength(1);
-        expect(result!.build!.rollupOptions!.plugins).toEqual(baseline!.build!.rollupOptions!.plugins);
-        expect(result!.build!.rollupOptions!.external).toEqual(baseline!.build!.rollupOptions!.external);
+        expect(result!.build!.rolldownOptions!.plugins).toEqual(baseline!.build!.rolldownOptions!.plugins);
+        expect(result!.build!.rolldownOptions!.external).toEqual(baseline!.build!.rolldownOptions!.external);
     });
 
     it('does not wipe the config when a hook returns nothing', async () => {
@@ -188,13 +246,13 @@ describe.each(wrappers)('build $app config', ({
 
         expect(result!.plugins).toHaveLength(1);
         expect(result!.build!.manifest).toBe(true);
-        expect(result!.build!.rollupOptions!.plugins).toEqual(baseline!.build!.rollupOptions!.plugins);
+        expect(result!.build!.rolldownOptions!.plugins).toEqual(baseline!.build!.rolldownOptions!.plugins);
     });
 
     it('does not leak hook mutations into the next build', async () => {
         const root = await createProject();
         const config = createHooked(root, (input) => {
-            (input.build!.rollupOptions!.external as string[]).push('leaked');
+            (input.build!.rolldownOptions!.external as string[]).push('leaked');
 
             return input;
         });
@@ -203,7 +261,7 @@ describe.each(wrappers)('build $app config', ({
 
         const next = await buildElectronConfig(config, app);
 
-        expect(next!.build!.rollupOptions!.external).not.toContain('leaked');
+        expect(next!.build!.rolldownOptions!.external).not.toContain('leaked');
     });
 });
 
@@ -226,7 +284,7 @@ describe('buildMainConfig', () => {
             NODE_ENV: `"${config.get('env')}"`,
             PORT: '"1234"',
         });
-        expect(result.build!.rollupOptions!.plugins).toEqual([
+        expect(result.build!.rolldownOptions!.plugins).toEqual([
             {
                 name: 'replace-mock',
                 options: {
@@ -262,6 +320,6 @@ describe('buildPreloadConfig', () => {
 
         expect(result!.server).toBeUndefined();
         expect(result!.define).toBeUndefined();
-        expect(result!.build!.rollupOptions!.plugins).toBeUndefined();
+        expect(result!.build!.rolldownOptions!.plugins).toBeUndefined();
     });
 });

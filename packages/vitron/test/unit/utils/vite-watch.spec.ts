@@ -98,6 +98,42 @@ it('rejects ready on the first compilation error', async () => {
     }
 });
 
+it('rejects ready when a plugin buildStart hook throws', async () => {
+    const config = createConfig(true);
+
+    config.plugins = [{
+        name: 'reject-build-start',
+        buildStart() {
+            throw new Error('buildStart failed');
+        },
+    }];
+
+    const handle = buildWithWatchHook(config, vi.fn());
+
+    try {
+        await expect(handle.ready).rejects.toThrow('buildStart failed');
+    } finally {
+        await handle.close();
+    }
+});
+
+// Rolldown drops this failure, so only completion is promised, not how close() settles.
+it('finishes closing after a plugin closeWatcher hook throws', async () => {
+    const closeWatcher = vi.fn(() => {
+        throw new Error('close failed');
+    });
+    const config = createConfig(true);
+
+    config.plugins = [{ name: 'reject-close-watcher', closeWatcher }];
+
+    const handle = buildWithWatchHook(config, vi.fn());
+
+    await handle.ready;
+    await Promise.allSettled([handle.close()]);
+
+    expect(closeWatcher).toHaveBeenCalledTimes(1);
+});
+
 it('resolves ready when a watch build returns no watcher', async () => {
     vi.mocked(vite.build).mockResolvedValueOnce({ output: [] } as never);
 
@@ -130,6 +166,12 @@ it('awaits the hook on rebuilds and recovers after a later error', async () => {
         });
         finished++;
     });
+
+    // FSEvents replays the entry's creation to a watcher started right after it, as a rebuild this test would count.
+    await new Promise((resolve) => {
+        setTimeout(resolve, 3000);
+    });
+
     const handle = buildWithWatchHook(createConfig(true), hook);
 
     try {

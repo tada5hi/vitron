@@ -77,6 +77,36 @@ it('writes a whole development failure to a slow pipe before exiting', { timeout
     }
 });
 
+// Rolldown reports this failure as an unhandled rejection, so the process crash is what users can rely on.
+it.each(['main', 'preload'])('exits nonzero when a %s plugin options hook throws', { timeout: 15_000 }, async (target) => {
+    const root = await mkdtemp(path.join(tmpdir(), 'vitron-options-hook-'));
+
+    try {
+        await mkdir(path.join(root, 'src/main'), { recursive: true });
+        await mkdir(path.join(root, 'src/preload'), { recursive: true });
+        await writeFile(path.join(root, 'package.json'), '{"name":"options-hook","type":"module"}');
+        await writeFile(path.join(root, 'src/main/index.ts'), 'export const value = 1;');
+        await writeFile(path.join(root, 'src/preload/index.ts'), 'export const value = 1;');
+        await writeFile(
+            path.join(root, 'vitron.config.mjs'),
+            `export default { ${target}Config: () => ({ plugins: [{ name: 'throwing', options() { throw new Error('options failed'); } }] }) };`,
+        );
+
+        const result = spawnSync(process.execPath, [cliPath, 'dev', '--root', root], {
+            cwd: root,
+            encoding: 'utf8',
+            timeout: 10_000,
+        });
+
+        expect(result.error).toBeUndefined();
+        expect(result.signal).toBeNull();
+        expect(result.status).toBe(1);
+        expect(`${result.stdout}${result.stderr}`).toContain('options failed');
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
 it('exits nonzero after initial main compilation fails without launching Electron', { timeout: 15_000 }, async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'vitron-invalid-main-'));
 
