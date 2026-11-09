@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { assertSupportedNext } from '../../../src/apps/renderer/next';
+import { buildConfig } from '../../../src/config';
 import { Framework, detectFrameworkSync } from '../../../src/utils';
 
 function createConfig(framework: unknown) {
@@ -55,11 +56,27 @@ describe('detectFrameworkSync', () => {
         }
     });
 
-    it('keeps the declared Next version when next is not installed', () => {
+    it.each(['16.0.0', '^16.0.0'])('reports a declared Next %s that is not installed', (declared) => {
+        const root = project({ next: declared });
+
+        try {
+            const framework = detectFrameworkSync(root);
+
+            expect(framework?.name).toBe('next');
+            expect(() => assertSupportedNext(createConfig(framework))).toThrow('Install next in this project.');
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('still loads a project with an uninstalled Next and keeps the install error', () => {
         const root = project({ next: '16.0.0' });
 
         try {
-            expect(detectFrameworkSync(root)).toEqual({ name: 'next', version: '16.0.0' });
+            const config = buildConfig({ rootPath: root, rendererDevCommand: () => 'custom dev' });
+
+            expect(config.get('rendererDevCommand')).toBeTypeOf('function');
+            expect(() => assertSupportedNext(config)).toThrow('Install next in this project.');
         } finally {
             fs.rmSync(root, { recursive: true, force: true });
         }

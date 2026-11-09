@@ -43,8 +43,8 @@ function parsePackageJSONOutput(input: unknown, packageJsonFilePath: string) {
     if (hasOwnProperty(dependencyMap, Framework.NEXT)) {
         return {
             name: Framework.NEXT,
-            version: installedNextVersion(packageJsonFilePath) ??
-                removePackageVersionCaret(`${dependencyMap[Framework.NEXT]}`),
+            // Without an installed manifest the declared range proves nothing, so the support check reports it.
+            version: installedNextVersion(packageJsonFilePath) ?? 'unknown',
         };
     }
 
