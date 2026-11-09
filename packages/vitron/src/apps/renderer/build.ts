@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path';
-import type { SpawnOptions } from 'node:child_process';
+import type { SpawnOptions, SpawnSyncReturns } from 'node:child_process';
 import spawn from 'cross-spawn';
 import semver from 'semver';
 import { build } from 'vite';
@@ -15,6 +15,16 @@ import { EnvironmentName } from '../../constants';
 import { Framework, isPackageInfo } from '../../utils';
 import { moveAppRendererDirectory } from './move';
 import { buildRendererConfig } from './config';
+
+function assertRendererBuildResult(result: SpawnSyncReturns<Buffer>, command: string): void {
+    if (result.error) {
+        throw result.error;
+    }
+
+    if (result.status !== 0) {
+        throw new Error(`${command} exited with status ${result.status}${result.signal ? ` (${result.signal})` : ''}.`);
+    }
+}
 
 export async function buildRendererApp(config: Config): Promise<void> {
     const execOptions: SpawnOptions = {
@@ -26,7 +36,13 @@ export async function buildRendererApp(config: Config): Promise<void> {
     const command = config.get('rendererBuildCommand');
 
     if (command) {
-        spawn.sync(command(config.get()));
+        const commandLine = command(config.get());
+
+        assertRendererBuildResult(spawn.sync(commandLine, {
+            shell: true,
+            cwd: config.get('rootPath'),
+            stdio: 'inherit',
+        }), commandLine);
         await moveAppRendererDirectory(config);
 
         return;
@@ -38,11 +54,11 @@ export async function buildRendererApp(config: Config): Promise<void> {
         switch (framework.name) {
             case Framework.NUXT: {
                 if (semver.gte(framework.version, '3.0.0')) {
-                    spawn.sync('nuxi', ['build', config.get('rendererDirectory')], execOptions);
-                    spawn.sync('nuxi', ['generate', config.get('rendererDirectory')], execOptions);
+                    assertRendererBuildResult(spawn.sync('nuxi', ['build', config.get('rendererDirectory')], execOptions), 'nuxi build');
+                    assertRendererBuildResult(spawn.sync('nuxi', ['generate', config.get('rendererDirectory')], execOptions), 'nuxi generate');
                 } else {
-                    spawn.sync('nuxt', ['build', config.get('rendererDirectory')], execOptions);
-                    spawn.sync('nuxt', ['generate', config.get('rendererDirectory')], execOptions);
+                    assertRendererBuildResult(spawn.sync('nuxt', ['build', config.get('rendererDirectory')], execOptions), 'nuxt build');
+                    assertRendererBuildResult(spawn.sync('nuxt', ['generate', config.get('rendererDirectory')], execOptions), 'nuxt generate');
                 }
 
                 break;

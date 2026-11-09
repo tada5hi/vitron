@@ -24,7 +24,11 @@ export function spawnRendererProcess(
     const command = config.get('rendererDevCommand');
 
     if (command) {
-        return spawn(command(config.get()));
+        return spawn(command(config.get()), {
+            shell: true, 
+            cwd: config.get('rootPath'), 
+            stdio: 'inherit', 
+        });
     }
 
     const framework = config.get('framework') as PackageInfo;
