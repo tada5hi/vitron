@@ -68,14 +68,18 @@ export async function buildRendererApp(config: Config): Promise<void> {
                 break;
             }
             case Framework.NEXT: {
-                assertRendererBuildResult(spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions), 'next build');
-
-                const indexPath = path.resolve(
+                const outputPath = path.resolve(
                     config.get('rootPath'),
                     config.get('rendererDirectory'),
                     config.get('rendererBuildDirectory'),
-                    'index.html',
                 );
+
+                // A leftover index.html would otherwise pass the output check below and get packaged.
+                fs.rmSync(outputPath, { recursive: true, force: true });
+
+                assertRendererBuildResult(spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions), 'next build');
+
+                const indexPath = path.join(outputPath, 'index.html');
 
                 if (!fs.existsSync(indexPath)) {
                     throw new Error(`next build produced no ${indexPath}. Set output: 'export' and distDir to match rendererBuildDirectory in the Next config.`);

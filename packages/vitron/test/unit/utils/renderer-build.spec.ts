@@ -118,17 +118,19 @@ describe('next build', () => {
     function withOutput(callback: (root: string) => Promise<void>, emit = true) {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitron-next-build-'));
 
-        if (emit) {
-            fs.mkdirSync(path.join(root, 'renderer/dist'), { recursive: true });
-            fs.writeFileSync(path.join(root, 'renderer/dist/index.html'), '');
-        }
+        sync.mockImplementation(() => {
+            if (emit) {
+                fs.mkdirSync(path.join(root, 'renderer/dist'), { recursive: true });
+                fs.writeFileSync(path.join(root, 'renderer/dist/index.html'), '');
+            }
+
+            return { status: 0 };
+        });
 
         return callback(root).finally(() => fs.rmSync(root, { recursive: true, force: true }));
     }
 
     it('runs only next build', () => withOutput(async (root) => {
-        sync.mockReturnValue({ status: 0 });
-
         await buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'dist' }));
 
         expect(sync.mock.calls).toEqual([['next', ['build', 'renderer'], {
@@ -140,7 +142,16 @@ describe('next build', () => {
     }));
 
     it('fails when the Next output has no index.html', () => withOutput(async (root) => {
-        sync.mockReturnValue({ status: 0 });
+        const run = buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'dist' }));
+
+        await expect(run).rejects.toThrow("output: 'export'");
+        await expect(run).rejects.toThrow('distDir');
+        expect(move).not.toHaveBeenCalled();
+    }, false));
+
+    it('does not accept a stale index.html from an earlier build', () => withOutput(async (root) => {
+        fs.mkdirSync(path.join(root, 'renderer/dist'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'renderer/dist/index.html'), 'stale');
 
         const run = buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'dist' }));
 
