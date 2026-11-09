@@ -29,14 +29,23 @@ function killProcess(child: ChildProcess) {
     child.kill();
 }
 
-function signalGroup(pid: number, signal: NodeJS.Signals | 0) : boolean {
+type GroupState = 'alive' | 'gone' | 'zombie';
+
+function signalGroup(pid: number, signal: NodeJS.Signals | 0) : GroupState {
     try {
         process.kill(-pid, signal);
 
-        return true;
+        return 'alive';
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ESRCH') {
-            return false;
+        const { code } = error as NodeJS.ErrnoException;
+
+        if (code === 'ESRCH') {
+            return 'gone';
+        }
+
+        // A group kill fails with EPERM only if no member can be signalled, e.g. a group left with an unreaped zombie.
+        if (code === 'EPERM') {
+            return 'zombie';
         }
 
         throw error;
@@ -45,12 +54,13 @@ function signalGroup(pid: number, signal: NodeJS.Signals | 0) : boolean {
 
 // Renderer children lead their own process group on POSIX, so a shell launcher's workers are signalled with it.
 async function terminateGroup(pid: number) : Promise<void> {
-    if (!signalGroup(pid, 'SIGTERM')) {
+    if (signalGroup(pid, 'SIGTERM') === 'gone') {
         return;
     }
 
     const deadline = Date.now() + 5000;
     let killed = false;
+    let zombies = 0;
 
     for (;;) {
         await delay(100);
@@ -60,7 +70,16 @@ async function terminateGroup(pid: number) : Promise<void> {
             signalGroup(pid, 'SIGKILL');
         }
 
-        if (!signalGroup(pid, 0)) {
+        const state = signalGroup(pid, 0);
+
+        if (state === 'gone') {
+            return;
+        }
+
+        // A zombie is reaped shortly; give up on one that is not.
+        zombies = state === 'zombie' ? zombies + 1 : 0;
+
+        if (zombies >= 20) {
             return;
         }
     }

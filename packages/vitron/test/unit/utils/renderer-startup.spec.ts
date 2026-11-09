@@ -368,7 +368,10 @@ it('kills a worker that ignores SIGTERM after the launcher exits', async () => {
     await once(launcher, 'close');
     await waitForPort(port);
 
+    const startedAt = Date.now();
+
     await renderer.stop();
+    expect(Date.now() - startedAt).toBeLessThan(7000);
     await expect(bindPort(port)).resolves.toBeUndefined();
 }, 15_000);
 

@@ -59,12 +59,15 @@ export class DevCommand implements CommandModule {
 
             process.on('SIGINT', stop);
             process.on('SIGTERM', stop);
+            // The renderer leads its own session, so it misses the terminal hangup and must be stopped explicitly.
+            process.on('SIGHUP', stop);
 
             try {
                 await runDevelopmentSession(config, logger, controller.signal);
             } finally {
                 process.removeListener('SIGINT', stop);
                 process.removeListener('SIGTERM', stop);
+                process.removeListener('SIGHUP', stop);
             }
         } catch (e) {
             // eslint-disable-next-line no-console
