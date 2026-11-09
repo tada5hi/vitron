@@ -79,7 +79,7 @@ export async function replaceSource(root: string, file: string, before: string, 
     await writeFile(filePath, source.replace(before, after));
 }
 
-export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Example }>({
+export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt' | 'next', example: Example }>({
     exampleName: ['vanilla', { option: true }],
     example: async ({ exampleName }, use, testInfo) => {
         // shortcut: Windows needs process-tree ownership after a CLI crash; add a Windows lifecycle runner before enabling.
@@ -104,6 +104,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
             ...process.env,
             PATH: `${path.join(workspace, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH}`,
             NUXT_TELEMETRY_DISABLED: '1',
+            NEXT_TELEMETRY_DISABLED: '1',
             CSC_IDENTITY_AUTO_DISCOVERY: 'false',
         };
 

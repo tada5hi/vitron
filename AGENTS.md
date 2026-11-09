@@ -1,6 +1,6 @@
 # Vitron agent guide
 
-Vitron builds and develops Electron applications with Vite. The npm workspace contains the `vitron` library/CLI and vanilla and Nuxt example applications.
+Vitron builds and develops Electron applications with Vite. The npm workspace contains the `vitron` library/CLI and vanilla, Nuxt and Next.js example applications.
 
 ## Development
 

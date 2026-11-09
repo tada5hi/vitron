@@ -1,0 +1,23 @@
+appId: net.tada5hi.vitron.example.next
+productName: Vitron Next
+copyright: Copyright © 2021 tada5hi
+directories:
+    output: dist
+    buildResources: resources
+artifactName: app-${version}.${ext}
+files:
+    - from: .
+      filter:
+          - package.json
+          - .vitron/**/*
+publish: null
+win:
+    signtoolOptions:
+        publisherName: tada5hi
+    target: nsis
+nsis:
+    differentialPackage: true
+linux:
+    target: deb
+mac:
+    target: dmg
