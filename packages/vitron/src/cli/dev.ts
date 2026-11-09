@@ -75,7 +75,7 @@ export class DevCommand implements CommandModule {
         } catch (e) {
             // process.exit() drops whatever a full pipe has not taken yet.
             await new Promise((resolve) => {
-                process.stdout.write(`${inspect(e)}\n`, resolve);
+                process.stderr.write(`${inspect(e)}\n`, resolve);
             });
 
             // Rethrowing would make yargs print the error again together with the usage text.

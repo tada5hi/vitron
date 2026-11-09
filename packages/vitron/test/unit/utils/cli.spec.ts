@@ -38,7 +38,7 @@ it('prints a development failure once, without the usage text', { timeout: 15_00
             encoding: 'utf8',
             timeout: 10_000,
         });
-        const output = `${result.stdout}${result.stderr}`;
+        const output = result.stderr;
 
         expect(result.status).toBe(1);
         expect(output.split('The main entrypoint file could not be located').length - 1).toBe(1);
@@ -57,16 +57,16 @@ it('writes a whole development failure to a slow pipe before exiting', { timeout
 
         const child = spawn(process.execPath, [cliPath, 'dev', '--root', root], {
             cwd: root,
-            stdio: ['ignore', 'pipe', 'ignore'],
+            stdio: ['ignore', 'ignore', 'pipe'],
         });
         const chunks: Buffer[] = [];
 
-        child.stdout.on('data', (chunk: Buffer) => {
+        child.stderr.on('data', (chunk: Buffer) => {
             chunks.push(chunk);
         });
         // Leaving the pipe full when the CLI reaches its exit is what would lose the remainder.
-        child.stdout.pause();
-        setTimeout(() => child.stdout.resume(), 2000);
+        child.stderr.pause();
+        setTimeout(() => child.stderr.resume(), 2000);
 
         const [status] = await once(child, 'close');
 
@@ -94,8 +94,8 @@ it('exits nonzero after initial main compilation fails without launching Electro
         expect(result.error).toBeUndefined();
         expect(result.signal).toBeNull();
         expect(result.status).toBe(1);
-        expect(`${result.stdout}${result.stderr}`).toContain('src/main/index.ts');
-        expect(stripVTControlCharacters(`${result.stdout}${result.stderr}`)).toContain('export const value = ;');
+        expect(result.stderr).toContain('src/main/index.ts');
+        expect(stripVTControlCharacters(result.stderr)).toContain('export const value = ;');
     } finally {
         await rm(root, { recursive: true, force: true });
     }
