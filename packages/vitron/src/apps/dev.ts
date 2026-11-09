@@ -32,7 +32,10 @@ export async function runDevelopmentSession(
     });
 
     const cleanups: (() => Promise<unknown>)[] = [];
-    const electron = createElectron(config, logger);
+    const cleanExit = new Error('Electron exited.');
+    const electron = createElectron(config, logger, (code, exitSignal) => {
+        controller.abort(code === 0 ? cleanExit : new Error(`Electron exited unexpectedly (${code === null ? `signal ${exitSignal}` : `exit code ${code}`}).`));
+    });
     const renderer = createRenderer(config);
     let reactions: Promise<unknown> = Promise.resolve();
 
@@ -94,7 +97,7 @@ export async function runDevelopmentSession(
     await aborted;
     await startup;
 
-    const errors: unknown[] = session.reason === signal.reason ? [] : [session.reason];
+    const errors: unknown[] = session.reason === signal.reason || session.reason === cleanExit ? [] : [session.reason];
 
     for (const cleanup of cleanups.reverse()) {
         try {

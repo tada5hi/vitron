@@ -182,3 +182,43 @@ it('restart rejects when the replacement fails to launch', async () => {
     expect(original.exitCode !== null || original.signalCode !== null).toBe(true);
     await vi.waitFor(() => expect(electron.up()).toBe(false));
 });
+
+it('reports an unrequested exit with its code', async () => {
+    const onExit = vi.fn();
+
+    vi.mocked(spawn).mockImplementationOnce(() => spawnNode(process.execPath, ['-e', 'setTimeout(() => process.exit(3), 100)']));
+
+    const electron = createElectron(buildConfig({ rootPath: process.cwd() }), createLogger('silent'), onExit);
+
+    await electron.start();
+    await vi.waitFor(() => expect(onExit).toHaveBeenCalledOnce(), { timeout: 5000 });
+    expect(onExit).toHaveBeenCalledWith(3, null);
+    expect(electron.up()).toBe(false);
+});
+
+it.skipIf(process.platform === 'win32')('does not report an exit caused by stop or restart', async () => {
+    const onExit = vi.fn();
+    const electron = createElectron(buildConfig({ rootPath: process.cwd() }), createLogger('silent'), onExit);
+
+    await electron.start();
+    await ready(0);
+    await electron.restart();
+    await ready(1);
+    await electron.stop();
+
+    expect(children).toHaveLength(2);
+    expect(onExit).not.toHaveBeenCalled();
+});
+
+it('does not report a launch failure', async () => {
+    const onExit = vi.fn();
+
+    vi.mocked(spawn).mockImplementationOnce(() => spawnNode(`/vitron-missing-electron-${process.pid}`));
+
+    const electron = createElectron(buildConfig({ rootPath: process.cwd() }), createLogger('silent'), onExit);
+
+    await expect(electron.start()).rejects.toMatchObject({ code: 'ENOENT' });
+    await vi.waitFor(() => expect(electron.up()).toBe(false));
+    await new Promise(setImmediate);
+    expect(onExit).not.toHaveBeenCalled();
+});
