@@ -54,6 +54,27 @@ async function waitFor(check: () => boolean) {
     }
 }
 
+// Rollup attaches its file watcher around the first BUNDLE_END and reports no readiness, so a write in that gap is lost.
+async function writeUntil(content: string, check: () => boolean) {
+    const deadline = Date.now() + 10_000;
+    let nextWrite = 0;
+
+    while (!check()) {
+        if (Date.now() > deadline) {
+            throw new Error('timed out');
+        }
+
+        if (Date.now() >= nextWrite) {
+            await fs.writeFile(entry, content);
+            nextWrite = Date.now() + 2000;
+        }
+
+        await new Promise((resolve) => {
+            setTimeout(resolve, 20);
+        });
+    }
+}
+
 beforeEach(async () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), 'vitron-watch-'));
     entry = path.join(dir, 'entry.js');
@@ -115,8 +136,7 @@ it('awaits the hook on rebuilds and recovers after a later error', async () => {
         await handle.ready;
         expect(hook).not.toHaveBeenCalled();
 
-        await fs.writeFile(entry, 'export const value = 2;\n');
-        await waitFor(() => started === 1);
+        await writeUntil('export const value = 2;\n', () => started === 1);
         expect(finished).toBe(0);
         await waitFor(() => finished === 1);
 
