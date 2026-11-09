@@ -74,8 +74,8 @@ export async function buildRendererApp(config: Config): Promise<void> {
                 const outputPath = path.resolve(rendererPath, config.get('rendererBuildDirectory'));
                 const indexPath = path.join(outputPath, 'index.html');
 
-                // Only an earlier export is cleared, judged on real paths so a symlink cannot lead the removal out of the renderer.
-                if (fs.existsSync(indexPath)) {
+                // Only an earlier export (marked by _next) is cleared, judged on real paths so a symlink cannot lead the removal out of the renderer.
+                if (fs.existsSync(indexPath) && fs.existsSync(path.join(outputPath, '_next'))) {
                     const relativeOutput = path.relative(fs.realpathSync(rendererPath), fs.realpathSync(outputPath));
                     const insideRenderer = relativeOutput !== '' &&
                         relativeOutput !== '..' &&

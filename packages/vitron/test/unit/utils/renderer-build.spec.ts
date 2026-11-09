@@ -197,6 +197,7 @@ describe('next build', () => {
 
         fs.mkdirSync(path.join(external, 'dist'), { recursive: true });
         fs.writeFileSync(path.join(external, 'dist/index.html'), 'stale');
+        fs.mkdirSync(path.join(external, 'dist/_next'));
         fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
         fs.symlinkSync(external, path.join(root, 'renderer/generated'), 'dir');
 
@@ -213,6 +214,27 @@ describe('next build', () => {
             .rejects.toThrow('distDir');
         expect(fs.existsSync(path.join(root, 'renderer/app/page.tsx'))).toBe(true);
     }, false));
+
+    it('keeps an authored directory with an index.html and no _next', () => withOutput(async (root) => {
+        fs.mkdirSync(path.join(root, 'renderer/public'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'renderer/public/index.html'), 'authored');
+        fs.writeFileSync(path.join(root, 'renderer/public/logo.svg'), 'asset');
+
+        await expect(buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'public' })))
+            .rejects.toThrow('distDir');
+        expect(fs.readFileSync(path.join(root, 'renderer/public/index.html'), 'utf8')).toBe('authored');
+        expect(fs.existsSync(path.join(root, 'renderer/public/logo.svg'))).toBe(true);
+    }, false));
+
+    it('clears an earlier export that holds _next', () => withOutput(async (root) => {
+        fs.mkdirSync(path.join(root, 'renderer/dist/_next'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'renderer/dist/index.html'), 'old');
+        fs.writeFileSync(path.join(root, 'renderer/dist/old.txt'), 'old');
+
+        await buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'dist' }));
+
+        expect(fs.existsSync(path.join(root, 'renderer/dist/old.txt'))).toBe(false);
+    }));
 
     it('rejects an index.html outside the renderer that the build did not rewrite', () => withOutput(async (root) => {
         fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
