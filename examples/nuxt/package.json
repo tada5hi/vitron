@@ -17,7 +17,7 @@
     "devDependencies": {
         "electron": "^38.1.2",
         "electron-builder": "^26.0.12",
-        "nuxt": "^4.1.2",
+        "nuxt": "^4.6.4",
         "vitron": "^2.4.0"
     }
 }
