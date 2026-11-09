@@ -70,22 +70,29 @@ export async function buildRendererApp(config: Config): Promise<void> {
             case Framework.NEXT: {
                 const rendererPath = path.resolve(config.get('rootPath'), config.get('rendererDirectory'));
                 const outputPath = path.resolve(rendererPath, config.get('rendererBuildDirectory'));
-                const relativeOutput = path.relative(rendererPath, outputPath);
-                const insideRenderer = relativeOutput !== '' &&
-                    relativeOutput !== '..' &&
-                    !relativeOutput.startsWith(`..${path.sep}`) &&
-                    !path.isAbsolute(relativeOutput);
+                const indexPath = path.join(outputPath, 'index.html');
 
-                // A leftover index.html would otherwise pass the output check below and get packaged.
-                if (insideRenderer) {
-                    fs.rmSync(outputPath, { recursive: true, force: true });
+                // Only an earlier export is cleared, judged on real paths so a symlink cannot lead the removal out of the renderer.
+                if (fs.existsSync(indexPath)) {
+                    const relativeOutput = path.relative(fs.realpathSync(rendererPath), fs.realpathSync(outputPath));
+                    const insideRenderer = relativeOutput !== '' &&
+                        relativeOutput !== '..' &&
+                        !relativeOutput.startsWith(`..${path.sep}`) &&
+                        !path.isAbsolute(relativeOutput);
+
+                    if (insideRenderer) {
+                        fs.rmSync(outputPath, { recursive: true, force: true });
+                    }
                 }
+
+                // Output that could not be cleared must at least be rewritten, or a leftover index.html would get packaged.
+                const previous = fs.statSync(indexPath, { throwIfNoEntry: false })?.mtimeMs;
 
                 assertRendererBuildResult(spawn.sync('next', ['build', config.get('rendererDirectory')], execOptions), 'next build');
 
-                const indexPath = path.join(outputPath, 'index.html');
+                const current = fs.statSync(indexPath, { throwIfNoEntry: false })?.mtimeMs;
 
-                if (!fs.existsSync(indexPath)) {
+                if (current === undefined || current === previous) {
                     throw new Error(`next build produced no ${indexPath}. Set output: 'export' and distDir to match rendererBuildDirectory in the Next config.`);
                 }
 

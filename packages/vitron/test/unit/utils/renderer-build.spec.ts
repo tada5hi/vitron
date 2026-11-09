@@ -9,6 +9,7 @@ import {
     vi,
 } from 'vitest';
 import { buildRendererApp } from '../../../src/apps/renderer/build';
+import type * as rendererMove from '../../../src/apps/renderer/move';
 import { Framework } from '../../../src/utils';
 
 const { sync, move } = vi.hoisted(() => ({ sync: vi.fn(), move: vi.fn() }));
@@ -180,6 +181,57 @@ describe('next build', () => {
         expect(sync).toHaveBeenCalledTimes(1);
     }, false));
 
+    it('does not follow a symlink out of the renderer when clearing output', () => withOutput(async (root) => {
+        const external = path.join(root, 'external');
+
+        fs.mkdirSync(path.join(external, 'dist'), { recursive: true });
+        fs.writeFileSync(path.join(external, 'dist/index.html'), 'stale');
+        fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
+        fs.symlinkSync(external, path.join(root, 'renderer/generated'), 'dir');
+
+        await expect(buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'generated/dist' })))
+            .rejects.toThrow('distDir');
+        expect(fs.readFileSync(path.join(external, 'dist/index.html'), 'utf8')).toBe('stale');
+    }, false));
+
+    it('keeps a source directory that holds no earlier export', () => withOutput(async (root) => {
+        fs.mkdirSync(path.join(root, 'renderer/app'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'renderer/app/page.tsx'), 'source');
+
+        await expect(buildRendererApp(next({ rootPath: root, rendererBuildDirectory: 'app' })))
+            .rejects.toThrow('distDir');
+        expect(fs.existsSync(path.join(root, 'renderer/app/page.tsx'))).toBe(true);
+    }, false));
+
+    it('rejects an index.html outside the renderer that the build did not rewrite', () => withOutput(async (root) => {
+        fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'export'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'export/index.html'), 'stale');
+
+        await expect(buildRendererApp(next({ rootPath: root, rendererBuildDirectory: '../export' })))
+            .rejects.toThrow('distDir');
+        expect(fs.readFileSync(path.join(root, 'export/index.html'), 'utf8')).toBe('stale');
+        expect(move).not.toHaveBeenCalled();
+    }, false));
+
+    it('accepts an index.html outside the renderer that the build rewrote', () => withOutput(async (root) => {
+        const indexPath = path.join(root, 'export/index.html');
+
+        fs.mkdirSync(path.join(root, 'renderer'), { recursive: true });
+        fs.mkdirSync(path.dirname(indexPath), { recursive: true });
+        fs.writeFileSync(indexPath, 'previous');
+        fs.utimesSync(indexPath, new Date(1000), new Date(1000));
+        sync.mockImplementation(() => {
+            fs.writeFileSync(indexPath, 'current');
+
+            return { status: 0 };
+        });
+
+        await buildRendererApp(next({ rootPath: root, rendererBuildDirectory: '../export' }));
+
+        expect(move).toHaveBeenCalledTimes(1);
+    }));
+
     it('rejects an unsupported Next before spawning', async () => {
         await expect(buildRendererApp(next({ framework: { name: Framework.NEXT, version: '13.5.0' } })))
             .rejects.toThrow('Next.js 14');
@@ -196,6 +248,28 @@ describe('next build', () => {
 
         expect(sync).toHaveBeenCalledTimes(1);
         expect(move).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('renderer output move', () => {
+    it('copies an absolute rendererBuildDirectory', async () => {
+        const { moveAppRendererDirectory } = await vi.importActual<typeof rendererMove>('../../../src/apps/renderer/move');
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitron-renderer-move-'));
+
+        try {
+            fs.mkdirSync(path.join(root, 'out'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'out/index.html'), 'export');
+
+            await moveAppRendererDirectory(createConfig({
+                rootPath: root,
+                buildDirectory: '.vitron',
+                rendererBuildDirectory: path.join(root, 'out'),
+            }));
+
+            expect(fs.readFileSync(path.join(root, '.vitron/renderer/index.html'), 'utf8')).toBe('export');
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 });
 
