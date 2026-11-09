@@ -59,8 +59,9 @@ export class DevCommand implements CommandModule {
 
             process.on('SIGINT', stop);
             process.on('SIGTERM', stop);
-            // The renderer leads its own session, so it misses the terminal hangup and must be stopped explicitly.
+            // The renderer leads its own session, so terminal-generated signals miss it and it must be stopped explicitly.
             process.on('SIGHUP', stop);
+            process.on('SIGQUIT', stop);
 
             try {
                 await runDevelopmentSession(config, logger, controller.signal);
@@ -68,12 +69,14 @@ export class DevCommand implements CommandModule {
                 process.removeListener('SIGINT', stop);
                 process.removeListener('SIGTERM', stop);
                 process.removeListener('SIGHUP', stop);
+                process.removeListener('SIGQUIT', stop);
             }
         } catch (e) {
             // eslint-disable-next-line no-console
             console.log(e);
 
-            throw e;
+            // Rethrowing would make yargs print the error again together with the usage text.
+            process.exit(1);
         }
     }
 }

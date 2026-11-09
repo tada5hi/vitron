@@ -26,6 +26,27 @@ it('starts the built command line entry point', () => {
     expect(result.stdout).toContain('Usage: vitron <command> [options]');
 });
 
+it('prints a development failure once, without the usage text', { timeout: 15_000 }, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'vitron-missing-main-'));
+
+    try {
+        await writeFile(path.join(root, 'package.json'), '{"name":"missing-main"}');
+
+        const result = spawnSync(process.execPath, [cliPath, 'dev', '--root', root], {
+            cwd: root,
+            encoding: 'utf8',
+            timeout: 10_000,
+        });
+        const output = `${result.stdout}${result.stderr}`;
+
+        expect(result.status).toBe(1);
+        expect(output.split('The main entrypoint file could not be located').length - 1).toBe(1);
+        expect(output).not.toContain('Options:');
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
 it('exits nonzero after initial main compilation fails without launching Electron', { timeout: 15_000 }, async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'vitron-invalid-main-'));
 
