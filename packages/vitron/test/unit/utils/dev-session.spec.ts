@@ -219,6 +219,37 @@ it('starts main, preload, renderer, then Electron in order', async () => {
     expectEverythingReleased(app);
 });
 
+it('rejects an unsupported Next before starting anything', async () => {
+    const app = await fixture();
+
+    app.config.set('framework', { name: 'next', version: '13.5.0' });
+    await app.start();
+
+    expect(app.outcome()).toBeInstanceOf(Error);
+    expect((app.outcome() as Error).message).toContain('Next.js 14');
+    expect(events).not.toContain('main:built');
+    expect(children).toHaveLength(0);
+});
+
+it('a custom dev command skips the Next version check', async () => {
+    const app = await fixture();
+    const child = new ChildProcess();
+
+    vi.spyOn(child, 'kill').mockReturnValue(true);
+    app.config.set('framework', { name: 'next', version: '13.5.0' });
+    app.config.set('rendererDevCommand', () => 'custom dev');
+
+    const spawnRenderer = vi.spyOn(rendererProcesses, 'spawnRendererProcess').mockReturnValue(child);
+    const result = app.start();
+
+    await vi.waitFor(() => expect(spawnRenderer).toHaveBeenCalled(), { timeout: 5000 });
+    app.controller.abort();
+    await result;
+
+    expect(app.outcome()).toBe('stopped');
+    expect(events).toContain('main:built');
+});
+
 it('skips a missing preload', async () => {
     const app = await fixture(false);
     const result = app.start();
@@ -497,4 +528,104 @@ it('repeated aborts shut down once', async () => {
     expect(count('main:closed')).toBe(1);
     expect(count('preload:closed')).toBe(1);
     expect(app.server()?.httpServer?.listening).toBe(false);
+});
+
+function closeElectron(child: ChildProcess, code: number | null, signal: NodeJS.Signals | null = null) {
+    child.emit('close', code, signal);
+}
+
+it('resolves and cleans up when Electron exits with code 0', async () => {
+    const app = await fixture();
+    const result = app.start();
+
+    await app.electronLive();
+    closeElectron([...liveChildren][0], 0);
+    await result;
+
+    expect(app.outcome()).toBe('stopped');
+    expectEverythingReleased(app);
+});
+
+it('rejects and cleans up when Electron exits with a failure', async () => {
+    const app = await fixture();
+    const result = app.start();
+
+    await app.electronLive();
+    closeElectron([...liveChildren][0], 1);
+    await result;
+
+    expect(app.outcome()).toBeInstanceOf(Error);
+    expect((app.outcome() as Error).message).toContain('exit code 1');
+    expectEverythingReleased(app);
+});
+
+it('rejects naming the signal when Electron is killed', async () => {
+    const app = await fixture();
+    const result = app.start();
+
+    await app.electronLive();
+    closeElectron([...liveChildren][0], null, 'SIGKILL');
+    await result;
+
+    expect(app.outcome()).toBeInstanceOf(Error);
+    expect((app.outcome() as Error).message).toContain('SIGKILL');
+    expectEverythingReleased(app);
+});
+
+it('a main rebuild restart is not treated as an exit', async () => {
+    const app = await fixture();
+    const result = app.start();
+
+    await app.electronLive();
+
+    const initial = [...liveChildren][0];
+
+    await app.edit('main', 'replacement');
+    await vi.waitFor(() => {
+        expect(liveChildren.size).toBe(1);
+        expect([...liveChildren][0]).not.toBe(initial);
+    }, { timeout: 5000 });
+    await delay(50);
+
+    expect(app.outcome()).toBe('pending');
+
+    app.controller.abort();
+    await result;
+    expect(app.outcome()).toBe('stopped');
+});
+
+it('a replacement that crashes after a main rebuild rejects', async () => {
+    const app = await fixture();
+    const result = app.start();
+
+    await app.electronLive();
+
+    const initial = [...liveChildren][0];
+
+    await app.edit('main', 'replacement');
+    await vi.waitFor(() => {
+        expect(liveChildren.size).toBe(1);
+        expect([...liveChildren][0]).not.toBe(initial);
+    }, { timeout: 5000 });
+    closeElectron([...liveChildren][0], 2);
+    await result;
+
+    expect((app.outcome() as Error).message).toContain('exit code 2');
+    expectEverythingReleased(app);
+});
+
+it('Electron exiting during a SIGINT shutdown resolves once', async () => {
+    const app = await fixture();
+    const result = app.start();
+
+    await app.electronLive();
+    holdElectronClose = true;
+    app.controller.abort();
+    await vi.waitFor(() => expect(count('electron:stop')).toBe(1), { timeout: 5000 });
+    closeHeldElectron!();
+    await result;
+
+    expect(app.outcome()).toBe('stopped');
+    expect(count('electron:stop')).toBe(1);
+    expect(count('main:closed')).toBe(1);
 });

@@ -30,6 +30,7 @@ Development uses the supplied port, defaulting to `9000`. Packaged loading uses 
 
 - **Renderer hot module replacement.** The Vite renderer development server provides HMR; framework renderers use their own development server.
 - **Main-process watch builds.** Rebuilding the running main process restarts Electron.
+- **Session ends with Electron.** Quitting the app ends `vitron dev` and stops the renderer; the command exits 0 after a normal quit and nonzero if Electron crashes or is killed. `app.relaunch()` also ends the session, because Vitron sees the process exit.
 - **Preload watch builds.** Preload changes reload the running renderer.
 - **Desktop packaging.** Production builds feed the renderer, main and optional preload outputs to electron-builder.
 
@@ -59,7 +60,9 @@ Keep your main, preload and renderer responsibilities separate. The [vanilla exa
 
 Place framework source under `rendererDirectory` and declare the framework in your project package manifest. Vitron detects `nuxt` and `next` from dependencies, dev dependencies or peer dependencies; Nuxt takes precedence when both are present. You can also configure `framework`, the renderer commands and output directory explicitly.
 
-The built-in Nuxt paths use `nuxi` for Nuxt 3 and newer and `nuxt` for earlier releases. The [Nuxt example](https://github.com/tada5hi/vitron/tree/master/examples/nuxt) shows the renderer layout and configuration. Packaged rendering needs static output; Vitron does not run a framework SSR server inside the desktop app. The built-in Next build path still uses the removed `next export` command, as explained in [Notes](#notes).
+The built-in Nuxt paths use `nuxi` for Nuxt 3 and newer and `nuxt` for earlier releases. The [Nuxt example](https://github.com/tada5hi/vitron/tree/master/examples/nuxt) shows the renderer layout and configuration. Packaged rendering needs static output; Vitron does not run a framework SSR server inside the desktop app.
+
+Vitron supports Next.js 14 and newer. Its built-in build path runs `next build`, so the Next config must enable static export with `output: 'export'` and set `distDir: 'dist'` (matching `rendererBuildDirectory`) in the renderer directory. Vitron does not read or rewrite the Next config, and the build fails if no `index.html` is produced.
 
 ## Usage
 
@@ -190,7 +193,7 @@ module.exports = {
 ## Notes
 
 - **Static desktop renderer.** Packaged loading serves files; it does not start a framework SSR server.
-- **Framework versions matter.** Nuxt and Next are detected from the project's package manifest. The built-in Next build path calls `next export`, which [Next.js removed in version 14](https://nextjs.org/docs/14/app/building-your-application/deploying/static-exports#version-history); current Next versions need an adapted renderer build configuration.
+- **Framework versions matter.** Nuxt and Next are detected from the project's package manifest. Next.js 14 and newer are supported through static export (`output: 'export'`, `distDir: 'dist'`); older versions are rejected before the dev server or build starts, unless you set custom renderer commands.
 - **Packaging stays yours.** Configure application identity, targets and signing in electron-builder. The repository examples derive `electronVersion` from the installed Electron package so hoisted workspaces package the correct runtime.
 - **Process boundaries stay explicit.** Expose application-specific preload functions and register their main-process handlers before window loading.
 

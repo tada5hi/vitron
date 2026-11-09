@@ -34,14 +34,14 @@ const workspace = path.resolve(__dirname, '../..');
 const requireFromFixture = createRequire(__filename);
 const cliPath = path.join(path.dirname(requireFromFixture.resolve('vitron/package.json')), requireFromFixture('vitron/package.json').bin.vitron);
 
-async function finishWithin(operation: Promise<unknown>) {
+async function finishWithin(operation: Promise<unknown>, timeout = 5000) {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     try {
         return await Promise.race([
             operation.then(() => true),
             new Promise<false>((resolve) => {
-                timer = setTimeout(() => resolve(false), 5000);
+                timer = setTimeout(() => resolve(false), timeout);
             }),
         ]);
     } finally {
@@ -57,7 +57,10 @@ async function signalTree(child: ChildProcess, signal: NodeJS.Signals) {
     try {
         process.kill(-child.pid, signal);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+        const { code } = error as NodeJS.ErrnoException;
+
+        // macOS reports EPERM for a process group holding only an unreaped zombie.
+        if (code !== 'ESRCH' && code !== 'EPERM') {
             throw error;
         }
     }
@@ -68,6 +71,7 @@ type Example = {
     connect: () => Promise<Page>,
     startDev: () => Promise<Page>,
     stopDev: () => Promise<void>,
+    quitElectron: () => Promise<void>,
     startBuilt: () => Promise<{ electron: ElectronApplication, page: Page }>,
 };
 
@@ -79,7 +83,7 @@ export async function replaceSource(root: string, file: string, before: string, 
     await writeFile(filePath, source.replace(before, after));
 }
 
-export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Example }>({
+export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt' | 'next', example: Example }>({
     exampleName: ['vanilla', { option: true }],
     example: async ({ exampleName }, use, testInfo) => {
         // shortcut: Windows needs process-tree ownership after a CLI crash; add a Windows lifecycle runner before enabling.
@@ -104,6 +108,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
             ...process.env,
             PATH: `${path.join(workspace, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH}`,
             NUXT_TELEMETRY_DISABLED: '1',
+            NEXT_TELEMETRY_DISABLED: '1',
             CSC_IDENTITY_AUTO_DISCOVERY: 'false',
         };
 
@@ -129,6 +134,45 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
             });
 
             return child;
+        };
+
+        const expectReleased = async () => {
+            const pids = (await readFile(electronPids, 'utf8')).trim().split('\n').map(Number);
+
+            expect(pids.length, 'Electron must have started').toBeGreaterThan(0);
+
+            for (const pid of pids) {
+                await expect.poll(() => {
+                    try {
+                        process.kill(pid, 0);
+
+                        return false;
+                    } catch (error) {
+                        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+                            throw error;
+                        }
+
+                        return true;
+                    }
+                }, { timeout: 5000, message: `Electron process ${pid} must exit before fallback teardown.` }).toBe(true);
+            }
+
+            for (const host of ['127.0.0.1', '::1']) {
+                const server = createServer();
+
+                try {
+                    await new Promise<void>((resolve, reject) => {
+                        server.once('error', reject);
+                        server.listen(rendererPort, host, () => resolve());
+                    });
+                } finally {
+                    if (server.listening) {
+                        await new Promise<void>((resolve, reject) => {
+                            server.close((error) => (error ? reject(error) : resolve()));
+                        });
+                    }
+                }
+            }
         };
 
         const watch = async (page: Page) => {
@@ -186,7 +230,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
             const mainFile = path.join(root, 'src/main/index.ts');
             const source = await readFile(mainFile, 'utf8');
 
-            await writeFile(mainFile, `import { appendFileSync } from 'node:fs';\n${source.replace("app.on('window-all-closed'", `app.setPath('userData', ${JSON.stringify(path.join(directory, 'user-data'))});\nappendFileSync(${JSON.stringify(electronPids)}, process.pid + '\\n');\napp.on('window-all-closed'`)}`);
+            await writeFile(mainFile, `import { appendFileSync } from 'node:fs';\n${source.replace("app.on('window-all-closed'", `app.setPath('userData', ${JSON.stringify(path.join(directory, 'user-data'))});\nappendFileSync(${JSON.stringify(electronPids)}, process.pid + '\\n');\nprocess.on('SIGUSR2', () => app.quit());\napp.on('window-all-closed'`)}`);
 
             await use({
                 root,
@@ -214,46 +258,25 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
 
                     // Signal only the CLI so descendants must be released by the session.
                     expect(child.kill('SIGTERM')).toBe(true);
-                    expect(await finishWithin(exited), `CLI must exit naturally after SIGTERM.\n${output}`).toBe(true);
+                    expect(await finishWithin(exited, 10_000), `CLI must exit naturally after SIGTERM.\n${output}`).toBe(true);
                     expect(child.exitCode, output).toBe(0);
                     expect(child.signalCode).toBeNull();
 
+                    await expectReleased();
+                },
+                quitElectron: async () => {
+                    expect(dev, 'development must have started').toBeDefined();
+
+                    const child = dev!;
+                    const exited = once(child, 'exit');
                     const pids = (await readFile(electronPids, 'utf8')).trim().split('\n').map(Number);
 
-                    expect(pids.length, 'Electron must have started').toBeGreaterThan(0);
+                    process.kill(pids.at(-1)!, 'SIGUSR2');
+                    expect(await finishWithin(exited, 10_000), `CLI must exit naturally after Electron quits.\n${output}`).toBe(true);
+                    expect(child.exitCode, output).toBe(0);
+                    expect(child.signalCode).toBeNull();
 
-                    for (const pid of pids) {
-                        await expect.poll(() => {
-                            try {
-                                process.kill(pid, 0);
-
-                                return false;
-                            } catch (error) {
-                                if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
-                                    throw error;
-                                }
-
-                                return true;
-                            }
-                        }, { timeout: 5000, message: `Electron process ${pid} must exit before fallback teardown.` }).toBe(true);
-                    }
-
-                    for (const host of ['127.0.0.1', '::1']) {
-                        const server = createServer();
-
-                        try {
-                            await new Promise<void>((resolve, reject) => {
-                                server.once('error', reject);
-                                server.listen(rendererPort, host, () => resolve());
-                            });
-                        } finally {
-                            if (server.listening) {
-                                await new Promise<void>((resolve, reject) => {
-                                    server.close((error) => (error ? reject(error) : resolve()));
-                                });
-                            }
-                        }
-                    }
+                    await expectReleased();
                 },
                 startBuilt: async () => {
                     const electronDist = path.join(path.dirname(requireFromFixture.resolve('electron/package.json')), 'dist');

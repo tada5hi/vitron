@@ -15,16 +15,17 @@ npm run lint
 
 ```sh
 npx playwright install-deps chromium
+node node_modules/electron/install.js
 sudo chown root node_modules/electron/dist/chrome-sandbox
 sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
 xvfb-run --auto-servernum npm run test:e2e
 ```
 
-The E2E suite exercises vanilla and Nuxt in development and as real unpacked applications. Development checks cover renderer updates in both examples, plus vanilla preload IPC updates and main-process restart. Both examples then receive SIGTERM on the CLI alone and must exit naturally with code zero, all recorded native Electron processes must be gone and the renderer port must rebind on IPv4 and IPv6; fallback process-tree teardown runs afterward. Built checks confirm packaged state, loopback production serving and renderer content, including vanilla IPC. Fixtures copy the examples so source edits, generated output and application data stay isolated; teardown bounds tracing and graceful shutdown, then stops process trees before removing the copies. Packaging reuses installed Electron, creates unpacked output and disables signing and publishing.
+The E2E suite exercises vanilla, Nuxt and Next.js in development and as real unpacked applications. Development checks cover renderer updates in all three examples, plus vanilla preload IPC updates and main-process restart. All three then receive SIGTERM on the CLI alone and must exit naturally with code zero, all recorded native Electron processes must be gone and the renderer port must rebind on IPv4 and IPv6; fallback process-tree teardown runs afterward. Vanilla also quits the app with SIGUSR2 (injected into its main file) and requires the CLI to exit 0 with the same release checks. Built checks confirm packaged state, loopback production serving and renderer content, including vanilla IPC. Fixtures copy the examples so source edits, generated output and application data stay isolated; teardown bounds tracing and graceful shutdown, then stops process trees before removing the copies. Packaging reuses installed Electron, creates unpacked output and disables signing and publishing.
 
 Playwright writes its HTML report to `playwright-report/` and failure diagnostics to `test-results/`. Inspect the report with `npx playwright show-report`; the Ubuntu E2E job uploads both directories when it fails. Keep `npm test` as the fast unit suite and run E2E separately when changing CLI startup, rebuild/reload behavior, preload integration, renderer serving or example packaging.
 
-The package build uses tsdown for ESM JavaScript and matching declarations; each build cleans all four output directories. The example `vitron build` commands also invoke electron-builder; an unsuccessful packager must cause a nonzero build exit. Root builds validate both examples, while CI's shared build action prepares the library's export artifacts.
+The package build uses tsdown for ESM JavaScript and matching declarations; each build cleans all four output directories. The example `vitron build` commands also invoke electron-builder; an unsuccessful packager must cause a nonzero build exit. Root builds validate all three examples, while CI's shared build action prepares the library's export artifacts.
 
 `@tada5hi/eslint-config` supplies the flat ESLint configuration, including checks on these guides. Vitest uses its V8 coverage provider and the thresholds in its test configuration. Release-please manages releases and monoship publishes packages; do not publish or hand-edit release versions during ordinary development.
 

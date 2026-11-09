@@ -20,7 +20,11 @@ type ElectronHandler = {
     restart: () => Promise<void>
     up: () => boolean
 };
-export function createElectron(config: Config, logger: Logger) : ElectronHandler {
+export function createElectron(
+    config: Config,
+    logger: Logger,
+    onExit?: (code: number | null, signal: NodeJS.Signals | null) => void,
+) : ElectronHandler {
     let myProcess : ChildProcess | undefined;
     let stopping: Promise<void> | undefined;
     let restartRequested = false;
@@ -43,8 +47,13 @@ export function createElectron(config: Config, logger: Logger) : ElectronHandler
             logger.info(`${data}`);
         });
 
+        let spawned = false;
+
         const launched = new Promise<void>((resolve, reject) => {
-            child.once('spawn', resolve);
+            child.once('spawn', () => {
+                spawned = true;
+                resolve();
+            });
             child.once('error', reject);
             child.once('close', () => reject(new Error('Electron closed before startup.')));
         });
@@ -53,9 +62,14 @@ export function createElectron(config: Config, logger: Logger) : ElectronHandler
             logger.error(e.message);
         });
 
-        child.on('close', () => {
+        child.on('close', (code, signal) => {
             if (myProcess === child) {
                 myProcess = undefined;
+            }
+
+            // `stopping` is set before any requested close and cleared only after it, so it separates the two.
+            if (spawned && !stopping) {
+                onExit?.(code, signal);
             }
         });
 

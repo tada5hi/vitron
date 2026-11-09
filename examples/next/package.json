@@ -1,0 +1,29 @@
+{
+    "name": "@vitron/next",
+    "private": true,
+    "version": "2.1.3",
+    "main": ".vitron/main/index.js",
+    "description": "This is my first vitron app.",
+    "scripts": {
+        "dev": "npx vitron dev",
+        "build": "npx vitron build --config electron-builder.mjs"
+    },
+    "license": "ISC",
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "dependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "electron": "^45.2.2",
+        "electron-builder": "^26.0.12",
+        "next": "^16.4.5",
+        "vitron": "^2.4.0"
+    }
+}

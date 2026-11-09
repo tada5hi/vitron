@@ -1,4 +1,7 @@
 import { expect, it, vi } from 'vitest';
+import { buildMainApp } from '../../../src/apps/main';
+import { buildPreloadApp } from '../../../src/apps/preload';
+import { buildRendererApp } from '../../../src/apps/renderer';
 import { BuildCommand } from '../../../src/cli/build';
 
 const { sync } = vi.hoisted(() => ({ sync: vi.fn() }));
@@ -33,4 +36,22 @@ it('propagates a missing packaging executable', async () => {
         root: '.',
         flags: [],
     })).rejects.toBe(error);
+});
+
+it('does not build main, preload or package after a renderer failure', async () => {
+    const error = new Error('renderer failed');
+
+    vi.clearAllMocks();
+    vi.mocked(buildRendererApp).mockRejectedValueOnce(error);
+
+    await expect(new BuildCommand().handler({
+        _: [],
+        $0: 'vitron',
+        root: '.',
+        flags: [],
+    })).rejects.toBe(error);
+
+    expect(buildMainApp).not.toHaveBeenCalled();
+    expect(buildPreloadApp).not.toHaveBeenCalled();
+    expect(sync).not.toHaveBeenCalled();
 });

@@ -21,6 +21,13 @@ test('develops a real Electron renderer and applies source updates', async ({ ex
     await example.stopDev();
 });
 
+test('ends development when the app quits', async ({ example }) => {
+    const page = await example.startDev();
+
+    await expect(page.locator('#app')).toHaveText('Vitron is running. IPC response: pong');
+    await example.quitElectron();
+});
+
 test('runs an unpacked production app without a development server', async ({ example }) => {
     const { electron, page } = await example.startBuilt();
 

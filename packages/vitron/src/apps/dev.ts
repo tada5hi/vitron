@@ -12,6 +12,7 @@ import type { ViteWatchHook } from '../core';
 import { buildMainConfig } from './main';
 import { buildPreloadConfig } from './preload';
 import { createRenderer } from './renderer';
+import { assertSupportedNext } from './renderer/next';
 import { clearBuildDirectory, createBuildDirectory } from './utils';
 
 export async function runDevelopmentSession(
@@ -31,7 +32,10 @@ export async function runDevelopmentSession(
     });
 
     const cleanups: (() => Promise<unknown>)[] = [];
-    const electron = createElectron(config, logger);
+    const cleanExit = new Error('Electron exited.');
+    const electron = createElectron(config, logger, (code, exitSignal) => {
+        controller.abort(code === 0 ? cleanExit : new Error(`Electron exited unexpectedly (${code === null ? `signal ${exitSignal}` : `exit code ${code}`}).`));
+    });
     const renderer = createRenderer(config);
     let reactions: Promise<unknown> = Promise.resolve();
 
@@ -60,6 +64,10 @@ export async function runDevelopmentSession(
     };
 
     const start = async () => {
+        if (!config.get('rendererDevCommand')) {
+            assertSupportedNext(config);
+        }
+
         await clearBuildDirectory(config);
         await createBuildDirectory(config);
 
@@ -89,7 +97,7 @@ export async function runDevelopmentSession(
     await aborted;
     await startup;
 
-    const errors: unknown[] = session.reason === signal.reason ? [] : [session.reason];
+    const errors: unknown[] = session.reason === signal.reason || session.reason === cleanExit ? [] : [session.reason];
 
     for (const cleanup of cleanups.reverse()) {
         try {

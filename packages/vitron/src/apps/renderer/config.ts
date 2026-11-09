@@ -7,13 +7,13 @@
 
 import path from 'node:path';
 import { read } from 'locter';
-import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
 import type { Config } from '../../config';
 import type { EnvironmentName } from '../../constants';
 import { getElectronDependencies, getElectronRendererDependencies } from '../../utils';
 import { AppName } from '../constants';
 import { getAppDestinationDirectoryPath, getAppDirectoryPath } from '../utils';
+import { applyConfigHook } from '../utils/config-hook';
 
 export async function buildRendererConfig(
     config: Config,
@@ -43,7 +43,7 @@ export async function buildRendererConfig(
     };
 
     if (config.has('rendererConfig')) {
-        merge(inlineConfig, config.get('rendererConfig')(inlineConfig));
+        return applyConfigHook(inlineConfig, config.get('rendererConfig'));
     }
 
     return inlineConfig;

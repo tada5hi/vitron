@@ -29,11 +29,80 @@ function killProcess(child: ChildProcess) {
     child.kill();
 }
 
+type GroupState = 'alive' | 'gone' | 'zombie';
+
+function signalGroup(pid: number, signal: NodeJS.Signals | 0) : GroupState {
+    try {
+        process.kill(-pid, signal);
+
+        return 'alive';
+    } catch (error) {
+        const { code } = error as NodeJS.ErrnoException;
+
+        if (code === 'ESRCH') {
+            return 'gone';
+        }
+
+        // A group kill fails with EPERM only if no member can be signalled: an unreaped zombie, or a process of another user.
+        if (code === 'EPERM') {
+            return 'zombie';
+        }
+
+        throw error;
+    }
+}
+
+// Renderer children lead their own process group on POSIX, so a shell launcher's workers are signalled with it.
+async function terminateGroup(pid: number) : Promise<void> {
+    if (signalGroup(pid, 'SIGTERM') === 'gone') {
+        return;
+    }
+
+    const deadline = Date.now() + 5000;
+    let killed = false;
+    let unconfirmed = 0;
+
+    for (;;) {
+        await delay(100);
+
+        if (!killed && Date.now() >= deadline) {
+            killed = true;
+            signalGroup(pid, 'SIGKILL');
+        }
+
+        const state = signalGroup(pid, 0);
+
+        if (state === 'gone') {
+            return;
+        }
+
+        // Only an unreaped zombie outlasts SIGKILL, and Linux still counts one as signallable; stop must not wait on its reaper.
+        unconfirmed = killed || state === 'zombie' ? unconfirmed + 1 : 0;
+
+        if (unconfirmed >= 20) {
+            // eslint-disable-next-line no-console
+            console.warn(`Could not confirm that renderer process group ${pid} ended.`);
+
+            return;
+        }
+    }
+}
+
 function terminateProcess(child: ChildProcess) : Promise<void> {
     const { pid } = child;
 
-    // Without a pid or with an exit status there is no process to wait for, and `close` may have fired already.
-    if (!pid || child.exitCode !== null || child.signalCode !== null) {
+    if (!pid) {
+        killProcess(child);
+
+        return Promise.resolve();
+    }
+
+    if (process.platform !== 'win32') {
+        return terminateGroup(pid);
+    }
+
+    // With an exit status there is no process to wait for, and `close` may have fired already.
+    if (child.exitCode !== null || child.signalCode !== null) {
         killProcess(child);
 
         return Promise.resolve();
@@ -42,22 +111,14 @@ function terminateProcess(child: ChildProcess) : Promise<void> {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     return new Promise<void>((resolve, reject) => {
-        const forceKill = () => {
-            kill(pid, 'SIGKILL', (error) => {
-                if (error) {
-                    reject(error);
-                }
-            });
-        };
-
         child.once('close', () => resolve());
-        timer = setTimeout(forceKill, 5000);
+        timer = setTimeout(() => kill(pid, 'SIGKILL'), 5000);
 
-        if (process.platform === 'win32') {
-            forceKill();
-        } else {
-            child.kill('SIGTERM');
-        }
+        kill(pid, 'SIGKILL', (error) => {
+            if (error) {
+                reject(error);
+            }
+        });
     }).finally(() => clearTimeout(timer));
 }
 

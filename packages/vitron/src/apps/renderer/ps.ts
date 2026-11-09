@@ -6,6 +6,7 @@
  */
 
 import type { ChildProcess, SpawnOptions } from 'node:child_process';
+import process from 'node:process';
 import spawn from 'cross-spawn';
 import semver from 'semver';
 import type { Config } from '../../config';
@@ -18,13 +19,18 @@ export function spawnRendererProcess(
     const execOptions: SpawnOptions = {
         cwd: config.get('rootPath'),
         stdio: 'inherit',
-        detached: false,
+        detached: process.platform !== 'win32',
     };
 
     const command = config.get('rendererDevCommand');
 
     if (command) {
-        return spawn(command(config.get()));
+        return spawn(command(config.get()), {
+            shell: true,
+            cwd: config.get('rootPath'),
+            stdio: 'inherit',
+            detached: process.platform !== 'win32',
+        });
     }
 
     const framework = config.get('framework') as PackageInfo;
