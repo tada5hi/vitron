@@ -86,10 +86,10 @@
     },
     "devDependencies": {
         "@types/cross-spawn": "^6.0.6",
-        "@types/node": "^24.5.2",
+        "@types/node": "^26.6.6",
         "@types/semver": "^7.7.0",
         "@types/yargs": "^17.0.29",
-        "electron": "^38.1.2"
+        "electron": "^45.2.2"
     },
     "peerDependencies": {
         "electron": ">=35.x",
