@@ -18,6 +18,7 @@ test('develops a real Electron renderer and applies source updates', async ({ ex
     await expect.poll(() => browser.isConnected()).toBe(false);
     page = await example.connect();
     await expect(page.locator('#app')).toHaveText('Renderer updated. IPC response: preload: main updated');
+    await example.stopDev();
 });
 
 test('runs an unpacked production app without a development server', async ({ example }) => {

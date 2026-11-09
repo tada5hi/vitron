@@ -8,14 +8,7 @@
 import process from 'node:process';
 import { createLogger } from 'vite';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import {
-    clearBuildDirectory,
-    createBuildDirectory,
-    createRenderer,
-    startMainApp,
-    startPreloadApp,
-} from '../apps';
-import { createElectron } from '../core';
+import { runDevelopmentSession } from '../apps/dev';
 import { createConfig } from '../config';
 import { EnvironmentName } from '../constants';
 
@@ -61,62 +54,18 @@ export class DevCommand implements CommandModule {
 
             config.set('env', EnvironmentName.DEVELOPMENT);
 
-            // ----------------------------------------
+            const controller = new AbortController();
+            const stop = () => controller.abort();
 
-            await clearBuildDirectory(config);
-            await createBuildDirectory(config);
+            process.on('SIGINT', stop);
+            process.on('SIGTERM', stop);
 
-            // ----------------------------------------
-
-            const electronProcess = createElectron(config, logger);
-            const rendererProcess = createRenderer(config);
-            let shuttingDown = false;
-
-            /**
-             * Entrypoint
-             */
-            await startMainApp(config, async () => {
-                if (shuttingDown || !electronProcess.up()) {
-                    return;
-                }
-
-                await electronProcess.restart();
-            });
-
-            /**
-             * Preload
-             */
-            await startPreloadApp(config, async () => {
-                if (!rendererProcess.up()) {
-                    return;
-                }
-
-                await rendererProcess.reload();
-            });
-
-            // ----------------------------------------
-
-            const killAllProcesses = async () => {
-                if (shuttingDown) {
-                    return;
-                }
-
-                shuttingDown = true;
-                await electronProcess.stop();
-
-                await rendererProcess.stop();
-
-                process.exit(0);
-            };
-
-            process.on('SIGINT', killAllProcesses);
-            process.on('SIGTERM', killAllProcesses);
-            process.on('exit', killAllProcesses);
-
-            // ----------------------------------------
-
-            await rendererProcess.start();
-            electronProcess.start();
+            try {
+                await runDevelopmentSession(config, logger, controller.signal);
+            } finally {
+                process.removeListener('SIGINT', stop);
+                process.removeListener('SIGTERM', stop);
+            }
         } catch (e) {
             // eslint-disable-next-line no-console
             console.log(e);

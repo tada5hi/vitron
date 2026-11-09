@@ -160,3 +160,25 @@ it.skipIf(process.platform === 'win32')('keeps the process stopped when shutdown
     expect(electron.up()).toBe(false);
     await expect(fetch(`http://127.0.0.1:${port}`)).rejects.toThrow();
 });
+
+it('start rejects on launch error', async () => {
+    vi.mocked(spawn).mockImplementationOnce(() => spawnNode(`/vitron-missing-electron-${process.pid}`));
+
+    const electron = createElectron(buildConfig({ rootPath: process.cwd() }), createLogger('silent'));
+
+    await expect(electron.start()).rejects.toMatchObject({ code: 'ENOENT' });
+    await vi.waitFor(() => expect(electron.up()).toBe(false));
+});
+
+it('restart rejects when the replacement fails to launch', async () => {
+    const electron = createElectron(buildConfig({ rootPath: process.cwd() }), createLogger('silent'));
+
+    await electron.start();
+
+    const original = await ready(0);
+
+    vi.mocked(spawn).mockImplementationOnce(() => spawnNode(`/vitron-missing-electron-${process.pid}`));
+    await expect(electron.restart()).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(original.exitCode !== null || original.signalCode !== null).toBe(true);
+    await vi.waitFor(() => expect(electron.up()).toBe(false));
+});

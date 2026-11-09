@@ -5,41 +5,68 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
 import { build } from 'vite';
-import type { InlineConfig } from 'vite';
-import type { ViteWatchHook } from './types';
+import type { InlineConfig, Rollup } from 'vite';
+import type { ViteWatchBuild, ViteWatchHook } from './types';
 
-export async function buildWithWatchHook(
+export function buildWithWatchHook(
     config: InlineConfig,
-    watchHook: ViteWatchHook,
-) {
-    return new Promise<void>((resolve) => {
-        if (config.build?.watch) {
-            let firstBundle = true;
-            const closeBundle = (): void => {
-                if (firstBundle) {
-                    firstBundle = false;
-                    resolve();
-                } else {
-                    watchHook();
-                }
-            };
+    hook: ViteWatchHook,
+): ViteWatchBuild {
+    let resolveReady!: () => void;
+    let rejectReady!: (error: unknown) => void;
+    const ready = new Promise<void>((resolve, reject) => {
+        resolveReady = resolve;
+        rejectReady = reject;
+    });
 
-            config = merge(config, {
-                plugins: [
-                    {
-                        name: 'vite:watcher',
-                        closeBundle,
-                    },
-                ],
-            } satisfies InlineConfig);
+    // an unawaited rejection must not surface as unhandled
+    ready.catch(() => {});
+
+    let closed = false;
+    let first = true;
+    let watcher: Rollup.RollupWatcher | undefined;
+
+    const building = build(config).then((result) => {
+        if (!('close' in result)) {
+            resolveReady();
+
+            return;
         }
 
-        build(config).then(() => {
-            if (!config.build?.watch) {
-                resolve();
+        watcher = result;
+        watcher.on('event', async (event) => {
+            if (closed) {
+                return;
+            }
+
+            if (event.code === 'BUNDLE_END') {
+                if (first) {
+                    first = false;
+                    resolveReady();
+                } else {
+                    await hook();
+                }
+            } else if (event.code === 'ERROR' && first) {
+                first = false;
+                rejectReady(event.error);
             }
         });
-    });
+    }, rejectReady);
+
+    let closing: Promise<void> | undefined;
+
+    return {
+        ready,
+        close: () => {
+            closing ??= (async () => {
+                closed = true;
+                resolveReady();
+                await building;
+                await watcher?.close();
+            })();
+
+            return closing;
+        },
+    };
 }

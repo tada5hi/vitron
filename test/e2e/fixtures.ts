@@ -12,6 +12,7 @@ import {
     writeFile,
 } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -31,6 +32,7 @@ import { getRandomPort } from 'get-port-please';
 
 const workspace = path.resolve(__dirname, '../..');
 const requireFromFixture = createRequire(__filename);
+const cliPath = path.join(path.dirname(requireFromFixture.resolve('vitron/package.json')), requireFromFixture('vitron/package.json').bin.vitron);
 
 async function finishWithin(operation: Promise<unknown>) {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -65,6 +67,7 @@ type Example = {
     root: string,
     connect: () => Promise<Page>,
     startDev: () => Promise<Page>,
+    stopDev: () => Promise<void>,
     startBuilt: () => Promise<{ electron: ElectronApplication, page: Page }>,
 };
 
@@ -86,6 +89,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
 
         const directory = await mkdtemp(path.join(tmpdir(), 'vitron-e2e-'));
         const root = path.join(directory, 'examples', exampleName);
+        const electronPids = path.join(directory, 'electron-pids');
         const children: ChildProcess[] = [];
         const browsers: Browser[] = [];
         const contexts: BrowserContext[] = [];
@@ -94,6 +98,8 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
         let currentPage: Page | undefined;
         let output = '';
         let debugPort: number;
+        let rendererPort: number;
+        let dev: ChildProcess | undefined;
         const env: NodeJS.ProcessEnv = {
             ...process.env,
             PATH: `${path.join(workspace, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH}`,
@@ -104,7 +110,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
         delete env.ELECTRON_RUN_AS_NODE;
 
         const run = (args: string[]) => {
-            const child = spawn(process.execPath, [path.join(workspace, 'packages/vitron/dist/index.cjs'), ...args], {
+            const child = spawn(process.execPath, [cliPath, ...args], {
                 cwd: root,
                 env,
                 detached: true,
@@ -180,7 +186,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
             const mainFile = path.join(root, 'src/main/index.ts');
             const source = await readFile(mainFile, 'utf8');
 
-            await writeFile(mainFile, source.replace("app.on('window-all-closed'", `app.setPath('userData', ${JSON.stringify(path.join(directory, 'user-data'))});\napp.on('window-all-closed'`));
+            await writeFile(mainFile, `import { appendFileSync } from 'node:fs';\n${source.replace("app.on('window-all-closed'", `app.setPath('userData', ${JSON.stringify(path.join(directory, 'user-data'))});\nappendFileSync(${JSON.stringify(electronPids)}, process.pid + '\\n');\napp.on('window-all-closed'`)}`);
 
             await use({
                 root,
@@ -190,15 +196,64 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt', example: Exam
 
                     await writeFile(mainFile, `app.commandLine.appendSwitch('remote-debugging-port', '${debugPort}');\n${main}`);
 
-                    let rendererPort = await getRandomPort('127.0.0.1');
+                    rendererPort = await getRandomPort('127.0.0.1');
 
                     while (rendererPort === debugPort) {
                         rendererPort = await getRandomPort('127.0.0.1');
                     }
 
-                    run(['dev', '--port', `${rendererPort}`]);
+                    dev = run(['dev', '--port', `${rendererPort}`]);
 
                     return connect();
+                },
+                stopDev: async () => {
+                    expect(dev, 'development must have started').toBeDefined();
+
+                    const child = dev!;
+                    const exited = once(child, 'exit');
+
+                    // Signal only the CLI so descendants must be released by the session.
+                    expect(child.kill('SIGTERM')).toBe(true);
+                    expect(await finishWithin(exited), `CLI must exit naturally after SIGTERM.\n${output}`).toBe(true);
+                    expect(child.exitCode, output).toBe(0);
+                    expect(child.signalCode).toBeNull();
+
+                    const pids = (await readFile(electronPids, 'utf8')).trim().split('\n').map(Number);
+
+                    expect(pids.length, 'Electron must have started').toBeGreaterThan(0);
+
+                    for (const pid of pids) {
+                        await expect.poll(() => {
+                            try {
+                                process.kill(pid, 0);
+
+                                return false;
+                            } catch (error) {
+                                if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+                                    throw error;
+                                }
+
+                                return true;
+                            }
+                        }, { timeout: 5000, message: `Electron process ${pid} must exit before fallback teardown.` }).toBe(true);
+                    }
+
+                    for (const host of ['127.0.0.1', '::1']) {
+                        const server = createServer();
+
+                        try {
+                            await new Promise<void>((resolve, reject) => {
+                                server.once('error', reject);
+                                server.listen(rendererPort, host, () => resolve());
+                            });
+                        } finally {
+                            if (server.listening) {
+                                await new Promise<void>((resolve, reject) => {
+                                    server.close((error) => (error ? reject(error) : resolve()));
+                                });
+                            }
+                        }
+                    }
                 },
                 startBuilt: async () => {
                     const electronDist = path.join(path.dirname(requireFromFixture.resolve('electron/package.json')), 'dist');

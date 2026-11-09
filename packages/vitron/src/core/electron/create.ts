@@ -15,7 +15,7 @@ import { AppName } from '../../apps/constants';
 import { getAppDestinationDirectoryPath } from '../../apps/utils';
 
 type ElectronHandler = {
-    start: () => void,
+    start: () => Promise<void>,
     stop: () => Promise<void>,
     restart: () => Promise<void>
     up: () => boolean
@@ -25,7 +25,7 @@ export function createElectron(config: Config, logger: Logger) : ElectronHandler
     let stopping: Promise<void> | undefined;
     let restartRequested = false;
 
-    const start = () : void => {
+    const start = async () : Promise<void> => {
         if (myProcess || stopping) {
             return;
         }
@@ -43,6 +43,12 @@ export function createElectron(config: Config, logger: Logger) : ElectronHandler
             logger.info(`${data}`);
         });
 
+        const launched = new Promise<void>((resolve, reject) => {
+            child.once('spawn', resolve);
+            child.once('error', reject);
+            child.once('close', () => reject(new Error('Electron closed before startup.')));
+        });
+
         child.on('error', (e) => {
             logger.error(e.message);
         });
@@ -52,6 +58,8 @@ export function createElectron(config: Config, logger: Logger) : ElectronHandler
                 myProcess = undefined;
             }
         });
+
+        await launched;
     };
 
     const stop = () : Promise<void> => {
@@ -112,7 +120,7 @@ export function createElectron(config: Config, logger: Logger) : ElectronHandler
         }
 
         restartRequested = false;
-        start();
+        await start();
     };
 
     return {
