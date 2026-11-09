@@ -10,9 +10,10 @@ import {
 import { spawnRendererProcess } from '../../../src/apps/renderer/ps';
 import { Framework } from '../../../src/utils';
 
-const { spawn } = vi.hoisted(() => ({ spawn: vi.fn() }));
+const { spawn, shellSpawn } = vi.hoisted(() => ({ spawn: vi.fn(), shellSpawn: vi.fn() }));
 
 vi.mock('cross-spawn', () => ({ default: spawn }));
+vi.mock('node:child_process', () => ({ spawn: shellSpawn }));
 
 const rootPath = '/project';
 
@@ -36,6 +37,7 @@ describe.each([
 
     beforeEach(() => {
         spawn.mockReset();
+        shellSpawn.mockReset();
         Object.defineProperty(process, 'platform', { ...original, value: platform });
     });
 
@@ -46,17 +48,18 @@ describe.each([
     it('runs a custom command through a shell from the project root', () => {
         const child = {};
 
-        spawn.mockReturnValueOnce(child);
+        shellSpawn.mockReturnValueOnce(child);
 
         const result = spawnRendererProcess(createConfig({ rendererDevCommand: () => 'custom dev --flag' }));
 
         expect(result).toBe(child);
-        expect(spawn.mock.calls).toEqual([['custom dev --flag', {
+        expect(shellSpawn.mock.calls).toEqual([['custom dev --flag', {
             shell: true,
             cwd: rootPath,
             stdio: 'inherit',
             detached,
         }]]);
+        expect(spawn).not.toHaveBeenCalled();
     });
 
     it.each([

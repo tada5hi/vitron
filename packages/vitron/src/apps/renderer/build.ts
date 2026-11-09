@@ -7,6 +7,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import type { SpawnOptions, SpawnSyncReturns } from 'node:child_process';
 import spawn from 'cross-spawn';
 import semver from 'semver';
@@ -40,7 +41,8 @@ export async function buildRendererApp(config: Config): Promise<void> {
     if (command) {
         const commandLine = command(config.get());
 
-        assertRendererBuildResult(spawn.sync(commandLine, {
+        // cross-spawn reads a shell run without a resolved file as a missing command and turns exit status 1 into ENOENT on Windows.
+        assertRendererBuildResult(spawnSync(commandLine, {
             shell: true,
             cwd: config.get('rootPath'),
             stdio: 'inherit',
