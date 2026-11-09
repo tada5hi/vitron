@@ -6,6 +6,7 @@
  */
 
 import process from 'node:process';
+import { inspect } from 'node:util';
 import { createLogger } from 'vite';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { runDevelopmentSession } from '../apps/dev';
@@ -72,8 +73,10 @@ export class DevCommand implements CommandModule {
                 process.removeListener('SIGQUIT', stop);
             }
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.log(e);
+            // process.exit() drops whatever a full pipe has not taken yet.
+            await new Promise((resolve) => {
+                process.stdout.write(`${inspect(e)}\n`, resolve);
+            });
 
             // Rethrowing would make yargs print the error again together with the usage text.
             process.exit(1);

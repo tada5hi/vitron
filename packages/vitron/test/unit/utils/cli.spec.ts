@@ -1,4 +1,5 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
 import {
     mkdir,
     mkdtemp,
@@ -42,6 +43,35 @@ it('prints a development failure once, without the usage text', { timeout: 15_00
         expect(result.status).toBe(1);
         expect(output.split('The main entrypoint file could not be located').length - 1).toBe(1);
         expect(output).not.toContain('Options:');
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
+it('writes a whole development failure to a slow pipe before exiting', { timeout: 15_000 }, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'vitron-large-failure-'));
+
+    try {
+        await writeFile(path.join(root, 'package.json'), '{"name":"large-failure","type":"module"}');
+        await writeFile(path.join(root, 'vitron.config.mjs'), "throw new Error('x'.repeat(200000) + 'END-OF-FAILURE');");
+
+        const child = spawn(process.execPath, [cliPath, 'dev', '--root', root], {
+            cwd: root,
+            stdio: ['ignore', 'pipe', 'ignore'],
+        });
+        const chunks: Buffer[] = [];
+
+        child.stdout.on('data', (chunk: Buffer) => {
+            chunks.push(chunk);
+        });
+        // Leaving the pipe full when the CLI reaches its exit is what would lose the remainder.
+        child.stdout.pause();
+        setTimeout(() => child.stdout.resume(), 2000);
+
+        const [status] = await once(child, 'close');
+
+        expect(status).toBe(1);
+        expect(Buffer.concat(chunks).includes('END-OF-FAILURE')).toBe(true);
     } finally {
         await rm(root, { recursive: true, force: true });
     }
