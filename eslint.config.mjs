@@ -13,5 +13,5 @@ export default config(
             'unicorn/prefer-promise-with-resolvers': 'off',
         },
     },
-    { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/playwright-report/**', '**/test-results/**', '**/writable/**', '**/.nuxt/**', '**/.next/**','**/.vitron/**', '**/.output/**', 'packages/vitron/assets/**', 'packages/vitron/main/**', 'packages/vitron/preload/**', 'packages/vitron/renderer/**'] },
+    { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/playwright-report/**', '**/test-results/**', '**/writable/**', '**/.nuxt/**', '**/.next/**', '**/next-env.d.ts', '**/.vitron/**', '**/.output/**', 'packages/vitron/assets/**', 'packages/vitron/main/**', 'packages/vitron/preload/**', 'packages/vitron/renderer/**'] },
 );
