@@ -24,6 +24,11 @@ export async function moveAppRendererDirectory(
 
     const destinationPath = path.join(destinationBasePath, AppName.RENDERER);
 
+    // Removing the destination would remove the source with it.
+    if (path.resolve(sourceDistPath) === path.resolve(destinationPath)) {
+        return;
+    }
+
     try {
         await fs.promises.access(destinationPath, fs.constants.R_OK);
         await fs.promises.rm(destinationPath, { recursive: true });

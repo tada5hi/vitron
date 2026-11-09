@@ -306,6 +306,28 @@ describe('renderer output move', () => {
     });
 });
 
+describe('renderer output already in place', () => {
+    it('keeps output that is already in the packaging directory', async () => {
+        const { moveAppRendererDirectory } = await vi.importActual<typeof rendererMove>('../../../src/apps/renderer/move');
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitron-renderer-same-'));
+
+        try {
+            fs.mkdirSync(path.join(root, '.vitron/renderer'), { recursive: true });
+            fs.writeFileSync(path.join(root, '.vitron/renderer/index.html'), 'export');
+
+            await moveAppRendererDirectory(createConfig({
+                rootPath: root,
+                buildDirectory: '.vitron',
+                rendererBuildDirectory: path.join(root, '.vitron/renderer'),
+            }));
+
+            expect(fs.readFileSync(path.join(root, '.vitron/renderer/index.html'), 'utf8')).toBe('export');
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
+
 describe('renderer build without mocks', () => {
     it('reports failure in a compound shell command', async () => {
         const actual = await vi.importActual<typeof childProcess>('node:child_process');
