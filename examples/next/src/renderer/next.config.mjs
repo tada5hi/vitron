@@ -19,7 +19,8 @@ function commonRoot(a, b) {
         shared.push(left[i]);
     }
 
-    return shared.join(path.sep) || path.sep;
+    // A bare drive ("C:") would be relative to the working directory, so a shared filesystem root comes from path.parse.
+    return shared.length > 1 ? shared.join(path.sep) : path.parse(a).root;
 }
 
 export default {
