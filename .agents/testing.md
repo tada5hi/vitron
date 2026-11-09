@@ -15,6 +15,7 @@ npm run lint
 
 ```sh
 npx playwright install-deps chromium
+node node_modules/electron/install.js
 sudo chown root node_modules/electron/dist/chrome-sandbox
 sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
 xvfb-run --auto-servernum npm run test:e2e
