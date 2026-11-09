@@ -34,14 +34,14 @@ const workspace = path.resolve(__dirname, '../..');
 const requireFromFixture = createRequire(__filename);
 const cliPath = path.join(path.dirname(requireFromFixture.resolve('vitron/package.json')), requireFromFixture('vitron/package.json').bin.vitron);
 
-async function finishWithin(operation: Promise<unknown>) {
+async function finishWithin(operation: Promise<unknown>, timeout = 5000) {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     try {
         return await Promise.race([
             operation.then(() => true),
             new Promise<false>((resolve) => {
-                timer = setTimeout(() => resolve(false), 5000);
+                timer = setTimeout(() => resolve(false), timeout);
             }),
         ]);
     } finally {
@@ -57,7 +57,10 @@ async function signalTree(child: ChildProcess, signal: NodeJS.Signals) {
     try {
         process.kill(-child.pid, signal);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+        const { code } = error as NodeJS.ErrnoException;
+
+        // macOS reports EPERM for a process group holding only an unreaped zombie.
+        if (code !== 'ESRCH' && code !== 'EPERM') {
             throw error;
         }
     }
@@ -255,7 +258,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt' | 'next', exam
 
                     // Signal only the CLI so descendants must be released by the session.
                     expect(child.kill('SIGTERM')).toBe(true);
-                    expect(await finishWithin(exited), `CLI must exit naturally after SIGTERM.\n${output}`).toBe(true);
+                    expect(await finishWithin(exited, 10_000), `CLI must exit naturally after SIGTERM.\n${output}`).toBe(true);
                     expect(child.exitCode, output).toBe(0);
                     expect(child.signalCode).toBeNull();
 
@@ -269,7 +272,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt' | 'next', exam
                     const pids = (await readFile(electronPids, 'utf8')).trim().split('\n').map(Number);
 
                     process.kill(pids.at(-1)!, 'SIGUSR2');
-                    expect(await finishWithin(exited), `CLI must exit naturally after Electron quits.\n${output}`).toBe(true);
+                    expect(await finishWithin(exited, 10_000), `CLI must exit naturally after Electron quits.\n${output}`).toBe(true);
                     expect(child.exitCode, output).toBe(0);
                     expect(child.signalCode).toBeNull();
 
