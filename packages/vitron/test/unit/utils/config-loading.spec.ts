@@ -58,7 +58,7 @@ it('reads project dependencies for all process configurations', async () => {
         ]);
 
         for (const appConfig of configs) {
-            expect(appConfig!.build!.rollupOptions!.external).toEqual(expect.arrayContaining(['example', 'peer']));
+            expect(appConfig!.build!.rolldownOptions!.external).toEqual(expect.arrayContaining(['example', 'peer']));
         }
     } finally {
         await rm(root, { recursive: true, force: true });

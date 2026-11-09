@@ -39,7 +39,7 @@ export async function runDevelopmentSession(
     const renderer = createRenderer(config);
     let reactions: Promise<unknown> = Promise.resolve();
 
-    // Rollup does not catch a rejecting event listener, so a reaction reports failure by aborting.
+    // The watcher only logs a rejecting event listener, so a reaction reports failure by aborting.
     const reactTo = (up: () => boolean, react: () => Promise<void>) : ViteWatchHook => () => {
         if (session.aborted || !up()) {
             return undefined;

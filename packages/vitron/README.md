@@ -196,6 +196,9 @@ module.exports = {
 - **Framework versions matter.** Nuxt and Next are detected from the project's package manifest. Next.js 14 and newer are supported through static export (`output: 'export'`, `distDir: 'dist'`); older versions are rejected before the dev server or build starts, unless you set custom renderer commands.
 - **Packaging stays yours.** Configure application identity, targets and signing in electron-builder. The repository examples derive `electronVersion` from the installed Electron package so hoisted workspaces package the correct runtime.
 - **Process boundaries stay explicit.** Expose application-specific preload functions and register their main-process handlers before window loading.
+- **Config hooks receive Vite 8 options.** `mainConfig`, `preloadConfig` and `rendererConfig` see Vitron's bundler settings under `build.rolldownOptions`, and must return theirs there. A `build.rollupOptions` value from a hook is ignored, so an `external` set that way gets bundled.
+- **Default imports of `__esModule` packages changed.** In main and preload builds, `import dep from 'cjs-dep'` of an external CommonJS package that sets `__esModule` now gives `exports.default`; with Vite 7 it was the whole module object. Nothing warns about this.
+- **Two plugin failures behave differently in `vitron dev`.** A plugin `options` hook that throws ends the CLI with exit code 1 and a stack trace, without normal session cleanup. An error thrown from a `closeWatcher` hook is not reported.
 
 ## License
 

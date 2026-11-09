@@ -30,8 +30,8 @@ export async function buildMainConfig(
         build: {
             ...shared.build,
             emptyOutDir: false,
-            rollupOptions: {
-                ...shared.build!.rollupOptions,
+            rolldownOptions: {
+                ...shared.build!.rolldownOptions,
                 plugins: [
                     replace({
                         preventAssignment: true,

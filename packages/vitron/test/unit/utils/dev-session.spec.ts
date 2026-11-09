@@ -25,8 +25,32 @@ import {
 import { runDevelopmentSession } from '../../../src/apps/dev';
 import * as rendererProcesses from '../../../src/apps/renderer/ps';
 import { buildConfig } from '../../../src/config/utils/build';
+import { buildWithWatchHook } from '../../../src/core/vite/build';
 
 vi.mock('cross-spawn', () => ({ default: vi.fn() }));
+vi.mock('../../../src/core/vite/build', async (importOriginal: () => Promise<{ buildWithWatchHook: typeof buildWithWatchHook }>) => {
+    const actual = await importOriginal();
+
+    return { buildWithWatchHook: vi.fn(actual.buildWithWatchHook) };
+});
+
+// Rolldown drops plugin closeWatcher failures, so a real watcher's close is made to reject at Vitron's own seam.
+function rejectNextWatchClose(failure: Error) {
+    const real = vi.mocked(buildWithWatchHook).getMockImplementation()!;
+
+    vi.mocked(buildWithWatchHook).mockImplementationOnce((config, hook) => {
+        const handle = real(config, hook);
+
+        return {
+            ready: handle.ready,
+            close: async () => {
+                await handle.close();
+
+                throw failure;
+            },
+        };
+    });
+}
 
 const directories: string[] = [];
 const sessions: { controller: AbortController, result: Promise<unknown> }[] = [];
@@ -461,18 +485,7 @@ it('runs every cleanup when one rejects', async () => {
     const operational = new Error('reload failed');
     const cleanup = new Error('main close failed');
 
-    app.config.set('mainConfig', () => ({
-        configFile: false,
-        logLevel: 'silent',
-        plugins: [{
-            name: 'reject-main-cleanup',
-            closeWatcher() {
-                events.push('main:closed');
-
-                throw cleanup;
-            },
-        }],
-    }));
+    rejectNextWatchClose(cleanup);
 
     const result = app.start();
 
@@ -491,18 +504,7 @@ it('rejects a cancelled session whose cleanup fails', async () => {
     const app = await fixture();
     const cleanup = new Error('main close failed');
 
-    app.config.set('mainConfig', () => ({
-        configFile: false,
-        logLevel: 'silent',
-        plugins: [{
-            name: 'reject-main-cleanup',
-            closeWatcher() {
-                events.push('main:closed');
-
-                throw cleanup;
-            },
-        }],
-    }));
+    rejectNextWatchClose(cleanup);
 
     const result = app.start();
 
