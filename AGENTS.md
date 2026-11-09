@@ -15,7 +15,7 @@ npm run dev --workspace=examples/vanilla
 npm run dev --workspace=examples/nuxt
 ```
 
-The root build packages both examples with electron-builder. Each example allows compatible Electron minor and patch updates. Its ES module packaging configuration resolves the installed Electron version, including hoisted npm workspace dependencies. The library's pretest script builds the CLI so tests work after a clean checkout.
+The root build packages all three examples with electron-builder. Each example allows compatible Electron minor and patch updates. Its ES module packaging configuration resolves the installed Electron version, including hoisted npm workspace dependencies. The library's pretest script builds the CLI so tests work after a clean checkout.
 
 ## Guides
 

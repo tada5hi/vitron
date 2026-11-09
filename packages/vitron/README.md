@@ -30,7 +30,7 @@ Development uses the supplied port, defaulting to `9000`. Packaged loading uses 
 
 - **Renderer hot module replacement.** The Vite renderer development server provides HMR; framework renderers use their own development server.
 - **Main-process watch builds.** Rebuilding the running main process restarts Electron.
-- **Session ends with Electron.** Quitting the app ends `vitron dev` and stops the renderer; the command exits 0 after a normal quit and nonzero if Electron crashes or is killed.
+- **Session ends with Electron.** Quitting the app ends `vitron dev` and stops the renderer; the command exits 0 after a normal quit and nonzero if Electron crashes or is killed. `app.relaunch()` also ends the session, because Vitron sees the process exit.
 - **Preload watch builds.** Preload changes reload the running renderer.
 - **Desktop packaging.** Production builds feed the renderer, main and optional preload outputs to electron-builder.
 

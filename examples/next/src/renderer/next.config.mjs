@@ -26,5 +26,6 @@ export default {
     output: 'export',
     distDir: 'dist',
     env: { NEXT_VERSION: next.version },
+    // Next infers this root from the nearest lockfile, which misses an install of next outside this tree (workspaces, symlinks).
     turbopack: { root: commonRoot(sources, installed) },
 };
