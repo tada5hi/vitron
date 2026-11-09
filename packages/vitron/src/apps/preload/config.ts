@@ -5,70 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'node:path';
-import { read } from 'locter';
-import { merge } from 'smob';
 import type { InlineConfig } from 'vite';
 import type { Config } from '../../config';
-import {
-    findEntryFile,
-    getElectronDependencies,
-    getElectronMainDependencies,
-    getNodeBuiltInModules,
-} from '../../utils';
 import { AppName } from '../constants';
-import { getAppDestinationDirectoryPath, getAppDirectoryPath } from '../utils';
+import { applyConfigHook } from '../utils/config-hook';
+import { buildElectronConfig } from '../utils/electron-config';
 
 export async function buildPreloadConfig(
     config: Config,
 ) : Promise<InlineConfig | undefined> {
-    const packageJson = await read(path.join(config.get('rootPath'), 'package.json'));
+    const shared = await buildElectronConfig(config, AppName.PRELOAD);
 
-    const dependencies : string[] = Object.keys(packageJson.dependencies || {});
-    const peerDependencies : string[] = Object.keys(packageJson.peerDependencies || {});
-
-    const entryFile = await findEntryFile(path.join(config.get('rootPath'), config.get('preloadDirectory')));
-
-    if (!entryFile) {
+    if (!shared) {
         return undefined;
     }
 
     const inlineConfig : InlineConfig = {
-        mode: config.get('env'),
-        root: getAppDirectoryPath(config, AppName.PRELOAD),
-        optimizeDeps: { esbuildOptions: { target: 'es2020' } },
+        ...shared,
         build: {
-            watch: {},
+            ...shared.build,
             emptyOutDir: true,
-            manifest: true,
-            target: 'es2020',
-            outDir: getAppDestinationDirectoryPath(config, AppName.PRELOAD),
-            lib: {
-                entry: entryFile,
-                fileName: 'index',
-                formats: ['cjs'],
-            },
-            rollupOptions: {
-                input: entryFile,
-                external: [
-                    ...dependencies,
-                    ...peerDependencies,
-
-                    // electron dependencies
-                    ...getElectronDependencies(),
-                    ...getElectronMainDependencies(),
-
-                    // node built-in internals
-                    ...getNodeBuiltInModules(),
-                ],
-            },
         },
     };
 
     const customConfig = config.get('preloadConfig');
 
     if (customConfig) {
-        return merge(customConfig(inlineConfig), inlineConfig);
+        return applyConfigHook(inlineConfig, customConfig);
     }
 
     return inlineConfig;

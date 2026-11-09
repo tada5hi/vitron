@@ -13,9 +13,14 @@ import {
     it, 
 } from 'vitest';
 import { AppName } from '../../../src/apps/constants';
+import { buildMainConfig } from '../../../src/apps/main/config';
+import { buildPreloadConfig } from '../../../src/apps/preload/config';
 import { buildElectronConfig } from '../../../src/apps/utils/electron-config';
 import { buildConfig } from '../../../src/config';
+import type { InlineConfig } from 'vite';
 import type { OptionsInput } from '../../../src/config';
+
+vi.mock('@rollup/plugin-replace', () => ({ default: vi.fn((options: unknown) => ({ name: 'replace-mock', options })) }));
 
 const roots: string[] = [];
 
@@ -116,5 +121,177 @@ describe.each([AppName.MAIN, AppName.PRELOAD] as const)('buildElectronConfig for
 
         expect(first!.build).not.toBe(second!.build);
         expect(first!.build!.rollupOptions!.external).not.toBe(second!.build!.rollupOptions!.external);
+    });
+});
+
+describe('buildMainConfig', () => {
+    it('throws when the main entry is missing', async () => {
+        const root = await createProject({ apps: ['preload'] });
+
+        await expect(buildMainConfig(createConfig(root)))
+            .rejects.toThrow('The main entrypoint file could not be located...');
+    });
+
+    it('adds main-only settings', async () => {
+        const root = await createProject();
+        const config = createConfig(root, { port: 1234 });
+        const result = await buildMainConfig(config);
+
+        expect(result.build!.emptyOutDir).toBe(false);
+        expect(result.server).toEqual({});
+        expect(result.define).toEqual({
+            NODE_ENV: `"${config.get('env')}"`,
+            PORT: '"1234"',
+        });
+        expect(result.build!.rollupOptions!.plugins).toEqual([
+            {
+                name: 'replace-mock',
+                options: {
+                    preventAssignment: true,
+                    uncrypto: 'crypto',
+                    'process.env.NODE_ENV': `"${config.get('env')}"`,
+                    'process.env.PORT': '"1234"',
+                },
+            },
+        ]);
+    });
+
+    it('passes the defaults to the hook and lets returned values win', async () => {
+        const root = await createProject();
+        let received: InlineConfig | undefined;
+        const config = createConfig(root, {
+            mainConfig: (input) => {
+                received = input;
+
+                return { build: { target: 'es2022' } };
+            },
+        });
+        const result = await buildMainConfig(config);
+
+        expect(received!.build!.emptyOutDir).toBe(false);
+        expect(result.build!.target).toBe('es2022');
+        expect(result.build!.manifest).toBe(true);
+        expect(result.build!.emptyOutDir).toBe(false);
+    });
+
+    it('does not duplicate plugins when a main hook returns its input', async () => {
+        const root = await createProject();
+        const result = await buildMainConfig(createConfig(root, { mainConfig: (input) => input }));
+
+        expect(result.build!.rollupOptions!.plugins).toHaveLength(1);
+        expect(result.build!.rollupOptions!.external).toEqual(
+            (await buildElectronConfig(createConfig(root), AppName.MAIN))!.build!.rollupOptions!.external,
+        );
+    });
+
+    it('does not wipe the config when a main hook returns nothing', async () => {
+        const root = await createProject();
+        const result = await buildMainConfig(createConfig(root, { mainConfig: (() => undefined) as never }));
+
+        expect(result.build!.rollupOptions!.plugins).toHaveLength(1);
+        expect(result.build!.manifest).toBe(true);
+    });
+
+    it('does not leak hook mutations into the next build', async () => {
+        const root = await createProject();
+        const config = createConfig(root, {
+            mainConfig: (input) => {
+                (input.build!.rollupOptions!.external as string[]).push('leaked');
+
+                return input;
+            },
+        });
+
+        await buildMainConfig(config);
+
+        const next = await buildElectronConfig(config, AppName.MAIN);
+
+        expect(next!.build!.rollupOptions!.external).not.toContain('leaked');
+    });
+});
+
+describe('buildPreloadConfig', () => {
+    it('is optional when the preload entry is missing', async () => {
+        const root = await createProject({ apps: ['main'] });
+
+        expect(await buildPreloadConfig(createConfig(root))).toBeUndefined();
+    });
+
+    it('rejects an invalid manifest even without a preload entry', async () => {
+        const root = await createProject({ apps: ['main'] });
+        const config = createConfig(root);
+
+        await writeFile(path.join(root, 'package.json'), '{ not json');
+
+        await expect(buildPreloadConfig(config)).rejects.toThrow();
+    });
+
+    it('clears its output and has no main-only settings', async () => {
+        const root = await createProject();
+        const result = await buildPreloadConfig(createConfig(root));
+
+        expect(result!.build!.emptyOutDir).toBe(true);
+        expect(result!.server).toBeUndefined();
+        expect(result!.define).toBeUndefined();
+        expect(result!.build!.rollupOptions!.plugins).toBeUndefined();
+    });
+
+    it('passes the defaults to the hook and lets returned values win', async () => {
+        const root = await createProject();
+        let received: InlineConfig | undefined;
+        const config = createConfig(root, {
+            preloadConfig: (input) => {
+                received = input;
+
+                return { build: { target: 'es2022' } };
+            },
+        });
+        const result = await buildPreloadConfig(config);
+
+        expect(received!.build!.emptyOutDir).toBe(true);
+        expect(result!.build!.target).toBe('es2022');
+        expect(result!.build!.manifest).toBe(true);
+    });
+
+    it('does not duplicate plugins when a preload hook returns its input', async () => {
+        const root = await createProject();
+        const result = await buildPreloadConfig(createConfig(root, {
+            preloadConfig: (input) => {
+                input.plugins = [{ name: 'custom' }];
+
+                return input;
+            },
+        }));
+
+        expect(result!.plugins).toHaveLength(1);
+    });
+
+    it('does not wipe the config when a preload hook returns nothing', async () => {
+        const root = await createProject();
+        const result = await buildPreloadConfig(createConfig(root, {
+            preloadConfig: ((input: InlineConfig) => {
+                input.plugins = [{ name: 'custom' }];
+            }) as never,
+        }));
+
+        expect(result!.plugins).toHaveLength(1);
+        expect(result!.build!.manifest).toBe(true);
+    });
+
+    it('does not leak hook mutations into the next build', async () => {
+        const root = await createProject();
+        const config = createConfig(root, {
+            preloadConfig: (input) => {
+                (input.build!.rollupOptions!.external as string[]).push('leaked');
+
+                return input;
+            },
+        });
+
+        await buildPreloadConfig(config);
+
+        const next = await buildElectronConfig(config, AppName.PRELOAD);
+
+        expect(next!.build!.rollupOptions!.external).not.toContain('leaked');
     });
 });
