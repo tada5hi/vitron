@@ -34,6 +34,27 @@ it('does not duplicate arrays when the hook returns its input', () => {
     expect(result.plugins).toHaveLength(1);
 });
 
+it('does not duplicate arrays the returned object shares with the input', () => {
+    const plugin = { name: 'a' };
+    const input: InlineConfig = { plugins: [plugin], build: { rollupOptions: { external: ['x'] } } };
+    const result = applyConfigHook(input, (config) => ({
+        ...config,
+        root: '/custom',
+        build: { ...config.build },
+    }));
+
+    expect(result.plugins).toEqual([plugin]);
+    expect(result.build!.rollupOptions!.external).toEqual(['x']);
+    expect(result.root).toBe('/custom');
+});
+
+it('still concatenates distinct arrays', () => {
+    const input: InlineConfig = { plugins: [{ name: 'base' }] };
+    const result = applyConfigHook(input, () => ({ plugins: [{ name: 'custom' }] }));
+
+    expect(result.plugins).toEqual([{ name: 'custom' }, { name: 'base' }]);
+});
+
 it('keeps mutations when the hook returns nothing', () => {
     const input: InlineConfig = { mode: 'production' };
     const result = applyConfigHook(input, (config) => {

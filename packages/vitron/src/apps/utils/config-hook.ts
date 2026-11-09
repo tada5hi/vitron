@@ -1,5 +1,8 @@
-import { merge } from 'smob';
+import { createMerger } from 'smob';
 import type { InlineConfig, UserConfig } from 'vite';
+
+// A value the hook passed through unchanged must not be merged with itself, which would register its plugins twice.
+const merge = createMerger({ strategy: (target, key, value) => (target[key] === value ? target : undefined) });
 
 /**
  * Apply a user config hook. The hook may mutate its input, return it,
