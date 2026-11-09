@@ -45,11 +45,5 @@ export async function buildMainConfig(
         server: {},
     };
 
-    const customConfig = config.get('mainConfig');
-
-    if (customConfig) {
-        return applyConfigHook(inlineConfig, customConfig);
-    }
-
-    return inlineConfig;
+    return applyConfigHook(inlineConfig, config.get('mainConfig'));
 }

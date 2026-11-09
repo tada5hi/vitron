@@ -42,9 +42,5 @@ export async function buildRendererConfig(
         },
     };
 
-    if (config.has('rendererConfig')) {
-        return applyConfigHook(inlineConfig, config.get('rendererConfig'));
-    }
-
-    return inlineConfig;
+    return applyConfigHook(inlineConfig, config.get('rendererConfig'));
 }

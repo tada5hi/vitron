@@ -28,11 +28,5 @@ export async function buildPreloadConfig(
         },
     };
 
-    const customConfig = config.get('preloadConfig');
-
-    if (customConfig) {
-        return applyConfigHook(inlineConfig, customConfig);
-    }
-
-    return inlineConfig;
+    return applyConfigHook(inlineConfig, config.get('preloadConfig'));
 }
