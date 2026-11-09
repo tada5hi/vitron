@@ -22,12 +22,32 @@ const HOST = '127.0.0.1';
 
 let projects: string[] = [];
 const externalRenderers: ChildProcess[] = [];
+const workerGroups: number[] = [];
+
+function killGroup(pid: number | undefined) {
+    if (!pid || process.platform === 'win32') {
+        return;
+    }
+
+    try {
+        process.kill(-pid, 'SIGKILL');
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+            throw error;
+        }
+    }
+}
 
 afterEach(async () => {
     vi.restoreAllMocks();
 
     for (const child of externalRenderers.splice(0)) {
+        killGroup(child.pid);
         child.kill('SIGKILL');
+    }
+
+    for (const pid of workerGroups.splice(0)) {
+        killGroup(pid);
     }
 
     await Promise.all(projects.map((project) => fs.rm(project, { recursive: true, force: true })));
@@ -60,11 +80,33 @@ function spawnExternalRenderer(port: number, body: string, onTerminate = 'proces
         require('node:http')
             .createServer((_request, response) => response.end(${JSON.stringify(body)}))
             .listen(${port}, ${JSON.stringify(HOST)});
-    `], { stdio: 'ignore' });
+    `], { stdio: 'ignore', detached: process.platform !== 'win32' });
 
     externalRenderers.push(child);
 
     return child;
+}
+
+function spawnLauncher(port: number, options: { exit?: boolean, ignoreSigterm?: boolean } = {}) {
+    const worker = `
+        ${options.ignoreSigterm ? "process.on('SIGTERM', () => {});" : ''}
+        require('node:http').createServer((_request, response) => response.end('worker')).listen(${port}, ${JSON.stringify(HOST)});
+    `;
+    const child = spawn(process.execPath, ['-e', `
+        require('node:child_process').spawn(process.execPath, ['-e', ${JSON.stringify(worker)}], { stdio: 'ignore' });
+        ${options.exit ? 'setTimeout(() => process.exit(0), 200);' : 'setInterval(() => {}, 1000);'}
+    `], { stdio: 'ignore', detached: process.platform !== 'win32' });
+
+    externalRenderers.push(child);
+    workerGroups.push(child.pid!);
+
+    return child;
+}
+
+async function waitForPort(port: number) {
+    await vi.waitFor(async () => {
+        await expect(bindPort(port)).rejects.toMatchObject({ code: 'EADDRINUSE' });
+    });
 }
 
 async function bindPort(port: number) {
@@ -248,7 +290,7 @@ it('kills an external renderer that ignores SIGTERM and stops once', async () =>
     const port = await getRandomPort(HOST);
     const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
     const child = spawnExternalRenderer(port, 'stubborn', 'undefined');
-    const kill = vi.spyOn(child, 'kill');
+    const kill = vi.spyOn(process, 'kill');
 
     vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(child);
 
@@ -256,20 +298,22 @@ it('kills an external renderer that ignores SIGTERM and stops once', async () =>
     await Promise.all([renderer.stop(), renderer.stop()]);
 
     expect(child.signalCode).toBe('SIGKILL');
-    expect(kill).toHaveBeenCalledOnce();
+    expect(kill.mock.calls.filter(([, signal]) => signal === 'SIGTERM')).toHaveLength(1);
     expect(renderer.up()).toBe(false);
     await expect(bindPort(port)).resolves.toBeUndefined();
 
+    const calls = kill.mock.calls.length;
+
     await renderer.stop();
-    expect(kill).toHaveBeenCalledOnce();
-});
+    expect(kill.mock.calls).toHaveLength(calls);
+}, 15_000);
 
 it('kills an external renderer that ignores SIGTERM when startup is cancelled', async () => {
     const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port: await getRandomPort(HOST) }));
     const child = spawn(process.execPath, [
         '-e',
         'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000); console.log("ready");',
-    ], { stdio: ['ignore', 'pipe', 'ignore'] });
+    ], { stdio: ['ignore', 'pipe', 'ignore'], detached: process.platform !== 'win32' });
 
     externalRenderers.push(child);
     await once(child.stdout!, 'data');
@@ -284,6 +328,65 @@ it('kills an external renderer that ignores SIGTERM when startup is cancelled', 
     await expect(startup).rejects.toBe(controller.signal.reason);
     expect(child.signalCode).toBe('SIGKILL');
     expect(renderer.up()).toBe(false);
+}, 15_000);
+
+it('stop frees a port held by a worker of the launcher', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(spawnLauncher(port));
+
+    await renderer.start();
+    await renderer.stop();
+
+    await expect(bindPort(port)).resolves.toBeUndefined();
+});
+
+it('stop frees the port when the launcher already exited', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+    const launcher = spawnLauncher(port, { exit: true });
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(launcher);
+
+    await renderer.start();
+    await once(launcher, 'close');
+    await waitForPort(port);
+
+    await renderer.stop();
+    await expect(bindPort(port)).resolves.toBeUndefined();
+});
+
+it('kills a worker that ignores SIGTERM after the launcher exits', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+    const launcher = spawnLauncher(port, { exit: true, ignoreSigterm: true });
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(launcher);
+
+    await renderer.start();
+    await once(launcher, 'close');
+    await waitForPort(port);
+
+    await renderer.stop();
+    await expect(bindPort(port)).resolves.toBeUndefined();
+}, 15_000);
+
+it('cancelled startup terminates the launcher\'s worker', async () => {
+    const port = await getRandomPort(HOST);
+    const renderer = createRenderer(buildConfig({ rootPath: process.cwd(), port }));
+    const controller = new AbortController();
+
+    vi.spyOn(processes, 'spawnRendererProcess').mockReturnValue(spawnLauncher(port));
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('connection refused'));
+
+    const startup = renderer.start(controller.signal);
+
+    await waitForPort(port);
+    controller.abort();
+
+    await expect(startup).rejects.toBe(controller.signal.reason);
+    await expect(bindPort(port)).resolves.toBeUndefined();
 });
 
 it('stop resolves for an external renderer that already exited', async () => {

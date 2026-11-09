@@ -29,11 +29,58 @@ function killProcess(child: ChildProcess) {
     child.kill();
 }
 
+function signalGroup(pid: number, signal: NodeJS.Signals | 0) : boolean {
+    try {
+        process.kill(-pid, signal);
+
+        return true;
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ESRCH') {
+            return false;
+        }
+
+        throw error;
+    }
+}
+
+// Renderer children lead their own process group on POSIX, so a shell launcher's workers are signalled with it.
+async function terminateGroup(pid: number) : Promise<void> {
+    if (!signalGroup(pid, 'SIGTERM')) {
+        return;
+    }
+
+    const deadline = Date.now() + 5000;
+    let killed = false;
+
+    for (;;) {
+        await delay(100);
+
+        if (!killed && Date.now() >= deadline) {
+            killed = true;
+            signalGroup(pid, 'SIGKILL');
+        }
+
+        if (!signalGroup(pid, 0)) {
+            return;
+        }
+    }
+}
+
 function terminateProcess(child: ChildProcess) : Promise<void> {
     const { pid } = child;
 
-    // Without a pid or with an exit status there is no process to wait for, and `close` may have fired already.
-    if (!pid || child.exitCode !== null || child.signalCode !== null) {
+    if (!pid) {
+        killProcess(child);
+
+        return Promise.resolve();
+    }
+
+    if (process.platform !== 'win32') {
+        return terminateGroup(pid);
+    }
+
+    // With an exit status there is no process to wait for, and `close` may have fired already.
+    if (child.exitCode !== null || child.signalCode !== null) {
         killProcess(child);
 
         return Promise.resolve();
@@ -42,22 +89,14 @@ function terminateProcess(child: ChildProcess) : Promise<void> {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     return new Promise<void>((resolve, reject) => {
-        const forceKill = () => {
-            kill(pid, 'SIGKILL', (error) => {
-                if (error) {
-                    reject(error);
-                }
-            });
-        };
-
         child.once('close', () => resolve());
-        timer = setTimeout(forceKill, 5000);
+        timer = setTimeout(() => kill(pid, 'SIGKILL'), 5000);
 
-        if (process.platform === 'win32') {
-            forceKill();
-        } else {
-            child.kill('SIGTERM');
-        }
+        kill(pid, 'SIGKILL', (error) => {
+            if (error) {
+                reject(error);
+            }
+        });
     }).finally(() => clearTimeout(timer));
 }
 
