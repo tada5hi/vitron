@@ -1,5 +1,34 @@
 # Change Log
 
+## [3.0.0](https://github.com/tada5hi/vitron/compare/v2.1.3...v3.0.0) (2026-11-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* custom renderer commands now run through a shell, and a failed renderer build stops vitron build.
+* **dev:** Vitron now provides import-only ESM exports, no longer publishes CommonJS artifacts, and requires Node.js >=24.15.0.
+
+### Features
+
+* harden renderer commands, add Next 14+ and end dev with Electron ([#1150](https://github.com/tada5hi/vitron/issues/1150)) ([19b2e26](https://github.com/tada5hi/vitron/commit/19b2e269c4728aacf72bf71ba493321d4f8f5e3c))
+
+
+### Bug Fixes
+
+* serialize Electron restarts and add Playwright coverage ([#1144](https://github.com/tada5hi/vitron/issues/1144)) ([08e07a5](https://github.com/tada5hi/vitron/commit/08e07a519ea55e6924a1fb7d1db7b7c6cf727351))
+
+
+### Code Refactoring
+
+* **dev:** own the dev lifecycle and move to routup 6 ([#1147](https://github.com/tada5hi/vitron/issues/1147)) ([706839a](https://github.com/tada5hi/vitron/commit/706839a5a1e5edc186d40622d0a16286c708dc6c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * vitron bumped from ^2.4.0 to ^3.0.0
+
 ## [2.1.3](https://github.com/tada5hi/vitron/compare/v2.1.2...v2.1.3) (2025-04-04)
 
 
