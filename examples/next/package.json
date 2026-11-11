@@ -21,7 +21,7 @@
     "devDependencies": {
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
-        "electron": "^45.2.2",
+        "electron": "^45.2.3",
         "electron-builder": "^26.0.12",
         "next": "^16.4.5",
         "vitron": "^2.4.0"
