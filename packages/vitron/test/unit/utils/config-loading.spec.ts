@@ -66,8 +66,9 @@ it('reads project dependencies for all process configurations', async () => {
 });
 
 it('resolves an explicitly selected installed framework package', async () => {
-    const manifest = JSON.parse(await readFile(createRequire(import.meta.url).resolve('nuxt/package.json'), 'utf8'));
-    const config = buildConfig({ framework: 'nuxt' });
+    const rootPath = path.resolve(import.meta.dirname, '../../../../../examples/nuxt');
+    const manifest = JSON.parse(await readFile(createRequire(path.join(rootPath, 'package.json')).resolve('nuxt/package.json'), 'utf8'));
+    const config = buildConfig({ framework: 'nuxt', rootPath });
 
     expect(config.get('framework')).toEqual({ name: 'nuxt', version: manifest.version });
 });

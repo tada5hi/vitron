@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
+import { existsSync } from 'node:fs';
 import {
     access,
     cp,
@@ -93,6 +94,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt' | 'next', exam
 
         const directory = await mkdtemp(path.join(tmpdir(), 'vitron-e2e-'));
         const root = path.join(directory, 'examples', exampleName);
+        const exampleModules = path.join(workspace, 'examples', exampleName, 'node_modules');
         const electronPids = path.join(directory, 'electron-pids');
         const children: ChildProcess[] = [];
         const browsers: Browser[] = [];
@@ -106,7 +108,7 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt' | 'next', exam
         let dev: ChildProcess | undefined;
         const env: NodeJS.ProcessEnv = {
             ...process.env,
-            PATH: `${path.join(workspace, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH}`,
+            PATH: [path.join(exampleModules, '.bin'), path.join(workspace, 'node_modules', '.bin'), process.env.PATH].join(path.delimiter),
             NUXT_TELEMETRY_DISABLED: '1',
             NEXT_TELEMETRY_DISABLED: '1',
             CSC_IDENTITY_AUTO_DISCOVERY: 'false',
@@ -223,6 +225,11 @@ export const test = base.extend<{ exampleName: 'vanilla' | 'nuxt' | 'next', exam
                 filter: (source) => !['node_modules', 'dist', '.vitron', '.nuxt', '.output'].includes(path.basename(source)),
             });
             await symlink(path.join(workspace, 'node_modules'), path.join(directory, 'node_modules'), 'junction');
+
+            if (existsSync(exampleModules)) {
+                await symlink(exampleModules, path.join(root, 'node_modules'), 'junction');
+            }
+
             await cp(path.join(workspace, 'tsconfig.json'), path.join(directory, 'tsconfig.json'));
             await cp(path.join(workspace, 'tsconfig.build.json'), path.join(directory, 'tsconfig.build.json'));
             await mkdir(path.join(directory, 'user-data'));
